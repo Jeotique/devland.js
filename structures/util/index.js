@@ -29,7 +29,9 @@ module.exports.createDefaultOptions = () => {
         $device: 'devland.js',
       },
       version: 1,
-    }
+    },
+    messagesLifeTime: null,
+    token: null,
   }
 }
 

@@ -5,6 +5,7 @@ const util = require('../util')
 const Models = require('../models')
 const { Store } = require('../util/Store/Store')
 const Guild = require('../models/Guild')
+const Message = require('../models/Message')
 /**
  * @extends {EventEmitter}
  */
@@ -29,6 +30,7 @@ module.exports = class Client extends EventEmitter {
      * @property {wsOptions} ws
      * @property {presenceOptions} presence
      * @property {string} token
+     * @property {number} messagesLifeTime
      */
     /**
      * The client options
@@ -139,6 +141,10 @@ module.exports = class Client extends EventEmitter {
         this.options = util.mergeDefault(util.createDefaultOptions(), options)
         this.rest = new RESTHandler(this)
         this.user = new Models.ClientUser(this)
+        /**
+         * @type {Store<String, Message>}
+         */
+        this.messages = new Store()
         if (this.options && this.options.connect == false) {
             return this;
         } else {

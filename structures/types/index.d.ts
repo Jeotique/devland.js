@@ -7,6 +7,7 @@ declare type clientOptions = {
     presence: presenceOptions;
     intents: number;
     token: string;
+    messagesLifeTime: number;
 }
 declare type wsOptions = {
     large_threshold: number;
@@ -49,6 +50,7 @@ export class Client extends EventEmitter {
     private rest: RESTHandler;
     private readonly guildsIds: [string];
     readonly user: Client.ClientUser;
+    readonly messages: Store<string, Message>;
     readonly version: string;
     connect(token?: string): Client;
     toJSON(): JSON;
