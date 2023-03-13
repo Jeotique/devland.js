@@ -1,0 +1,41 @@
+{
+  "dependencies": {
+    "got": "^7.1.0",
+    "multistream": "^2.1.1",
+    "phin": "^3.6.1",
+    "ws": "^8.5.0"
+  },
+  "name": "devland.js",
+  "version": "1.0.0",
+  "description": "A powerful API wrapper for the Discord API",
+  "main": "index.js",
+  "types": "./structures/types/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jeotique/Luma.js-V2.git"
+  },
+  "keywords": [
+    "discordjs",
+    "discord.js",
+    "api",
+    "aoi.js",
+    "aoijs",
+    "luma",
+    "lumajs",
+    "luma.js",
+    "devland",
+    "devland.js",
+    "devlandjs",
+    "jeotique",
+    "mxtorie"
+  ],
+  "author": "Jeotique",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Jeotique/Luma.js-V2/issues"
+  },
+  "homepage": "https://github.com/Jeotique/Luma.js-V2#readme"
+}
