@@ -2,13 +2,21 @@ const ClientUser = require('./ClientUser')
 const Attachment = require('./Attachment')
 const Guild = require('./Guild')
 const Message = require('./Message')
-const MessageEmbed = require('./MessageEmbed')
+const Embed = require('./Embed')
 const TextChannel = require('./TextChannel')
+const User = require('./User')
+const ActionRow = require('./ActionRow')
+const Button = require('./Button')
+const StringSelect = require('./StringSelect')
 module.exports = {
     ClientUser,
     Attachment,
     Guild,
     Message,
-    MessageEmbed,
-    TextChannel
+    Embed,
+    TextChannel,
+    User,
+    ActionRow,
+    Button,
+    StringSelect
 }

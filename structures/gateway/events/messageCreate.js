@@ -18,10 +18,11 @@ module.exports = {
             if(!channel) return
             let message = new Message(client, guild, new TextChannel(client, guild, channel), data)
             /**
-             * @event client#messageCreate
+             * Emitted whenever a message is sended
+             * @event client#message
              * @param {Message} message
              */
-            client.emit('messageCreate', message)
+            client.emit('message', message)
             if(typeof client.options.messagesLifeTime === "number" && client.options.messagesLifeTime > 0) {
                 message.cachedAt = Date.now()
                 message.expireAt = Date.now()+client.options.messagesLifeTime

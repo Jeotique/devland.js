@@ -1,8 +1,9 @@
 const Client = require('../client/client')
 const Guild = require('./Guild')
 const Message = require('./Message')
-const MessageEmbed = require('./MessageEmbed')
+const Embed = require('./Embed')
 const Utils = require('../util')
+const ActionRow = require('./ActionRow')
 module.exports = class TextChannel {
     /**
      * 
@@ -31,11 +32,11 @@ module.exports = class TextChannel {
     /**
      * @typedef {object} MessageOptions
      * @property {string} content
-     * @property {MessageEmbed[]} embeds
+     * @property {Embed[]} embeds
      * @property {boolean} tts
      * @property {string} nonce
      * @property {'roles'|'users'|'everyone'} allowedMentions
-     * @property {object} components
+     * @property {ActionRow[]} components
      */
     /**
      * Send a message is the channel
@@ -57,15 +58,28 @@ module.exports = class TextChannel {
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id), data).then(messageData => {
                     return resolve(new Message(this.client, this.guild, this, messageData))
                 }).catch(e => {
-                    return reject(e)
+                    return reject(new Error(e))
                 })
-            } else if (options instanceof MessageEmbed) {
+            } else if (options instanceof Embed) {
                 data['embeds'].push(options.pack())
-                console.log(data)
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id), data).then(messageData => {
                     return resolve(new Message(this.client, this.guild, this, messageData))
                 }).catch(e => {
-                    return reject(e)
+                    return reject(new Error(e))
+                })
+            } else if(options instanceof ActionRow) {
+                data['components'].push(options.pack())
+                let toTestCustomId = []
+                let alrSeen = {}
+                data['components']?.map(ar => ar?.components.map(comp => toTestCustomId.push(comp)))
+                if(toTestCustomId.length > 0) toTestCustomId.map(test => {
+                    if(alrSeen[test.custom_id]) return reject(new TypeError("Duplicated custom Id"))
+                    else alrSeen[test.custom_id] = true
+                })
+                this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.channelId), data).then(messageData => {
+                    return resolve(new Message(this.client, this.guild, this, messageData))
+                }).catch(e => {
+                    return reject(new Error(e))
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
@@ -74,13 +88,24 @@ module.exports = class TextChannel {
                 data['tts'] = options['tts']
                 data['nonce'] = options['nonce']
                 data['allowed_mentions'] = options['allowedMentions']
-                data['components'] = options['components']
+                data['components'] = []
+                options['components']?.map(comp => {
+                    if(comp instanceof ActionRow) data['components'].push(comp.pack())
+                    else return reject(new TypeError("Invalid component, must be a ActionRow instance"))
+                })
+                let toTestCustomId = []
+                let alrSeen = {}
+                data['components']?.map(ar => ar?.components.map(comp => toTestCustomId.push(comp)))
+                if(toTestCustomId.length > 0) toTestCustomId.map(test => {
+                    if(alrSeen[test.custom_id]) return reject(new TypeError("Duplicated custom Id"))
+                    else alrSeen[test.custom_id] = true
+                })
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id), data).then(messageData => {
                     return resolve(new Message(this.client, this.guild, this, messageData))
                 }).catch(e => {
-                    return reject(e)
+                    return reject(new Error(e))
                 })
-            } else return reject("Send without any options is not authorized")
+            } else return reject(new TypeError("Send without any options is not authorized"))
         })
     }
 }

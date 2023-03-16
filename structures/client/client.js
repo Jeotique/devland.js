@@ -4,8 +4,7 @@ const ws = require('ws')
 const util = require('../util')
 const Models = require('../models')
 const { Store } = require('../util/Store/Store')
-const Guild = require('../models/Guild')
-const Message = require('../models/Message')
+const {Message, Guild, TextChannel, User} = require('../models')
 /**
  * @extends {EventEmitter}
  */
@@ -31,6 +30,13 @@ module.exports = class Client extends EventEmitter {
      * @property {presenceOptions} presence
      * @property {string} token
      * @property {number} messagesLifeTime
+     * @property {boolean} messagesLifeTimeResetAfterEvents
+     * @property {number} guildsLifeTime
+     * @property {boolean} guildsLifeTimeResetAfterEvents
+     * @property {number} channelsLifeTime
+     * @property {boolean} channelsLifeTimeResetAfterEvents
+     * @property {number} usersLifeTime
+     * @property {boolean} usersLifeTimeResetAfterEvents
      */
     /**
      * The client options
@@ -145,6 +151,10 @@ module.exports = class Client extends EventEmitter {
          * @type {Store<String, Message>}
          */
         this.messages = new Store()
+        /**
+         * @type {Store<String, Guild>}
+         */
+        this.guilds = new Store()
         if (this.options && this.options.connect == false) {
             return this;
         } else {
@@ -182,17 +192,49 @@ module.exports = class Client extends EventEmitter {
              */
             let res = new Store()
             if (!max) for (let i of this.guildsIds) {
-                let result = await this.rest.get(this._ENDPOINTS.SERVERS(i)).catch(e => { return reject(e) })
-                if (!result) return reject("One guild has not result")
-                res.set(result.id, new Guild(this, result))
+                let result = await this.rest.get(this._ENDPOINTS.SERVERS(i)).catch(e => { return reject(new Error(e)) })
+                if (!result) return reject(new TypeError("One guild has not result"))
+                let guild = new Guild(this, result)
+                res.set(result.id, guild)
+                if(typeof this.options.guildsLifeTime && this.options.guildsLifeTime > 0) {
+                    guild.cachedAt = Date.now()
+                    guild.expireAt = Date.now() + this.options.guildsLifeTime
+                    this.guilds.set(guild.id, guild)
+                }
                 if (res.size === this.guildsIds.length) return resolve(res)
             }
             else for (let i of this.guildsIds.slice(0, max)) {
-                let result = await this.rest.get(this._ENDPOINTS.SERVERS(i)).catch(e => { return reject(e) })
-                if (!result) return reject("One guild has not result")
-                res.set(result.id, new Guild(this, result))
+                let result = await this.rest.get(this._ENDPOINTS.SERVERS(i)).catch(e => { return reject(new Error(e)) })
+                if (!result) return reject(new TypeError("One guild has not result"))
+                let guild = new Guild(this, result)
+                res.set(result.id, guild)
+                if(typeof this.options.guildsLifeTime && this.options.guildsLifeTime > 0) {
+                    guild.cachedAt = Date.now()
+                    guild.expireAt = Date.now() + this.options.guildsLifeTime
+                    this.guilds.set(guild.id, guild)
+                }
                 if (res.size === this.guildsIds.length) return resolve(res)
             }
+        })
+    }
+    /**
+     * Fetch and return guild data
+     * @param {string|Guild} guildId The guild id to fetch 
+     * @returns {Promise<Guild>}
+     */
+    async fetchGuild(guildId){
+        return new Promise(async(resolve, reject) => {
+            if(guildId instanceof Guild) guildId = guildId?.id
+            if(typeof guildId !== "string") return reject(new TypeError("guildId must be a string or a valid guild reference"))
+            let result = await this.rest.get(this._ENDPOINTS.SERVERS(guildId)).catch(e=>{reject(new Error(e))})
+            if(!result) return reject(new TypeError("Unknow guild"))
+            let guild = new Guild(this, result)
+            if(typeof this.options.guildsLifeTime && this.options.guildsLifeTime > 0) {
+                guild.cachedAt = Date.now()
+                guild.expireAt = Date.now() + this.options.guildsLifeTime
+                this.guilds.set(guild.id, guild)
+            }
+            return resolve(guild)
         })
     }
 }

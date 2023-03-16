@@ -1,4 +1,4 @@
-module.exports = class MessageEmbed {
+module.exports = class Embed {
     /**
      * @typedef {object} fieldOptions
      * @property {string} name
@@ -46,11 +46,11 @@ module.exports = class MessageEmbed {
         this.description = data.description
         this.color = data.color
         this.timestamp = data.timestamp
-        this.author = data.author || {name: undefined, icon_url: undefined}
-        this.footer = data.footer || {text: undefined, icon_url: undefined}
-        this.image = data.image || {url: undefined}
+        this.author = data.author// || {name: undefined, icon_url: undefined}
+        this.footer = data.footer// || {text: undefined, icon_url: undefined}
+        this.image = data.image//|| {url: undefined}
         this.url = data.url
-        this.thumbnail = data.thumbnail || {url: undefined}
+        this.thumbnail = data.thumbnail// || {url: undefined}
     }
 
     pack() {

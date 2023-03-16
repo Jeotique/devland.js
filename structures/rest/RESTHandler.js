@@ -39,7 +39,7 @@ module.exports = class RESTHandler {
                     }
                     if(res.status === 200 || res.statusCode === 200) return res.promise.resolve(res?.body)
                     let errorMessage = new APIError(null, null, req.method, res.statusCode, null, null).get()
-                    throw new Error(errorMessage)
+                    res.promise.reject(new Error(errorMessage))
                 }
             });
         });

@@ -8,6 +8,13 @@ declare type clientOptions = {
     intents: number;
     token: string;
     messagesLifeTime: number;
+    messagesLifeTimeResetAfterEvents: boolean;
+    guildsLifeTime: number;
+    guildsLifeTimeResetAfterEvents: boolean;
+    channelsLifeTime: number;
+    channelsLifeTimeResetAfterEvents: boolean;
+    usersLifeTime: number;
+    usersLifeTimeResetAfterEvents: boolean;
 }
 declare type wsOptions = {
     large_threshold: number;
@@ -51,9 +58,13 @@ export class Client extends EventEmitter {
     private readonly guildsIds: [string];
     readonly user: Client.ClientUser;
     readonly messages: Store<string, Message>;
+    readonly guilds: Store<string, Guild>;
     readonly version: string;
     connect(token?: string): Client;
     toJSON(): JSON;
+    fetchGuilds(max?: number): Promise<Store<string, Guild>>;
+    fetchGuild(guildId: string | Guild): Promise<Guild>;
+
     public on<K extends keyof ClientEvents>(event: K, listener: (...args: ClientEvents[K]) => Awaitable<void>): this;
     public on<S extends string | symbol>(
         event: Exclude<S, keyof ClientEvents>,
@@ -74,10 +85,27 @@ export class Client extends EventEmitter {
     public removeAllListeners<K extends keyof ClientEvents>(event?: K): this;
     public removeAllListeners<S extends string | symbol>(event?: Exclude<S, keyof ClientEvents>): this;
 }
+export type invalid_Message = {
+    error: string;
+    guild: Guild;
+    channel: TextChannel;
+    id: string;
+    data_is_available: boolean;
+}
+export type invalid_Guild = {
+    error: string;
+    id: string;
+    data_is_available: boolean;
+}
 declare interface ClientEvents {
     debug: [data: string];
     ready: [client: Client];
-    messageCreate: [message: Message];
+    message: [message: Message];
+    messageUpdate: [message: Message | invalid_Message, message: Message];
+    messageDelete: [message: Message | invalid_Message];
+    guildAvailable: [guild: Guild];
+    guildAdded: [guild: Guild];
+    guildRemoved: [guild: Guild | invalid_Guild];
 }
 declare class RESTHandler {
     private constructor(client: Client);
@@ -96,7 +124,7 @@ declare class RESTHandler {
 }
 declare namespace Client {
     export class ClientUser {
-        protected constructor(client: Client, data: object);
+        constructor(client: Client, data: object);
         private client: Client;
         readonly verified: boolean;
         readonly username: string;
@@ -160,7 +188,7 @@ export type utilsChannels = {
     publicUpdatesChannel: TextChannel | null;
 }
 export class Guild {
-    protected constructor(client: Client, data: object);
+    constructor(client: Client, data: object);
     private client: Client;
     readonly id: string;
     readonly name: string;
@@ -190,6 +218,9 @@ export class Guild {
     readonly nsfwLevel: guildNsfwLevel;
     readonly createdTimestamp: number;
     readonly createdAt: Date;
+    readonly data_is_available: boolean;
+    private readonly cachedAt: number | undefined;
+    private readonly expireAt: number | undefined;
     fetchVanity(): Promise<guildVanityData>;
     fetchUtilsChannels(): Promise<utilsChannels>;
 }
@@ -209,11 +240,11 @@ export enum channelType {
 }
 declare type MessageOptions = {
     content: string,
-    embeds: any[];
-
+    embeds: Embed[];
+    components: ActionRow[];
 }
 export class TextChannel {
-    protected constructor(client: Client, guild: Guild, data: object)
+    constructor(client: Client, guild: Guild, data: object)
     private client: Client;
     readonly guild: Guild;
     readonly id: string;
@@ -229,11 +260,14 @@ export class TextChannel {
     readonly nsfw: boolean;
     readonly createdTimestamp: number;
     readonly createdAt: Date;
-    send(options: MessageOptions|string|MessageEmbed): Promise<Message>;
+    readonly data_is_available: boolean;
+    private readonly cachedAt: number | undefined;
+    private readonly expireAt: number | undefined;
+    send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
 }
 
 export class Message {
-    protected constructor(client: Client, guild: Guild, channel: TextChannel, data: object)
+    constructor(client: Client, guild: Guild, channel: TextChannel, data: object)
     private client: Client;
     readonly guild: Guild;
     readonly channel: TextChannel;
@@ -242,7 +276,7 @@ export class Message {
     readonly content: string | undefined;
     readonly channelId: string;
     readonly attachments: Store<String, Attachment>;
-    readonly embeds: object;
+    readonly embeds: Embed[];
     readonly mentions: object;
     readonly pinned: boolean;
     readonly mentionEveryone: boolean;
@@ -250,17 +284,21 @@ export class Message {
     readonly createdTimestamp: number;
     readonly createdAt: Date;
     readonly guildId: string;
-    readonly editTimestamp: number|null;
+    readonly editTimestamp: number | null;
     readonly flags: number;
-    readonly components: object;
-    readonly messageReplyied: Message|null;
+    readonly components: ActionRow[];
+    readonly messageReplyied: Message | null;
     readonly deleted: boolean;
-    edit(options: MessageOptions|string|MessageEmbed): Promise<Message>;
+    readonly data_is_available: boolean;
+    private readonly cachedAt: number | undefined;
+    private readonly expireAt: number | undefined;
+    edit(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
     delete(delay: number): Promise<Message>;
+    reply(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
 }
 
 export class Attachment {
-    protected constructor(client: Client, message: Message, data: object);
+    constructor(client: Client, message: Message, data: object);
     private client: Client;
     readonly message: Message;
     readonly id: string;
@@ -277,15 +315,15 @@ export class Attachment {
 declare type fieldOptions = {
     name: string,
     value: string,
-    inline: boolean
+    inline?: boolean
 }
 declare type authorOptions = {
     name: string,
-    icon_url: string
+    icon_url?: string
 }
 declare type footerOptions = {
     text: string,
-    icon_url: string
+    icon_url?: string
 }
 declare type imageOptions = {
     url: string
@@ -294,42 +332,129 @@ declare type thumbnailOptions = {
     url: string
 }
 declare type embedOptions = {
-    fields: fieldOptions[],
-    title: string,
-    description: string,
-    color: string|number,
-    timestamp: string|number|Date,
-    author: authorOptions,
-    footer: footerOptions,
-    image: imageOptions|string,
-    thumbnail: thumbnailOptions|string,
-    url: string
+    fields?: fieldOptions[],
+    title?: string,
+    description?: string,
+    color?: string | number,
+    timestamp?: string | number | Date,
+    author?: authorOptions,
+    footer?: footerOptions,
+    image?: imageOptions | string,
+    thumbnail?: thumbnailOptions | string,
+    url?: string
 }
-export class MessageEmbed {
-    protected constructor(data: embedOptions|undefined);
+export class Embed {
+    constructor(data: embedOptions | undefined);
     fields: fieldOptions[];
-    title: string|undefined;
-    description: string|undefined;
-    color: string|number|undefined;
-    timestamp: string|number|Date|undefined;
-    author: authorOptions|undefined;
-    footer: footerOptions|undefined;
-    image: imageOptions|string|undefined;
-    url: string|undefined;
+    title: string | undefined;
+    description: string | undefined;
+    color: string | number | undefined;
+    timestamp: string | number | Date | undefined;
+    author: authorOptions | undefined;
+    footer: footerOptions | undefined;
+    image: imageOptions | string | undefined;
+    url: string | undefined;
 }
 
 export class User {
-    protected constructor(client: Client, data: object);
+    constructor(client: Client, data: object);
     private client: Client;
     readonly username: string;
     readonly publicFlags: number;
     readonly id: string;
     readonly tag: string;
     readonly discriminator: string;
-    readonly displayName: string|null;
+    readonly displayName: string | null;
     readonly bot: boolean;
     readonly avatarDecoration: null;
-    readonly avatar: string|null;
+    readonly avatar: string | null;
     readonly createdAt: Date;
     readonly createdTimestamp: number;
+    readonly data_is_available: boolean;
+    private readonly cachedAt: number | undefined;
+    private readonly expireAt: number | undefined;
 }
+
+export enum ComponentsType {
+    ActionRow = 1,
+    Button = 2,
+    StringSelect = 3,
+    TextInput = 4,
+    UserSelect = 5,
+    RoleSelect = 6,
+    MentionableSelect = 7,
+    ChannelSelect = 8
+}
+
+export enum ButtonStyle {
+    Primary = 1,
+    Secondary = 2,
+    Success = 3,
+    Danger = 4,
+    Link = 5
+}
+declare type APIEmoji = {
+    animated: boolean,
+    id: string | null,
+    name: string
+}
+declare type resolvableComponents = Button|StringSelect;
+export class ActionRow {
+    constructor(...components: resolvableComponents);
+    readonly components: resolvableComponents[];
+    private readonly type: number;
+    private pack();
+    addComponents(...components: resolvableComponents);
+}
+declare type buttonData = {
+    label?: string,
+    style: ButtonStyle,
+    custom_id?: string,
+    customId: string,
+    url?: string,
+    emoji?: APIEmoji|string,
+    disabled?: boolean
+}
+export class Button {
+    constructor(button_data: buttonData | undefined);
+    private readonly type: number;
+    label?: string | undefined;
+    style: ButtonStyle;
+    custom_id?: string;
+    customId: string;
+    url?: string;
+    emoji?: APIEmoji|string;
+    disabled?: boolean;
+    private pack();
+}
+declare type stringData = {
+    placeholder?: string,
+    custom_id?: string,
+    customId: string,
+    max_values?: number,
+    min_values?: number,
+    options: selectOptions[],
+    disabled?: boolean
+}
+declare type selectOptions = {
+    label: string,
+    value: string,
+    description?: string,
+    emoji?: APIEmoji|string,
+    default?: string
+}
+export class StringSelect {
+    constructor(string_select_data: stringData | undefined);
+    private readonly type: number;
+    placeholder?: string;
+    max_values?: number;
+    min_values?: number;
+    custom_id?: string;
+    customId: string;
+    options: selectOptions[];
+    disabled?: boolean;
+    addOptions(...options: selectOptions);
+    setOptions(...options: selectOptions);
+    private pack();
+}
+export function parseEmoji(text: string): APIEmoji;

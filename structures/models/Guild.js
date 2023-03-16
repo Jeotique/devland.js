@@ -9,6 +9,7 @@ module.exports = class Guild {
      */
     constructor(client, data) {
         this.client = client
+        this.ready = true
         this.id = data.id
         this.name = data.name
         this.icon = data.icon
@@ -36,6 +37,7 @@ module.exports = class Guild {
         this.nsfwLevel = data.nsfw_level
         this.createdTimestamp = Utils.getTimestampFrom(this.id)
         this.createdAt = new Date(this.createdTimestamp)
+        this.data_is_available = true
     }
     /**
      * @typedef {Object} guildVanityData
@@ -48,8 +50,8 @@ module.exports = class Guild {
      */
     async fetchVanity(){
         return new Promise(async (resolve, reject) => {
-            let result = await this.client.rest.get(this.client._ENDPOINTS.SERVERS(this.id)+'/vanity-url').catch(e=>{return reject(e)})
-            if(!result) return reject("Can't fetch the vanity data")
+            let result = await this.client.rest.get(this.client._ENDPOINTS.SERVERS(this.id)+'/vanity-url').catch(e=>{return reject(new Error(e))})
+            if(!result) return reject(new TypeError("Can't fetch the vanity data from : "+this.name))
             let res = {
                 code: result.vanityUrlCode,
                 uses: result.vanityUrlUses,
@@ -74,8 +76,8 @@ module.exports = class Guild {
      */
     async fetchUtilsChannels(){
         return new Promise(async(resolve, reject) => {
-            let guildResult = await this.client.rest.get(this.client._ENDPOINTS.SERVERS(this.id)).catch(e=>{return reject(e)})
-            if(!guildResult) return reject("Can't fetch the guild")
+            let guildResult = await this.client.rest.get(this.client._ENDPOINTS.SERVERS(this.id)).catch(e=>{return reject(new Error(e))})
+            if(!guildResult) return reject(new TypeError("Can't fetch the guild : "+this.name))
             let afkChannel = null
             let afkTimeout = guildResult.afk_timeout
             let systemChannel = null
@@ -84,12 +86,12 @@ module.exports = class Guild {
             let rulesChannel = null
             let safetyChannel = null
             let publicUpdatesChannel = null
-            if(guildResult.system_channel_id) systemChannel = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(guildResult.system_channel_id)).catch(e=>reject(e))
-            if(guildResult.afk_channel_id) afkChannel = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(guildResult.afk_channel_id)).catch(e=>reject(e))
-            if(guildResult.widget_channel_id) widgetChannel = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(guildResult.widget_channel_id)).catch(e=>reject(e))
-            if(guildResult.rules_channel_id) rulesChannel = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(guildResult.rules_channel_id)).catch(e=>reject(e))
-            if(guildResult.safety_alerts_channel_id) safetyChannel = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(guildResult.safety_alerts_channel_id)).catch(e=>reject(e))
-            if(guildResult.public_updates_channel_id) publicUpdatesChannel = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(guildResult.public_updates_channel_id)).catch(e=>{reject(e)})
+            if(guildResult.system_channel_id) systemChannel = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(guildResult.system_channel_id)).catch(e=>reject(new Error(e)))
+            if(guildResult.afk_channel_id) afkChannel = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(guildResult.afk_channel_id)).catch(e=>reject(new Error(e)))
+            if(guildResult.widget_channel_id) widgetChannel = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(guildResult.widget_channel_id)).catch(e=>reject(new Error(e)))
+            if(guildResult.rules_channel_id) rulesChannel = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(guildResult.rules_channel_id)).catch(e=>reject(new Error(e)))
+            if(guildResult.safety_alerts_channel_id) safetyChannel = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(guildResult.safety_alerts_channel_id)).catch(e=>reject(new Error(e)))
+            if(guildResult.public_updates_channel_id) publicUpdatesChannel = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(guildResult.public_updates_channel_id)).catch(e=>{reject(new Error(e))})
             if(systemChannel) systemChannel = new TextChannel(this.client, this, systemChannel)
             if(afkChannel) afkChannel = new TextChannel(this.client, this, afkChannel)
             if(widgetChannel) widgetChannel = new TextChannel(this.client, this, widgetChannel)
