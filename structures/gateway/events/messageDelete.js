@@ -30,7 +30,7 @@ module.exports = {
                  * @event client#messageDelete
                  * @param {object} message
                  */
-                client.emit('messageDelete', {error: "Enable the messages cache to get the old message data", guild: guild, channel: channel, id: id, data_is_available: false}, message)
+                client.emit('messageDelete', {error: "Enable the messages cache to get the old message data", guild: guild, channel: channel, id: data.id, data_is_available: false}, message)
             }
         }
     }

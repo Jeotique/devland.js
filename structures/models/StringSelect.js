@@ -29,7 +29,7 @@ module.exports = class StringSelect {
             if(typeof op.value !== "string") throw new TypeError("The value must be a string")
             let testemoji = null
             if(op.emoji && typeof op.emoji === "string") testemoji = parseEmoji(op.emoji)
-            if(op.emoji && !testemoji || typeof testemoji !== 'object') throw new TypeError("Invalid option emoji")
+            if(op.emoji && typeof op.emoji === "string" && (!testemoji || typeof testemoji !== 'object')) throw new TypeError("Invalid option emoji")
             if(op.description && typeof op.description !== "string") throw new TypeError("The description must be a string")
             if(op.default && typeof op.default !== "string") throw new TypeError("The default value must be a string")
             if(op.label.length > 100) throw new TypeError("Label max length of 100")
@@ -73,15 +73,6 @@ module.exports = class StringSelect {
     }
 
     pack(){
-        /*
-         this.placeholder = stringData.placeholder
-        this.max_values = stringData.max_values
-        this.min_values = stringData.min_values
-        this.custom_id = stringData.custom_id || stringData.customId
-        this.customId = stringData.customId || stringData.custom_id
-        this.options = []
-        this.disabled = buttonData.disabled
-        */
         if(this.placeholder && typeof this.placeholder !== "string") throw new TypeError("The placeholder must be a string")
         if(this.placeholder && this.placeholder.length > 150) throw new TypeError("Placeholder max length of 150")
         if(this.max_values && typeof this.max_values !== "number") throw new TypeError("The max_values must be a number")

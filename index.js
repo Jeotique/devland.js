@@ -9,6 +9,10 @@ const User = require('./structures/models/User')
 const ActionRow = require('./structures/models/ActionRow')
 const Button = require('./structures/models/Button')
 const StringSelect = require('./structures/models/StringSelect')
+const RoleSelect = require('./structures/models/RoleSelect')
+const UserSelect = require('./structures/models/UserSelect')
+const MentionableSelect = require('./structures/models/MentionableSelect')
+const ChannelSelect = require('./structures/models/ChannelSelect')
 const {Store} = require('./structures/util/Store/Store')
 module.exports = {
     Client,
@@ -22,5 +26,9 @@ module.exports = {
     ActionRow,
     Button,
     StringSelect,
+    RoleSelect,
+    UserSelect,
+    MentionableSelect,
+    ChannelSelect,
     Store,
 }

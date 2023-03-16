@@ -9,6 +9,10 @@ const User = require('./User')
 const ActionRow = require('./ActionRow')
 const StringSelect = require('./StringSelect')
 const Button = require('./Button')
+const RoleSelect = require('./RoleSelect')
+const UserSelect = require('./UserSelect')
+const MentionableSelect = require('./MentionableSelect')
+const ChannelSelect = require('./ChannelSelect')
 module.exports = class Message {
     /**
      * 
@@ -56,6 +60,10 @@ module.exports = class Message {
                 switch(op.type){
                     case 2: op = new Button(op); break;
                     case 3: op = new StringSelect(op); break;
+                    case 6: op = new RoleSelect(op); break;
+                    case 5: op = new UserSelect(op); break;
+                    case 7: op = new MentionableSelect(op); break;
+                    case 8: op = new ChannelSelect(op); break;
                 }
                 return op
             })))
@@ -83,7 +91,7 @@ module.exports = class Message {
                 tts: false,
                 nonce: undefined,
                 allowed_mentions: undefined,
-                components: []
+                components: this.components
             }
             if (typeof options === 'string') {
                 data['content'] = options
@@ -121,10 +129,11 @@ module.exports = class Message {
                 data['nonce'] = options['nonce']
                 data['allowed_mentions'] = options['allowedMentions']
                 data['components'] = []
-                options['components']?.map(comp => {
+                if(options['components'] && options['components']?.length > 0) options['components']?.map(comp => {
                     if(comp instanceof ActionRow) data['components'].push(comp.pack())
                     else return reject(new TypeError("Invalid component, must be a ActionRow instance"))
                 })
+                else data['components'] = this.components
                 let toTestCustomId = []
                 let alrSeen = {}
                 data['components']?.map(ar => ar?.components.map(comp => toTestCustomId.push(comp)))

@@ -17,15 +17,23 @@ client.on('ready', async () => {
 client.on('message', async message => {
     if (message.content === '+test') {
         console.log('test')
-        let button = new Discord.Models.Button({
-            label: "coucou",
-            customId: "test"
-        })
-        let row = new Discord.Models.ActionRow(button)
-        let embed = new Discord.Models.Embed()
+        let select = new Discord.MentionableSelect()
+        select.customId = "test"
+        select.placeholder = "Coucou user select"
+        let row = new Discord.ActionRow(select)
+        let embed = new Discord.Embed()
         embed.description = "je suis la desc"
         let msg = await message.channel.send({ content: "Envoyé avec la custom lib", embeds: [embed], components: [row] })
-        console.log(msg)
+        setTimeout(() => {
+            try{
+            let row1 = new Discord.ActionRow()
+            let select2 = new Discord.StringSelect()
+            select2.addOptions({label: "coucou", value: "ok", emoji: "❤"}, {label: "haha", value: "hehe"})
+            select2.customId = "test2"
+            row1.addComponents(select2)
+            msg.edit({content: "coucoucou", components: [row, row1]})//.catch(e=>{})
+            }catch(err){console.log(err)}
+        }, 2000)
     }
 })
 

@@ -39,7 +39,7 @@ module.exports = {
                  * @param {object} oldMessage
                  * @param {Message} message
                  */
-                client.emit('messageUpdate', {error: "Enable the messages cache to get the old message data", guild: guild, channel: channel, id: id, data_is_available: false}, message)
+                client.emit('messageUpdate', {error: "Enable the messages cache to get the old message data", guild: guild, channel: channel, id: data.id, data_is_available: false}, message)
             }
         }
     }
