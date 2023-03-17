@@ -224,6 +224,9 @@ declare module 'devland.js' {
         private readonly expireAt: number | undefined;
         fetchVanity(): Promise<guildVanityData>;
         fetchUtilsChannels(): Promise<utilsChannels>;
+        setCommands(...commands: GuildCommand): Promise<boolean>;
+        getCommands(): Promise<GuildCommand[]>;
+        deleteCommand(command: GuildCommand | object): Promise<boolean>;
     }
     export enum channelType {
         GUILD_TEXT = 0,
@@ -539,4 +542,184 @@ declare module 'devland.js' {
         private pack();
     }
     export function parseEmoji(text: string): APIEmoji;
+    export type PermissionString =
+        | 'CREATE_INSTANT_INVITE'
+        | 'KICK_MEMBERS'
+        | 'BAN_MEMBERS'
+        | 'ADMINISTRATOR'
+        | 'MANAGE_CHANNELS'
+        | 'MANAGE_GUILD'
+        | 'ADD_REACTIONS'
+        | 'VIEW_AUDIT_LOG'
+        | 'PRIORITY_SPEAKER'
+        | 'STREAM'
+        | 'VIEW_CHANNEL'
+        | 'SEND_MESSAGES'
+        | 'SEND_TTS_MESSAGES'
+        | 'MANAGE_MESSAGES'
+        | 'EMBED_LINKS'
+        | 'ATTACH_FILES'
+        | 'READ_MESSAGE_HISTORY'
+        | 'MENTION_EVERYONE'
+        | 'USE_EXTERNAL_EMOJIS'
+        | 'VIEW_GUILD_INSIGHTS'
+        | 'CONNECT'
+        | 'SPEAK'
+        | 'MUTE_MEMBERS'
+        | 'DEAFEN_MEMBERS'
+        | 'MOVE_MEMBERS'
+        | 'USE_VAD'
+        | 'CHANGE_NICKNAME'
+        | 'MANAGE_NICKNAMES'
+        | 'MANAGE_ROLES'
+        | 'MANAGE_WEBHOOKS'
+        | 'MANAGE_EMOJIS_AND_STICKERS'
+        | 'USE_APPLICATION_COMMANDS'
+        | 'REQUEST_TO_SPEAK'
+        | 'MANAGE_THREADS'
+        | 'USE_PUBLIC_THREADS'
+        | 'CREATE_PUBLIC_THREADS'
+        | 'USE_PRIVATE_THREADS'
+        | 'CREATE_PRIVATE_THREADS'
+        | 'USE_EXTERNAL_STICKERS'
+        | 'SEND_MESSAGES_IN_THREADS'
+        | 'START_EMBEDDED_ACTIVITIES'
+        | 'MODERATE_MEMBERS'
+        | 'MANAGE_EVENTS';
+    export type PermissionFlags = Record<PermissionString, bigint>;
+    export type PermissionResolvable = BitFieldResolvable<PermissionString, bigint>;
+    export type BitFieldResolvable<T extends string, N extends number | bigint> =
+        | RecursiveReadonlyArray<T | N | `${bigint}` | Readonly<BitField<T, N>>>
+        | T
+        | N
+        | `${bigint}`
+        | Readonly<BitField<T, N>>;
+    export type RecursiveArray<T> = ReadonlyArray<T | RecursiveArray<T>>;
+
+    export type RecursiveReadonlyArray<T> = ReadonlyArray<T | RecursiveReadonlyArray<T>>;
+    export class Permissions extends BitField<PermissionString, bigint> {
+        public any(permission: PermissionResolvable, checkAdmin?: boolean): boolean;
+        public has(permission: PermissionResolvable, checkAdmin?: boolean): boolean;
+        public missing(bits: BitFieldResolvable<PermissionString, bigint>, checkAdmin?: boolean): PermissionString[];
+        public serialize(checkAdmin?: boolean): Record<PermissionString, boolean>;
+        public toArray(): PermissionString[];
+
+        public static ALL: bigint;
+        public static DEFAULT: bigint;
+        public static STAGE_MODERATOR: bigint;
+        public static FLAGS: PermissionFlags;
+        public static resolve(permission?: PermissionResolvable): bigint;
+    }
+
+    export class BitField<S extends string, N extends number | bigint = number> {
+        public constructor(bits?: BitFieldResolvable<S, N>);
+        public bitfield: N;
+        public add(...bits: BitFieldResolvable<S, N>[]): BitField<S, N>;
+        public any(bit: BitFieldResolvable<S, N>): boolean;
+        public equals(bit: BitFieldResolvable<S, N>): boolean;
+        public freeze(): Readonly<BitField<S, N>>;
+        public has(bit: BitFieldResolvable<S, N>): boolean;
+        public missing(bits: BitFieldResolvable<S, N>, ...hasParams: readonly unknown[]): S[];
+        public remove(...bits: BitFieldResolvable<S, N>[]): BitField<S, N>;
+        public serialize(...hasParams: readonly unknown[]): Record<S, boolean>;
+        public toArray(...hasParams: readonly unknown[]): S[];
+        public toJSON(): N extends number ? number : string;
+        public valueOf(): N;
+        public [Symbol.iterator](): IterableIterator<S>;
+        public static FLAGS: Record<string, number | bigint>;
+        public static resolve(bit?: BitFieldResolvable<string, number | bigint>): number | bigint;
+    }
+    export enum commandType {
+        CHAT_INPUT = 1,
+        USER = 2,
+        MESSAGE = 3
+    }
+    export enum commandOptionsType {
+        SUB_COMMAND = 1,
+        SUB_COMMAND_GROUP = 2,
+        STRING = 3,
+        INTEGER = 4,
+        BOOLEAN = 5,
+        USER = 6,
+        CHANNEL = 7,
+        ROLE = 8,
+        MENTIONABLE = 9,
+        NUMBER = 10,
+        ATTACHMENT = 11
+    }
+    declare type localizationsOptions = {
+        id: string,
+        da: string,
+        de: string,
+        "en-GB": string,
+        "en-US": string,
+        "es-ES": string,
+        fr: string,
+        hr: string,
+        it: string,
+        lt: string,
+        hu: string,
+        nl: string,
+        no: string,
+        pl: string,
+        "pt-BR": string,
+        ro: string,
+        fi: string,
+        "sv-SE": string,
+        vi: string,
+        tr: string,
+        cs: string,
+        el: string,
+        bg: string,
+        ru: string,
+        uk: string,
+        hi: string,
+        th: string,
+        "zh-CN": string,
+        ja: string,
+        "zh-TW": string,
+        ko: string
+    }
+    declare type GuildCommandOptions = {
+        name: string,
+        type?: commandType,
+        description?: string,
+        options?: commandOptions[],
+        default_member_permissions?: PermissionResolvable,
+        name_localizations?: localizationsOptions,
+        description_localizations?: localizationsOptions,
+        nsfw?: boolean,
+    }
+    declare type commandChoicesOptions = {
+        name: string,
+        name_localizations?: localizationsOptions,
+        value: string | number;
+    }
+    declare type commandOptions = {
+        type: commandOptionsType,
+        name: string,
+        name_localizations?: localizationsOptions,
+        description: string,
+        description_localizations?: localizationsOptions,
+        required?: boolean,
+        choices?: commandChoicesOptions[],
+        options?: commandOptions[],
+        channel_types?: channelType[],
+        min_value?: number,
+        max_value?: number,
+        min_length?: number,
+        max_length?: number,
+        autocomplete?: boolean,
+    }
+    export class GuildCommand {
+        constructor(options: GuildCommandOptions);
+        name: string;
+        type?: commandType;
+        description?: string;
+        options?: commandOptions[];
+        default_member_permissions?: PermissionResolvable;
+        name_localizations?: localizationsOptions;
+        description_localizations?: localizationOptions;
+        nsfw?: boolean;
+    }
 }

@@ -4,7 +4,7 @@ const ws = require('ws')
 const util = require('../util')
 const Models = require('../models')
 const { Store } = require('../util/Store/Store')
-const {Message, Guild, TextChannel, User} = require('../models')
+const { Message, Guild, TextChannel, User } = require('../models')
 /**
  * @extends {EventEmitter}
  */
@@ -92,7 +92,8 @@ module.exports = class Client extends EventEmitter {
             WEBHOOKS: (webhookID) => { return DiscordAPI + '/webhooks/' + webhookID; },
             WEBHOOKS_TOKEN: (webhookID, webhookToken) => { return DiscordAPI + '/webhooks/' + webhookID + '/' + webhookToken; },
             BULD_DELETE: (channelID) => { return `${this._ENDPOINTS.CHANNEL(channelID)}/messages/bulk-delete`; },
-            TYPING: (channelID) => { return `${this._ENDPOINTS.CHANNEL(channelID)}/typing`; }
+            TYPING: (channelID) => { return `${this._ENDPOINTS.CHANNEL(channelID)}/typing`; },
+            COMMANDS: (guildId, commandId) => { return `${this._ENDPOINTS.API}/applications/${this.user.id}/guilds/${guildId}/commands${commandId ? `/${commandId}` : ``}` },
         }
 
         this.token = options?.token
@@ -196,7 +197,7 @@ module.exports = class Client extends EventEmitter {
                 if (!result) return reject(new TypeError("One guild has not result"))
                 let guild = new Guild(this, result)
                 res.set(result.id, guild)
-                if(typeof this.options.guildsLifeTime && this.options.guildsLifeTime > 0) {
+                if (typeof this.options.guildsLifeTime && this.options.guildsLifeTime > 0) {
                     guild.cachedAt = Date.now()
                     guild.expireAt = Date.now() + this.options.guildsLifeTime
                     this.guilds.set(guild.id, guild)
@@ -208,7 +209,7 @@ module.exports = class Client extends EventEmitter {
                 if (!result) return reject(new TypeError("One guild has not result"))
                 let guild = new Guild(this, result)
                 res.set(result.id, guild)
-                if(typeof this.options.guildsLifeTime && this.options.guildsLifeTime > 0) {
+                if (typeof this.options.guildsLifeTime && this.options.guildsLifeTime > 0) {
                     guild.cachedAt = Date.now()
                     guild.expireAt = Date.now() + this.options.guildsLifeTime
                     this.guilds.set(guild.id, guild)
@@ -222,14 +223,14 @@ module.exports = class Client extends EventEmitter {
      * @param {string|Guild} guildId The guild id to fetch 
      * @returns {Promise<Guild>}
      */
-    async fetchGuild(guildId){
-        return new Promise(async(resolve, reject) => {
-            if(guildId instanceof Guild) guildId = guildId?.id
-            if(typeof guildId !== "string") return reject(new TypeError("guildId must be a string or a valid guild reference"))
-            let result = await this.rest.get(this._ENDPOINTS.SERVERS(guildId)).catch(e=>{reject(new Error(e))})
-            if(!result) return reject(new TypeError("Unknow guild"))
+    async fetchGuild(guildId) {
+        return new Promise(async (resolve, reject) => {
+            if (guildId instanceof Guild) guildId = guildId?.id
+            if (typeof guildId !== "string") return reject(new TypeError("guildId must be a string or a valid guild reference"))
+            let result = await this.rest.get(this._ENDPOINTS.SERVERS(guildId)).catch(e => { reject(new Error(e)) })
+            if (!result) return reject(new TypeError("Unknow guild"))
             let guild = new Guild(this, result)
-            if(typeof this.options.guildsLifeTime && this.options.guildsLifeTime > 0) {
+            if (typeof this.options.guildsLifeTime && this.options.guildsLifeTime > 0) {
                 guild.cachedAt = Date.now()
                 guild.expireAt = Date.now() + this.options.guildsLifeTime
                 this.guilds.set(guild.id, guild)
@@ -237,4 +238,5 @@ module.exports = class Client extends EventEmitter {
             return resolve(guild)
         })
     }
+
 }
