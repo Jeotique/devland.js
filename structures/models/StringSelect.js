@@ -30,6 +30,7 @@ module.exports = class StringSelect {
             let testemoji = null
             if(op.emoji && typeof op.emoji === "string") testemoji = parseEmoji(op.emoji)
             if(op.emoji && typeof op.emoji === "string" && (!testemoji || typeof testemoji !== 'object')) throw new TypeError("Invalid option emoji")
+            if(typeof op.emoji === "object" && op.emoji.name) testemoji = op.emoji
             if(op.description && typeof op.description !== "string") throw new TypeError("The description must be a string")
             if(op.default && typeof op.default !== "string") throw new TypeError("The default value must be a string")
             if(op.label.length > 100) throw new TypeError("Label max length of 100")

@@ -21,7 +21,13 @@ module.exports = class Message {
      * @param {TextChannel} channel 
      */
     constructor(client, guild, channel, data) {
-        this.client = client
+        /**
+     * The client that instantiated this
+     * @name Base#client
+     * @type {Client}
+     * @readonly
+     */
+    Object.defineProperty(this, 'client', { value: client })
         this.guild = guild
         this.channel = channel
 
@@ -51,6 +57,7 @@ module.exports = class Message {
         this.deleted = false
         this.webhookId = data.webhook_id
         this.author = this.webhookId ? null : new User(this.client, data.author)
+        this.authorId = this.webhookId ? this.webhookId : data.author.id
         this.data_is_available = true
 
         data.attachments.map(attach => this.attachments.set(attach.id, new Attachment(this.client, this, attach)))

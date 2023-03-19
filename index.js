@@ -15,6 +15,7 @@ const MentionableSelect = require('./structures/models/MentionableSelect')
 const ChannelSelect = require('./structures/models/ChannelSelect')
 const Permissions = require('./structures/util/Permissions/Permissions')
 const GuildCommand = require('./structures/models/GuildCommand')
+const ForumTag = require('./structures/models/ForumTag')
 const {Store} = require('./structures/util/Store/Store')
 module.exports = {
     Client,
@@ -34,5 +35,6 @@ module.exports = {
     ChannelSelect,
     Permissions,
     GuildCommand,
+    ForumTag,
     Store,
 }

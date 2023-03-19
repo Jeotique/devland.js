@@ -4,7 +4,13 @@ const URL = require('url')
 module.exports = class Request {
 
     constructor([client, token, endpoint, method, data, options], resolve, reject) {
-        this.client = client
+        /**
+     * The client that instantiated this
+     * @name Base#client
+     * @type {Client}
+     * @readonly
+     */
+    Object.defineProperty(this, 'client', { value: client })
         this.token = token;
         this.endpoint = endpoint;
         this.method = method;

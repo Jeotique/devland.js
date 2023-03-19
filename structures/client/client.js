@@ -37,6 +37,8 @@ module.exports = class Client extends EventEmitter {
      * @property {boolean} channelsLifeTimeResetAfterEvents
      * @property {number} usersLifeTime
      * @property {boolean} usersLifeTimeResetAfterEvents
+     * @property {number} channelsLifeTime
+     * @property {boolean} channelsLifeTimeResetAfterEvents
      */
     /**
      * The client options
@@ -156,6 +158,10 @@ module.exports = class Client extends EventEmitter {
          * @type {Store<String, Guild>}
          */
         this.guilds = new Store()
+        /**
+         * @type {Store<String, TextChannel>}
+         */
+        this.textChannels = new Store()
         if (this.options && this.options.connect == false) {
             return this;
         } else {

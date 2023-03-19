@@ -10,7 +10,13 @@ module.exports = class Guild {
      * @param {Client} client 
      */
     constructor(client, data) {
-        this.client = client
+        /**
+     * The client that instantiated this
+     * @name Base#client
+     * @type {Client}
+     * @readonly
+     */
+    Object.defineProperty(this, 'client', { value: client })
         this.ready = true
         this.id = data.id
         this.name = data.name

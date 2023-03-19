@@ -8,7 +8,13 @@ module.exports = class User {
      * @param {*} data 
      */
     constructor(client, data){
-        this.client = client
+        /**
+     * The client that instantiated this
+     * @name Base#client
+     * @type {Client}
+     * @readonly
+     */
+    Object.defineProperty(this, 'client', { value: client })
         this.username = data.username
         this.publicFlags = data.public_flags
         this.id = data.id

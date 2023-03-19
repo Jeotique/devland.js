@@ -38,6 +38,8 @@ module.exports.createDefaultOptions = () => {
     channelsLifeTimeResetAfterEvents: true,
     usersLifeTime: null,
     usersLifeTimeResetAfterEvents: true,
+    channelsLifeTime: null,
+    channelsLifeTimeResetAfterEvents: true,
     token: null,
   }
 }

@@ -60,6 +60,7 @@ declare module 'devland.js' {
         readonly user: Client.ClientUser;
         readonly messages: Store<string, Message>;
         readonly guilds: Store<string, Guild>;
+        readonly textChannels: Store<string, TextChannel>;
         readonly version: string;
         connect(token?: string): Client;
         toJSON(): JSON;
@@ -125,7 +126,7 @@ declare module 'devland.js' {
     }
     declare namespace Client {
         export class ClientUser {
-            constructor(client: Client, data: object);
+            private constructor(client: Client, data: object);
             private client: Client;
             readonly verified: boolean;
             readonly username: string;
@@ -189,7 +190,7 @@ declare module 'devland.js' {
         publicUpdatesChannel: TextChannel | null;
     }
     export class Guild {
-        constructor(client: Client, data: object);
+        private constructor(client: Client, data: object);
         private client: Client;
         readonly id: string;
         readonly name: string;
@@ -247,8 +248,41 @@ declare module 'devland.js' {
         embeds: Embed[];
         components: ActionRow[];
     }
+    declare type fetchMessagesOptions = {
+        limit?: number,
+        around?: string,
+        before?: string,
+        after?: string
+    }
+    export enum videoQualityMode {
+        AUTO = 1,
+        FULL = 2
+    }
+    declare type PermissionOverwritesResolvable = {
+        id: string|User|Member|Role,
+        allow?: PermissionString[] | PermissionResolvable,
+        deny?: PermissionString[] | PermissionResolvable,
+    }
+    declare type channelEditOptions = {
+        name?: string,
+        position?: number,
+        topic?: string,
+        nsfw?: boolean,
+        rate_limit_per_user?: number,
+        bitrate?: number,
+        user_limit?: number,
+        parent_id?: CategoryChannel|string,
+        permission_overwrites?: PermissionOverwritesResolvable[],
+        rtc_region?: string,
+        video_quality_mode?: videoQualityMode,
+        available_tags?: ForumTag[]|object,
+        default_reaction_emoji?: APIEmoji|string,
+        default_thread_rate_limit_per_user?: number,
+        default_sort_order?: number,
+        default_forum_layout?: number,
+    }
     export class TextChannel {
-        constructor(client: Client, guild: Guild, data: object)
+        private constructor(client: Client, guild: Guild, data: object)
         private client: Client;
         readonly guild: Guild;
         readonly id: string;
@@ -268,10 +302,12 @@ declare module 'devland.js' {
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
         send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
+        fetchMessages(options: fetchMessagesOptions | string): Promise<Store<String, Message>>;
+        edit(options: channelEditOptions): Promise<TextChannel>;
     }
-
+    declare type webhookId = string;
     export class Message {
-        constructor(client: Client, guild: Guild, channel: TextChannel, data: object)
+        private constructor(client: Client, guild: Guild, channel: TextChannel, data: object)
         private client: Client;
         readonly guild: Guild;
         readonly channel: TextChannel;
@@ -294,6 +330,9 @@ declare module 'devland.js' {
         readonly messageReplyied: Message | null;
         readonly deleted: boolean;
         readonly data_is_available: boolean;
+        readonly author?: User;
+        readonly authorId: string|webhookId; 
+        readonly webhookId?: webhookId;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
         edit(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
@@ -361,7 +400,7 @@ declare module 'devland.js' {
     }
 
     export class User {
-        constructor(client: Client, data: object);
+        private constructor(client: Client, data: object);
         private client: Client;
         readonly username: string;
         readonly publicFlags: number;
@@ -685,7 +724,7 @@ declare module 'devland.js' {
         type?: commandType,
         description?: string,
         options?: commandOptions[],
-        default_member_permissions?: PermissionResolvable,
+        default_member_permissions?: PermissionString[] | PermissionResolvable,
         name_localizations?: localizationsOptions,
         description_localizations?: localizationsOptions,
         nsfw?: boolean,
@@ -717,9 +756,23 @@ declare module 'devland.js' {
         type?: commandType;
         description?: string;
         options?: commandOptions[];
-        default_member_permissions?: PermissionResolvable;
+        default_member_permissions?: PermissionString[] | PermissionResolvable;
         name_localizations?: localizationsOptions;
         description_localizations?: localizationOptions;
         nsfw?: boolean;
+    }
+    declare type tagOptions = {
+        id?: string,
+        name: string,
+        moderated?: boolean,
+        emoji?: APIEmoji|string,
+    }
+    export class ForumTag {
+        constructor(tag_options: tagOptions);
+        id?: string;
+        name: string;
+        moderated?: boolean;
+        emoji?: APIEmoji|string;
+        private pack();
     }
 }

@@ -10,7 +10,13 @@ module.exports = class Attachment {
      * @param {*} data 
      */
     constructor(client, message, data) {
-        this.client = client
+        /**
+     * The client that instantiated this
+     * @name Base#client
+     * @type {Client}
+     * @readonly
+     */
+    Object.defineProperty(this, 'client', { value: client })
         this.message = message
         this.id = data.id
         this.filename = data.filename

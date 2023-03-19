@@ -22,6 +22,8 @@ module.exports = class SlashCommand {
         if (this.name.length > 32) throw new TypeError("Command name have a max length of 32")
         if (this.name_localizations && typeof this.name_localizations === "object") if (Object.keys(this.name_localizations).find(key => this.name_localizations[key].length > 32)) throw new TypeError("Name localizations max length of 32")
         else this.name_localizations = undefined
+        if (this.name.includes(" ") && this.type === 1) throw new TypeError("Slash command name cannot contains space")
+        if (this.name_localizations && Object.keys(this.name_localizations).find(k => this.name_localizations[k].includes(" "))) throw new TypeError("Slash command name localizations cannot contains space")
         if (this.description && typeof this.description === "string" && this.description.length > 100) throw new TypeError("Command description have a max length of 100")
         else if (this.type !== 1 && this.description) throw new TypeError("Description is available for only CHAT_INPUT command")
         if (typeof this.description !== "string") this.description = undefined
@@ -35,9 +37,9 @@ module.exports = class SlashCommand {
         if (this.default_member_permissions && this.default_member_permissions instanceof Permissions) {
             this.default_member_permissions = this.default_member_permissions.bitfield
         } else if (this.default_member_permissions && typeof this.default_member_permissions === "number") {
-            this.default_member_permissions = new Permissions(this.default_member_permissions)
+            this.default_member_permissions = new Permissions(this.default_member_permissions).bitfield
         } else if (this.default_member_permissions && typeof this.default_member_permissions === "object") {
-            this.default_member_permissions == new Permissions(...this.default_member_permissions)
+            this.default_member_permissions == new Permissions(...this.default_member_permissions).bitfield
         } else this.default_member_permissions = undefined
         if (typeof this.nsfw !== "undefined" && typeof this.nsfw !== "boolean") throw new TypeError("Command nsfw value must be a boolean")
         return {
