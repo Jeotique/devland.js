@@ -300,4 +300,105 @@ module.exports = class Message {
             })
         })
     }
+
+    async react(emoji) {
+        return new Promise(async (resolve, reject) => {
+            let testemoji = null
+            if (emoji && typeof emoji === "string") testemoji = Utils.parseEmoji(emoji)
+            if (emoji && typeof emoji === "string" && (!testemoji || typeof testemoji !== 'object')) return reject(new TypeError("Invalid emoji"))
+            if (typeof emoji === "object" && emoji.name) testemoji = emoji
+            if (!testemoji) return reject(new TypeError("Invalid emoji"))
+            let encoded = encodeURIComponent(testemoji.id ? `${testemoji.name}:${testemoji.id}` : testemoji.name)
+            if (!encoded) return reject(new TypeError("An error occured during the encode process"))
+            this.client.rest.put(this.client._ENDPOINTS.REACTIONS(this.channelId, this.id, encoded, "@me")).then(() => {
+                return resolve()
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async unreact(emoji, user) {
+        return new Promise(async (resolve, reject) => {
+            let testemoji = null
+            if (emoji && typeof emoji === "string") testemoji = Utils.parseEmoji(emoji)
+            if (emoji && typeof emoji === "string" && (!testemoji || typeof testemoji !== 'object')) return reject(new TypeError("Invalid emoji"))
+            if (typeof emoji === "object" && emoji.name) testemoji = emoji
+            if (!testemoji) return reject(new TypeError("Invalid emoji"))
+            let encoded = encodeURIComponent(testemoji.id ? `${testemoji.name}:${testemoji.id}` : testemoji.name)
+            if (!encoded) return reject(new TypeError("An error occured during the encode process"))
+            if (typeof user !== "undefined") {
+                if (user instanceof User) user = user.id
+                if (typeof user !== "string") return reject(new TypeError("The provided user must be a string or a User instance"))
+                this.client.rest.delete(this.client._ENDPOINTS.REACTIONS(this.channelId, this.id, encoded, user)).then(() => {
+                    return resolve()
+                }).catch(e => {
+                    return reject(new Error(e))
+                })
+            } else {
+                this.client.rest.delete(this.client._ENDPOINTS.REACTIONS(this.channelId, this.id, encoded, "@me")).then(() => {
+                    return resolve()
+                }).catch(e => {
+                    return reject(new Error(e))
+                })
+            }
+        })
+    }
+
+    async getUsersFromReaction(emoji, options = {}) {
+        return new Promise(async (resolve, reject) => {
+            let testemoji = null
+            if (emoji && typeof emoji === "string") testemoji = Utils.parseEmoji(emoji)
+            if (emoji && typeof emoji === "string" && (!testemoji || typeof testemoji !== 'object')) return reject(new TypeError("Invalid emoji"))
+            if (typeof emoji === "object" && emoji.name) testemoji = emoji
+            if (!testemoji) return reject(new TypeError("Invalid emoji"))
+            let encoded = encodeURIComponent(testemoji.id ? `${testemoji.name}:${testemoji.id}` : testemoji.name)
+            if (!encoded) return reject(new TypeError("An error occured during the encode process"))
+            if (typeof options !== "undefined") {
+                if (typeof options !== "object") return reject(new TypeError("Get reactions options must be an object"))
+                if (typeof options.limit !== "undefined") {
+                    if (typeof options.limit !== "number") return reject(new TypeError("Get reactions options limit must be a number"))
+                    if (options.limit < 1 || options.limit > 100) return reject(new TypeError("Get reactions options limit must be between 1 and 100 (included)"))
+                }
+                if (typeof options.after !== "undefined") {
+                    if (options.after instanceof User) options.after = options.after.id
+                    if (typeof options.after !== "string") return reject(new TypeError("Get reactions options after must be a string or a User instance"))
+                }
+            } else options = { limit: 100 }
+            this.client.rest.get(this.client._ENDPOINTS.REACTIONS(this.channelId, this.id, encoded) + `?limit=${options.limit}${options.after ? `&after=${options.after}` : ``}`).then((res) => {
+                let collect = new Store()
+                res.map(a => {
+                    collect.set(a.id, new User(this.client, a))
+                })
+                return resolve(collect)
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async deleteAllReactions(emoji) {
+        return new Promise(async (resolve, reject) => {
+            if (typeof emoji !== "undefined") {
+                let testemoji = null
+                if (emoji && typeof emoji === "string") testemoji = Utils.parseEmoji(emoji)
+                if (emoji && typeof emoji === "string" && (!testemoji || typeof testemoji !== 'object')) return reject(new TypeError("Invalid emoji"))
+                if (typeof emoji === "object" && emoji.name) testemoji = emoji
+                if (!testemoji) return reject(new TypeError("Invalid emoji"))
+                let encoded = encodeURIComponent(testemoji.id ? `${testemoji.name}:${testemoji.id}` : testemoji.name)
+                if (!encoded) return reject(new TypeError("An error occured during the encode process"))
+                this.client.rest.delete(this.client._ENDPOINTS.REACTIONS(this.channelId, this.id, encoded)).then(() => {
+                    return resolve()
+                }).catch(e => {
+                    return reject(new Error(e))
+                })
+            } else {
+                this.client.rest.delete(this.client._ENDPOINTS.REACTIONS(this.channelId, this.id)).then(() => {
+                    return resolve()
+                }).catch(e => {
+                    return reject(new Error(e))
+                })
+            }
+        })
+    }
 }

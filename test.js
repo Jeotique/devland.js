@@ -31,14 +31,14 @@ client.on('message', async message => {
                 msg.edit({ content: "coucoucou", components: [row, row1] })//.catch(e=>{})
             } catch (err) { console.log(err) }
         }, 2000)
-    } else if(message.content === "+rename"){
-        message.channel.edit({name: "nom modifié 2"})//.catch(e=>{})
-    } else if(message.content === "+pin"){
+    } else if (message.content === "+rename") {
+        message.channel.edit({ name: "nom modifié 2" })//.catch(e=>{})
+    } else if (message.content === "+pin") {
         message.pinMessage("test fonction pin")
-        setTimeout(()=>{
+        setTimeout(() => {
             message.unpinMessage("test fonction unpin")
         }, 2000)
-    } else if(message.content === "+editperm"){
+    } else if (message.content === "+editperm") {
         message.channel.edit({
             permission_overwrites: [{
                 id: "1003648510643667034",
@@ -46,16 +46,29 @@ client.on('message', async message => {
                 allow: ["VIEW_CHANNEL"]
             }]
         })
-    } else if(message.content === "+clone"){
+    } else if (message.content === "+clone") {
         message.channel.clone()
-    } else if(message.content === "+move"){
+    } else if (message.content === "+move") {
         message.channel.setPosition(2)
-    } else if(message.content === "+clear"){
+    } else if (message.content === "+clear") {
         message.channel.bulkDelete(5)
-    } else if(message.content === "+pinned"){
+    } else if (message.content === "+pinned") {
         message.channel.getPinnedMessages().then(a => console.log(a))
-    } else if(message.content === "+cross"){
+    } else if (message.content === "+cross") {
         message.crosspost()
+    } else if (message.content === "+react") {
+        await message.react("<a:778729493279014913:1003648670505381950>")
+        setTimeout(() => {
+            message.unreact("<a:778729493279014913:1003648670505381950>")
+        }, 2000)
+    } else if (message.content === "+unreact") {
+        setTimeout(() => {
+            message.unreact("<a:778729493279014913:1003648670505381950>", "484412542530224128")
+        }, 6000)
+    } else if (message.content === "+reactlist"){
+        setTimeout(() => {
+            message.getUsersFromReaction("<a:778729493279014913:1003648670505381950>").then(a => console.log(a))
+        }, 6000)
     }
 })
 

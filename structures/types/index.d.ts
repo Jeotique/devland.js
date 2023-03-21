@@ -317,6 +317,10 @@ declare module 'devland.js' {
         getPinnedMessages(): Promise<Store<String, Message>>;
     }
     declare type webhookId = string;
+    declare type getUsersFromReactionOptions = {
+        limit: number,
+        after?: User|string,
+    }
     export class Message {
         private constructor(client: Client, guild: Guild, channel: TextChannel, data: object)
         private client: Client;
@@ -352,6 +356,10 @@ declare module 'devland.js' {
         crosspost(): Promise<Message>;
         pinMessage(reason?: string): Promise<void>;
         unpinMessage(reason?: string): Promise<void>;
+        react(emoji: APIEmoji|string): Promise<void>;
+        unreact(emoji: APIEmoji|string, user?: User|string): Promise<void>;
+        getUsersFromReaction(emoji: APIEmoji|string, options?: getUsersFromReactionOptions): Promise<Store<String, User>>;
+        deleteAllReactions(emoji?: APIEmoji|string): Promise<void>;
     }
 
     export class Attachment {

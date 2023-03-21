@@ -80,7 +80,7 @@ module.exports = class Client extends EventEmitter {
             MEMBERS: (serverID, userID) => { return `${this._ENDPOINTS.SERVERS(serverID)}/members${userID ? '/' + userID : ''}`; },
             MEMBER_ROLES: (serverID, userID, roleID) => { return `${this._ENDPOINTS.MEMBERS(serverID, userID)}/roles${roleID ? '/' + roleID : ''}`; },
             USER_DM: (userId) => { return ME + '/' + userId },
-            USER: (userID) => { return DiscordAPI + /users/ + userID; },
+            USER: (userID) => { return DiscordAPI + '/users/' + userID; },
             ROLES: (serverID, roleID) => { return `${this._ENDPOINTS.SERVERS(serverID)}/roles${roleID ? '/' + roleID : ''}`; },
             BANS: (serverID, userID) => { return `${this._ENDPOINTS.SERVERS(serverID)}/bans${userID ? '/' + userID : ''}`; },
             MESSAGES: (channelID, messageID) => { return `${this._ENDPOINTS.CHANNEL(channelID)}/messages${messageID ? '/' + messageID : ''}`; },
@@ -96,7 +96,8 @@ module.exports = class Client extends EventEmitter {
             BULD_DELETE: (channelID) => { return `${this._ENDPOINTS.CHANNEL(channelID)}/messages/bulk-delete`; },
             TYPING: (channelID) => { return `${this._ENDPOINTS.CHANNEL(channelID)}/typing`; },
             COMMANDS: (guildId, commandId) => { return `${this._ENDPOINTS.API}/applications/${this.user.id}/guilds/${guildId}/commands${commandId ? `/${commandId}` : ``}` },
-            SERVER_CHANNEL: (serverID, channelID) => { return `${DiscordAPI}/guilds/${serverID}/channels${channelID?`/${channelID}`:``}`; },
+            SERVER_CHANNEL: (serverID, channelID) => { return `${DiscordAPI}/guilds/${serverID}/channels${channelID ? `/${channelID}` : ``}`; },
+            REACTIONS: (channelID, messageID, emoji, user) => { return `${this._ENDPOINTS.CHANNEL(channelID)}/messages/${messageID}/reactions${emoji ? `/${emoji}${user ? `/${user}` : ``}` : ``}`; },
         }
 
         this.token = options?.token
