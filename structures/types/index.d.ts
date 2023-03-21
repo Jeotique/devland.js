@@ -258,8 +258,13 @@ declare module 'devland.js' {
         AUTO = 1,
         FULL = 2
     }
+    export enum PermissionIdType {
+        ROLE = 0,
+        USER = 1
+    }
     declare type PermissionOverwritesResolvable = {
         id: string|User|Member|Role,
+        type?: PermissionIdType,
         allow?: PermissionString[] | PermissionResolvable,
         deny?: PermissionString[] | PermissionResolvable,
     }
@@ -299,11 +304,17 @@ declare module 'devland.js' {
         readonly createdTimestamp: number;
         readonly createdAt: Date;
         readonly data_is_available: boolean;
+        readonly permission_overwrites: PermissionOverwritesResolvable[];
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
         send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
-        fetchMessages(options: fetchMessagesOptions | string): Promise<Store<String, Message>>;
+        fetchMessages(options?: fetchMessagesOptions | string): Promise<Store<String, Message>>;
         edit(options: channelEditOptions): Promise<TextChannel>;
+        delete(reason?: string, time?: number): Promise<TextChannel>;
+        clone(reason?: string, time?: number): Promise<TextChannel>;
+        setPosition(position: number): Promise<TextChannel>;
+        bulkDelete(data: number|Message[]|string[]): Promise<void>;
+        getPinnedMessages(): Promise<Store<String, Message>>;
     }
     declare type webhookId = string;
     export class Message {
@@ -338,6 +349,9 @@ declare module 'devland.js' {
         edit(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
         delete(delay: number): Promise<Message>;
         reply(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
+        crosspost(): Promise<Message>;
+        pinMessage(reason?: string): Promise<void>;
+        unpinMessage(reason?: string): Promise<void>;
     }
 
     export class Attachment {

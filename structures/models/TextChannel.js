@@ -37,6 +37,15 @@ module.exports = class TextChannel {
         this.nsfw = data.nsfw
         this.createdTimestamp = Utils.getTimestampFrom(this.id)
         this.createdAt = new Date(this.createdTimestamp)
+        this.permission_overwrites = []
+        data.permission_overwrites.map(perm => {
+            this.permission_overwrites.push({
+                id: perm.id,
+                type: perm.type,
+                allow: perm.allow && perm.allow.length > 0 ? new Permissions(perm.allow).toArray() : [],
+                deny: perm.deny && perm.deny.length > 0 ? new Permissions(perm.deny).toArray() : []
+            })
+        })
     }
     /**
      * @typedef {object} MessageOptions
@@ -231,18 +240,17 @@ module.exports = class TextChannel {
             if (typeof options.permission_overwrites !== "undefined") {
                 if (options.permission_overwrites !== null) {
                     if (typeof options.permission_overwrites !== "object") return reject(new TypeError("The channel permissions overwrites must an object"))
+                    let res = []
                     options.permission_overwrites.map(async perm => {
                         if (!perm.id) return reject(new TypeError("Id of the role/user is missing in the permissions array"))
-                        let isMember;
-                        isMember = await this.client.rest.get(this.client._ENDPOINTS.MEMBERS(this.guildId, perm.id)).catch(e => { })
-                        if (isMember) perm.type = 1
-                        let isRole;
-                        if (!isMember) isRole = await this.client.rest.get(this.client._ENDPOINTS.ROLES(this.guildId, perm.id)).catch(e => { })
-                        if (isRole) perm.type = 0
+                        if (typeof perm.type !== "number") return reject(new TypeError("Type of the permission (0 = role, 1 = user) must be provided"))
+                        if (perm.type < 0 || perm.type > 1) return reject(new TypeError("The type is invalid (0 = role, 1 = user)"))
                         if (!perm.allow && !perm.deny) return reject(new TypeError("You need to provide 'allow' or 'deny' permissions"))
-                        if (perm.allow) perm.allow = new Permissions(perm.allow).bitfield
-                        if (perm.deny) perm.deny = new Permissions(perm.deny).bitfield
+                        if (perm.allow) perm.allow = new Permissions(perm.allow).bitfield.toString()
+                        if (perm.deny) perm.deny = new Permissions(perm.deny).bitfield.toString()
+                        res.push(perm)
                     })
+                    options.permission_overwrites = res
                 }
             }
             if (typeof options.rtc_region !== "undefined") {
@@ -291,10 +299,141 @@ module.exports = class TextChannel {
                 if (typeof options.default_forum_layout !== "number") return reject(new TypeError("Default forum layout must be set to null or a number"))
             }
             this.client.rest.patch(this.client._ENDPOINTS.CHANNEL(this.id), options).then(res => {
-                let newChannel = new TextChannel(this.client, this.client.guilds.get(newChannel.guild_id) || this.guild, newChannel)
+                let newChannel = new TextChannel(this.client, this.client.guilds.get(res.guild_id) || this.guild, res)
                 Object.keys(newChannel).map(k => this[k] = newChannel[k])
                 return resolve(newChannel)
             }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async delete(reason, time) {
+        return new Promise(async (resolve, reject) => {
+            if (reason === null) reason = undefined
+            if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            if (time === null) time = 0
+            if (!time) time = 0
+            if (typeof time !== "undefined" && typeof time !== "number") return reject(new TypeError("The time before deleting the channel must be a number (ms) or a undefined value"))
+            setTimeout(() => {
+                this.client.rest.delete(this.client._ENDPOINTS.CHANNEL(this.id), {
+                    "X-Audit-Log-Reason": reason
+                }).then(newChannel => {
+                    let channel = new TextChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, newChannel)
+                    Object.keys(channel).map(k => this[k] = channel[k])
+                    return resolve(channel)
+                }).catch(e => {
+                    return reject(new Error(e))
+                })
+            }, time)
+        })
+    }
+
+    async clone(reason, time) {
+        return new Promise(async (resolve, reject) => {
+            if (reason === null) reason = undefined
+            if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            if (time === null) time = 0
+            if (!time) time = 0
+            if (typeof time !== "undefined" && typeof time !== "number") return reject(new TypeError("The time before deleting the channel must be a number (ms) or a undefined value"))
+            setTimeout(() => {
+                let data = {
+                    name: this.name,
+                    type: this.type,
+                    topic: this.topic,
+                    bitrate: this.bitrate,
+                    user_limit: this.userLimit,
+                    rate_limit_per_user: this.rateLimitPerUser,
+                    position: this.position,
+                    permission_overwrites: this.permission_overwrites.map(perm => {
+                        return {
+                            id: perm.id,
+                            type: perm.type,
+                            allow: perm.allow.length < 1 ? undefined : new Permissions(perm.allow).bitfield.toString(),
+                            deny: perm.deny.length < 1 ? undefined : new Permissions(perm.deny).bitfield.toString()
+                        }
+                    }),
+                    parent_id: this.parentId,
+                    nsfw: this.nsfw,
+                    rtc_region: this.rtcRegion,
+                    video_quality_mode: this.videoQualityMode,
+                    default_auto_archive_duration: this.defaultAutoArchiveDuration,
+                    default_reaction_emoji: this.defaultReactionEmoji,
+                    available_tags: this.availableTags,
+                    default_sort_order: this.defaultSortOrder,
+                }
+                if (reason) data['X-Audit-Log-Reason'] = reason
+                this.client.rest.post(this.client._ENDPOINTS.SERVER_CHANNEL(this.guildId), data).then(newChannel => {
+                    let channel = new TextChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, newChannel)
+                    return resolve(channel)
+                }).catch(e => {
+                    return reject(new Error(e))
+                })
+            }, time)
+        })
+    }
+
+    async setPosition(position) {
+        return new Promise(async (resolve, reject) => {
+            if (typeof position === "undefined") return reject(new TypeError("The channel position must be a number"))
+            if (typeof position !== "number") return reject(new TypeError("The channel position must be a number"))
+            if (position < 0) return reject(new TypeError("The channel position must be more than 0"))
+            this.client.rest.patch(this.client._ENDPOINTS.CHANNEL(this.id), {position: position}).then(res => {
+                let newChannel = new TextChannel(this.client, this.client.guilds.get(res.guild_id) || this.guild, res)
+                Object.keys(newChannel).map(k => this[k] = newChannel[k])
+                return resolve(newChannel)
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async bulkDelete(data) {
+        return new Promise(async (resolve, reject) => {
+            if (typeof data === "undefined") return reject(new TypeError("You must provide how many message you want to delete"))
+            if (typeof data === "object") {
+                let res = []
+                data.map(d => {
+                    if (d instanceof Message) {
+                        res.push(d.id)
+                    } else if (typeof d === "string") res.push(d)
+                    else return reject(new TypeError("Unknow message"))
+                })
+                this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id) + "/bulk-delete", {
+                    messages: res
+                }).then(() => {
+                    return resolve()
+                }).catch(e => {
+                    return reject(new Error(e))
+                })
+            } else if (typeof data === "number") {
+                let res = []
+                if (data < 2) return reject(new TypeError("The message count must be more than 1"))
+                if (data > 100) return reject(new TypeError("The message count must be less than 100"))
+                let all = await this.fetchMessages({ limit: data }).catch(e => {
+                    return reject(new Error(e))
+                })
+                all.map(message => res.push(message.id))
+                this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id) + "/bulk-delete", {
+                    messages: res
+                }).then(() => {
+                    return resolve()
+                }).catch(e => {
+                    return reject(new Error(e))
+                })
+            }
+        })
+    }
+
+    async getPinnedMessages(){
+        return new Promise(async(resolve, reject) => {
+            this.client.rest.get(this.client._ENDPOINTS.CHANNEL(this.id)+'/pins').then(messages => {
+                let collect = new Store()
+                messages.map(msg => {
+                    collect.set(msg.id, new Message(this.client, this.client.guilds.get(this.guildId)||this.guild, this.client.textChannels.get(this.id)||this,msg))
+                })
+                return resolve(collect)
+            }).catch(e=>{
                 return reject(new Error(e))
             })
         })

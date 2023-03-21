@@ -37,9 +37,9 @@ module.exports = class SlashCommand {
         if (this.default_member_permissions && this.default_member_permissions instanceof Permissions) {
             this.default_member_permissions = this.default_member_permissions.bitfield
         } else if (this.default_member_permissions && typeof this.default_member_permissions === "number") {
-            this.default_member_permissions = new Permissions(this.default_member_permissions).bitfield
+            this.default_member_permissions = new Permissions(this.default_member_permissions).bitfield.toString()
         } else if (this.default_member_permissions && typeof this.default_member_permissions === "object") {
-            this.default_member_permissions == new Permissions(...this.default_member_permissions).bitfield
+            this.default_member_permissions == new Permissions(...this.default_member_permissions).bitfield.toString()
         } else this.default_member_permissions = undefined
         if (typeof this.nsfw !== "undefined" && typeof this.nsfw !== "boolean") throw new TypeError("Command nsfw value must be a boolean")
         return {

@@ -27,7 +27,7 @@ module.exports = class Message {
      * @type {Client}
      * @readonly
      */
-    Object.defineProperty(this, 'client', { value: client })
+        Object.defineProperty(this, 'client', { value: client })
         this.guild = guild
         this.channel = channel
 
@@ -64,7 +64,7 @@ module.exports = class Message {
         data.embeds.map(embed => this.embeds.push(new Embed(embed)))
         data.components.map(component => {
             this.components.push(new ActionRow(...component.components.map(op => {
-                switch(op.type){
+                switch (op.type) {
                     case 2: op = new Button(op); break;
                     case 3: op = new StringSelect(op); break;
                     case 6: op = new RoleSelect(op); break;
@@ -103,28 +103,28 @@ module.exports = class Message {
             if (typeof options === 'string') {
                 data['content'] = options
                 this.client.rest.patch(this.client._ENDPOINTS.MESSAGES(this.channelId, this.id), data).then(messageData => {
-                    return resolve(new Message(this.client, this.guild, this, messageData))
+                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.client.textChannels.get(this.channelId) || this.channel, messageData))
                 }).catch(e => {
                     return reject(new Error(e))
                 })
             } else if (options instanceof Embed) {
                 data['embeds'].push(options.pack())
                 this.client.rest.patch(this.client._ENDPOINTS.MESSAGES(this.channelId, this.id), data).then(messageData => {
-                    return resolve(new Message(this.client, this.guild, this, messageData))
+                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.client.textChannels.get(this.channelId) || this.channel, messageData))
                 }).catch(e => {
                     return reject(new Error(e))
                 })
-            } else if(options instanceof ActionRow) {
+            } else if (options instanceof ActionRow) {
                 data['components'].push(options.pack())
                 let toTestCustomId = []
                 let alrSeen = {}
                 data['components']?.map(ar => ar?.components.map(comp => toTestCustomId.push(comp)))
-                if(toTestCustomId.length > 0) toTestCustomId.map(test => {
-                    if(alrSeen[test.custom_id]) return reject(new TypeError("Duplicated custom Id"))
+                if (toTestCustomId.length > 0) toTestCustomId.map(test => {
+                    if (alrSeen[test.custom_id]) return reject(new TypeError("Duplicated custom Id"))
                     else alrSeen[test.custom_id] = true
                 })
                 this.client.rest.patch(this.client._ENDPOINTS.MESSAGES(this.channelId, this.id), data).then(messageData => {
-                    return resolve(new Message(this.client, this.guild, this, messageData))
+                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.client.textChannels.get(this.channelId) || this.channel, messageData))
                 }).catch(e => {
                     return reject(new Error(e))
                 })
@@ -136,20 +136,20 @@ module.exports = class Message {
                 data['nonce'] = options['nonce']
                 data['allowed_mentions'] = options['allowedMentions']
                 data['components'] = []
-                if(options['components'] && options['components']?.length > 0) options['components']?.map(comp => {
-                    if(comp instanceof ActionRow) data['components'].push(comp.pack())
+                if (options['components'] && options['components']?.length > 0) options['components']?.map(comp => {
+                    if (comp instanceof ActionRow) data['components'].push(comp.pack())
                     else return reject(new TypeError("Invalid component, must be a ActionRow instance"))
                 })
                 else data['components'] = this.components
                 let toTestCustomId = []
                 let alrSeen = {}
                 data['components']?.map(ar => ar?.components.map(comp => toTestCustomId.push(comp)))
-                if(toTestCustomId.length > 0) toTestCustomId.map(test => {
-                    if(alrSeen[test.custom_id]) return reject(new TypeError("Duplicated custom Id"))
+                if (toTestCustomId.length > 0) toTestCustomId.map(test => {
+                    if (alrSeen[test.custom_id]) return reject(new TypeError("Duplicated custom Id"))
                     else alrSeen[test.custom_id] = true
                 })
                 this.client.rest.patch(this.client._ENDPOINTS.MESSAGES(this.channelId, this.id), data).then(messageData => {
-                    return resolve(new Message(this.client, this.guild, this, messageData))
+                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.client.textChannels.get(this.channelId) || this.channel, messageData))
                 }).catch(e => {
                     return reject(new Error(e))
                 })
@@ -207,28 +207,28 @@ module.exports = class Message {
             if (typeof options === 'string') {
                 data['content'] = options
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.channelId), data).then(messageData => {
-                    return resolve(new Message(this.client, this.guild, this, messageData))
+                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.client.textChannels.get(this.channelId) || this.channel, messageData))
                 }).catch(e => {
                     return reject(new Error(e))
                 })
             } else if (options instanceof Embed) {
                 data['embeds'].push(options.pack())
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.channelId), data).then(messageData => {
-                    return resolve(new Message(this.client, this.guild, this, messageData))
+                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.client.textChannels.get(this.channelId) || this.channel, messageData))
                 }).catch(e => {
                     return reject(new Error(e))
                 })
-            } else if(options instanceof ActionRow) {
+            } else if (options instanceof ActionRow) {
                 data['components'].push(options.pack())
                 let toTestCustomId = []
                 let alrSeen = {}
                 data['components']?.map(ar => ar?.components.map(comp => toTestCustomId.push(comp)))
-                if(toTestCustomId.length > 0) toTestCustomId.map(test => {
-                    if(alrSeen[test.custom_id]) return reject(new TypeError("Duplicated custom Id"))
+                if (toTestCustomId.length > 0) toTestCustomId.map(test => {
+                    if (alrSeen[test.custom_id]) return reject(new TypeError("Duplicated custom Id"))
                     else alrSeen[test.custom_id] = true
                 })
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.channelId), data).then(messageData => {
-                    return resolve(new Message(this.client, this.guild, this, messageData))
+                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.client.textChannels.get(this.channelId) || this.channel, messageData))
                 }).catch(e => {
                     return reject(new Error(e))
                 })
@@ -241,23 +241,63 @@ module.exports = class Message {
                 data['allowed_mentions'] = options['allowedMentions']
                 data['components'] = []
                 options['components']?.map(comp => {
-                    if(comp instanceof ActionRow) data['components'].push(comp.pack())
+                    if (comp instanceof ActionRow) data['components'].push(comp.pack())
                     else return reject(new TypeError("Invalid component, must be a ActionRow instance"))
                 })
                 let toTestCustomId = []
                 let alrSeen = {}
                 data['components']?.map(ar => ar?.components.map(comp => toTestCustomId.push(comp)))
-                if(toTestCustomId.length > 0) toTestCustomId.map(test => {
-                    if(alrSeen[test.custom_id]) return reject(new TypeError("Duplicated custom Id"))
+                if (toTestCustomId.length > 0) toTestCustomId.map(test => {
+                    if (alrSeen[test.custom_id]) return reject(new TypeError("Duplicated custom Id"))
                     else alrSeen[test.custom_id] = true
                 })
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.channelId), data).then(messageData => {
-                    return resolve(new Message(this.client, this.guild, this, messageData))
+                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.client.textChannels.get(this.channelId) || this.channel, messageData))
                 }).catch(e => {
                     return reject(new Error(e))
                 })
             } else return reject(new TypeError("Send without any options is not authorized"))
         })
     }
-    
+
+    async crosspost() {
+        return new Promise(async (resolve, reject) => {
+            if (this.channel.type !== 5) return reject(new TypeError("The channel must be an announcement channel"))
+            this.client.rest.post(`${this.client._ENDPOINTS.MESSAGES(this.channelId, this.id)}/crosspost`).then(message_data => {
+                let message = new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.client.textChannels.get(this.channelId) || this.channel, message_data)
+                Object.keys(message).map(k => this[k] = message[k])
+                return resolve(message)
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async pinMessage(reason) {
+        return new Promise(async (resolve, reject) => {
+            if (reason === null) reason = undefined
+            if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            this.client.rest.put(this.client._ENDPOINTS.CHANNEL(this.channelId) + '/pins/' + this.id, {
+                "X-Audit-Log-Reason": reason
+            }).then(() => {
+                return resolve()
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async unpinMessage(reason) {
+        return new Promise(async (resolve, reject) => {
+            if (reason === null) reason = undefined
+            if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            this.client.rest.delete(this.client._ENDPOINTS.CHANNEL(this.channelId) + '/pins/' + this.id, {
+                "X-Audit-Log-Reason": reason
+            }).then(() => {
+                return resolve()
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
 }
