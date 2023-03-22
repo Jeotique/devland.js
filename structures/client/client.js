@@ -98,6 +98,7 @@ module.exports = class Client extends EventEmitter {
             COMMANDS: (guildId, commandId) => { return `${this._ENDPOINTS.API}/applications/${this.user.id}/guilds/${guildId}/commands${commandId ? `/${commandId}` : ``}` },
             SERVER_CHANNEL: (serverID, channelID) => { return `${DiscordAPI}/guilds/${serverID}/channels${channelID ? `/${channelID}` : ``}`; },
             REACTIONS: (channelID, messageID, emoji, user) => { return `${this._ENDPOINTS.CHANNEL(channelID)}/messages/${messageID}/reactions${emoji ? `/${emoji}${user ? `/${user}` : ``}` : ``}`; },
+            EMOJI: (guildID, emoji) => { return `${this._ENDPOINTS.SERVERS(guildID)}/emojis${emoji ? `/${emoji}` : ``}` },
         }
 
         this.token = options?.token

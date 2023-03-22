@@ -1,4 +1,5 @@
 const {parseEmoji} = require('../util/index')
+const Emoji = require('./Emoji')
 module.exports = class ForumTag {
     constructor(data = {}){
         this.id = data.id
@@ -13,6 +14,7 @@ module.exports = class ForumTag {
         if(typeof this.moderated === "undefined") this.moderated = false
         if(typeof this.moderated !== "boolean") throw new TypeError("The tag moderator value must be a boolean")
         let testemoji;
+        if(this.emoji instanceof Emoji) this.emoji = this.emoji.pack()
         if(this.emoji && typeof this.emoji === "string") testemoji = parseEmoji(this.emoji)
         if(this.emoji && typeof this.emoji === "string" && (!testemoji || typeof testemoji !== 'object')) throw new TypeError("Invalid emoji")
         if(typeof this.emoji === "object" && this.emoji.name) testemoji = this.emoji

@@ -3,6 +3,7 @@ const Client = require('../client/client')
 const TextChannel = require('./TextChannel')
 const GuildCommand = require('./GuildCommand')
 const { Store } = require('../util/Store/Store')
+const Emoji = require('./Emoji')
 
 module.exports = class Guild {
     /**
@@ -189,6 +190,47 @@ module.exports = class Guild {
                     return reject(new Error(e))
                 })
             } else return reject(new TypeError("Invalid command provided"))
+        })
+    }
+
+    async fetchEmojis(emoji_id){
+        return new Promise(async(resolve, reject) => {
+            if(emoji_id instanceof Emoji) emoji_id = emoji_id.id
+            if(typeof emoji_id !== "undefined" && typeof emoji_id !== "string") return reject(new TypeError("Invalid emoji Id"))
+            this.client.rest.get(this.client._ENDPOINTS.EMOJI(this.id, emoji_id)).then(res => {
+                if(emoji_id){
+                    return resolve(new Emoji(this.client, this.client.guilds.get(this.id)||this, res))
+                } else {
+                    let collect = new Store()
+                    res.map(a => collect.set(a.id, new Emoji(this.client, this.client.guilds.get(this.id)||this, a)))
+                    return resolve(collect)
+                }
+            }).catch(e=>{
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async createEmoji(options){
+        return new Promise(async(resolve, reject)=>{
+            if(typeof options === "undefined") return reject(new TypeError("No data provided"))
+            if(typeof options !== "object") return reject(new TypeError("Create emoji options must be a object"))
+            if(typeof options.name !== "string") return reject(new TypeError("Create emoji options name must be a string"))
+            if(typeof options.roles === "undefined") options.roles = []
+            if(typeof options.roles !== "object") return reject(new TypeError("Create emoji options roles must be a array"))
+            if(options.roles.find(value => typeof value !== "string")) return reject(new TypeError("Create emoji options roles must contains only roles Id"))
+            if(typeof options.image === "undefined") return reject(new TypeError("Create emoji options image cannot be undefined"))
+            if(typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("Create emoji options reason must be string or a undefined value"))
+            this.client.rest.post(this.client._ENDPOINTS.EMOJI(this.id), {
+                name: options.name,
+                image: options.image,
+                roles: options.roles,
+                "X-Audit-Log-Reason": options.reason,
+            }).then(res => {
+                return resolve(new Emoji(this.client, this.client.guilds.get(this.id)||this, res))
+            }).catch(e=>{
+                return reject(new Error(e))
+            })
         })
     }
 }

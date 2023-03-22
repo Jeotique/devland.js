@@ -9,6 +9,8 @@ const client = new Discord.Client({
 })
 client.on('ready', async () => {
     console.log(client.user.tag)
+    let guild = await client.fetchGuild("974284423979745370")
+    guild.fetchEmojis()
 })
 
 client.on('message', async message => {

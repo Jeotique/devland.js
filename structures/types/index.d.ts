@@ -189,6 +189,12 @@ declare module 'devland.js' {
         safetyChannel: TextChannel | null;
         publicUpdatesChannel: TextChannel | null;
     }
+    declare type createEmojiOptions = {
+        name: string,
+        roles?: string[],
+        image: any,
+        reason?: string,
+    }
     export class Guild {
         private constructor(client: Client, data: object);
         private client: Client;
@@ -228,6 +234,8 @@ declare module 'devland.js' {
         setCommands(...commands: GuildCommand): Promise<boolean>;
         getCommands(): Promise<GuildCommand[]>;
         deleteCommand(command: GuildCommand | object): Promise<boolean>;
+        fetchEmojis(emoji_id?: string | Emoji): Promise<Store<String, Emoji> | Emoji>;
+        createEmoji(options: createEmojiOptions): Promise<Emoji>;
     }
     export enum channelType {
         GUILD_TEXT = 0,
@@ -263,7 +271,7 @@ declare module 'devland.js' {
         USER = 1
     }
     declare type PermissionOverwritesResolvable = {
-        id: string|User|Member|Role,
+        id: string | User | Member | Role,
         type?: PermissionIdType,
         allow?: PermissionString[] | PermissionResolvable,
         deny?: PermissionString[] | PermissionResolvable,
@@ -276,12 +284,12 @@ declare module 'devland.js' {
         rate_limit_per_user?: number,
         bitrate?: number,
         user_limit?: number,
-        parent_id?: CategoryChannel|string,
+        parent_id?: CategoryChannel | string,
         permission_overwrites?: PermissionOverwritesResolvable[],
         rtc_region?: string,
         video_quality_mode?: videoQualityMode,
-        available_tags?: ForumTag[]|object,
-        default_reaction_emoji?: APIEmoji|string,
+        available_tags?: ForumTag[] | object,
+        default_reaction_emoji?: APIEmoji | string,
         default_thread_rate_limit_per_user?: number,
         default_sort_order?: number,
         default_forum_layout?: number,
@@ -313,13 +321,13 @@ declare module 'devland.js' {
         delete(reason?: string, time?: number): Promise<TextChannel>;
         clone(reason?: string, time?: number): Promise<TextChannel>;
         setPosition(position: number): Promise<TextChannel>;
-        bulkDelete(data: number|Message[]|string[]): Promise<void>;
+        bulkDelete(data: number | Message[] | string[]): Promise<void>;
         getPinnedMessages(): Promise<Store<String, Message>>;
     }
     declare type webhookId = string;
     declare type getUsersFromReactionOptions = {
         limit: number,
-        after?: User|string,
+        after?: User | string,
     }
     export class Message {
         private constructor(client: Client, guild: Guild, channel: TextChannel, data: object)
@@ -346,7 +354,7 @@ declare module 'devland.js' {
         readonly deleted: boolean;
         readonly data_is_available: boolean;
         readonly author?: User;
-        readonly authorId: string|webhookId; 
+        readonly authorId: string | webhookId;
         readonly webhookId?: webhookId;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
@@ -356,10 +364,10 @@ declare module 'devland.js' {
         crosspost(): Promise<Message>;
         pinMessage(reason?: string): Promise<void>;
         unpinMessage(reason?: string): Promise<void>;
-        react(emoji: APIEmoji|string): Promise<void>;
-        unreact(emoji: APIEmoji|string, user?: User|string): Promise<void>;
-        getUsersFromReaction(emoji: APIEmoji|string, options?: getUsersFromReactionOptions): Promise<Store<String, User>>;
-        deleteAllReactions(emoji?: APIEmoji|string): Promise<void>;
+        react(emoji: APIEmoji | string): Promise<void>;
+        unreact(emoji: APIEmoji | string, user?: User | string): Promise<void>;
+        getUsersFromReaction(emoji: APIEmoji | string, options?: getUsersFromReactionOptions): Promise<Store<String, User>>;
+        deleteAllReactions(emoji?: APIEmoji | string): Promise<void>;
     }
 
     export class Attachment {
@@ -787,14 +795,36 @@ declare module 'devland.js' {
         id?: string,
         name: string,
         moderated?: boolean,
-        emoji?: APIEmoji|string,
+        emoji?: APIEmoji | string,
     }
     export class ForumTag {
         constructor(tag_options: tagOptions);
         id?: string;
         name: string;
         moderated?: boolean;
-        emoji?: APIEmoji|string;
+        emoji?: APIEmoji | string;
         private pack();
+    }
+    declare type editEmojiOptions = {
+        name?: string,
+        roles?: string[],
+        reason?: string,
+    }
+    export class Emoji {
+        constructor(client: Client, guild: Guild, data: any);
+        private client: Client;
+        readonly guild: Guild;
+        readonly guildId: string;
+        readonly name: string;
+        readonly id: string;
+        readonly roles: [];
+        readonly animated: boolean;
+        readonly require_colons: boolean;
+        readonly managed: boolean;
+        readonly available: boolean;
+        readonly user: User;
+        private pack();
+        edit(options: editEmojiOptions): Promise<Emoji>;
+        delete(reason?: string): Promise<void>;
     }
 }

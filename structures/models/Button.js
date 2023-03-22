@@ -22,6 +22,7 @@ module.exports = class Button {
         if(this.label && this.label.length > 80) throw new TypeError("Label max length of 80")
         if(!this.style || (this.style && typeof this.style !== "number")) throw new TypeError("Button style is invalid")
         if(this.url && typeof this.url !== "string") throw new TypeError("Button url is invalid")
+        if(this.emoji instanceof Emoji) this.emoji = this.emoji.pack()
         if(this.emoji && typeof this.emoji === "string") testemoji = parseEmoji(this.emoji)
         if(this.emoji && !testemoji || typeof testemoji !== 'object') throw new TypeError("Invalid button emoji")
         return {

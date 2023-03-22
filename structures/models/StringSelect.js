@@ -1,4 +1,5 @@
 const { parseEmoji } = require("../util")
+const Emoji = require("./Emoji")
 
 module.exports = class StringSelect {
     /**
@@ -28,6 +29,7 @@ module.exports = class StringSelect {
             if(!op.value) throw new TypeError("A value must be provided for a string select")
             if(typeof op.value !== "string") throw new TypeError("The value must be a string")
             let testemoji = null
+            if(op.emoji instanceof Emoji) op.emoji = op.emoji.pack()
             if(op.emoji && typeof op.emoji === "string") testemoji = parseEmoji(op.emoji)
             if(op.emoji && typeof op.emoji === "string" && (!testemoji || typeof testemoji !== 'object')) throw new TypeError("Invalid option emoji")
             if(typeof op.emoji === "object" && op.emoji.name) testemoji = op.emoji
@@ -56,7 +58,9 @@ module.exports = class StringSelect {
             if(!op.value) throw new TypeError("A value must be provided for a string select")
             if(typeof op.value !== "string") throw new TypeError("The value must be a string")
             let testemoji = null
+            if(op.emoji instanceof Emoji) op.emoji = op.emoji.pack()
             if(op.emoji && typeof op.emoji === "string") testemoji = parseEmoji(op.emoji)
+            if(typeof op.emoji === "object" && op.emoji.name) testemoji = op.emoji
             if(op.emoji && !testemoji || typeof testemoji !== 'object') throw new TypeError("Invalid option emoji")
             if(op.description && typeof op.description !== "string") throw new TypeError("The description must be a string")
             if(op.default && typeof op.default !== "string") throw new TypeError("The default value must be a string")
