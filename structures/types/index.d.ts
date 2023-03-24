@@ -182,7 +182,7 @@ declare module 'devland.js' {
     export type utilsChannels = {
         systemChannel: TextChannel | null;
         afkTimeout: number;
-        afkChannel: TextChannel | null;
+        afkChannel: VoiceChannel | null;
         widgetChannel: TextChannel | null;
         widgetEnabled: boolean;
         rulesChannel: TextChannel | null;
@@ -195,6 +195,27 @@ declare module 'devland.js' {
         image: any,
         reason?: string,
     }
+    declare type editGuildOptions = {
+        name?: string,
+        verification_level?: guildVerificationLevel,
+        default_message_notifications?: guildDefaultMessageNotifications,
+        explicit_content_filter?: guildExplicitContentFilterLevel,
+        afk_channel_id?: string|VoiceChannel,
+        afk_timeout?: number,
+        icon?: any,
+        owner_id?: User|string,
+        splash?: any,
+        discovery_splash?: any,
+        banner?: any,
+        system_channel_id?: string|TextChannel,
+        system_channel_flags?: number|string,
+        rules_channel_id?: string|TextChannel,
+        public_updates_channel_id?: string|TextChannel,
+        peferred_locale?: guildPreferredLocale,
+        features?: guildFeatures[],
+        description?: string,
+        premium_progress_bar_enabled?: boolean,
+    }
     export class Guild {
         private constructor(client: Client, data: object);
         private client: Client;
@@ -204,26 +225,25 @@ declare module 'devland.js' {
         readonly description: string | null;
         readonly homeHeader: string | null;
         readonly splash: string | null;
-        readonly discoverySplash: string | null;
-        readonly features: guildFeatures;
+        readonly discovery_splash: string | null;
+        readonly features: guildFeatures[];
         readonly banner: string | null;
-        readonly discoverySplash: string | null;
         readonly ownerId: string;
         readonly region: string;
-        readonly verificationLevel: guildVerificationLevel;
+        readonly verification_level: guildVerificationLevel;
         readonly mfaLevel: guildMfaLevel;
-        readonly defaultMessageNotifications: guildDefaultMessageNotifications;
-        readonly explicitContentFilterLevel: guildExplicitContentFilterLevel;
-        readonly maxMembers: number;
-        readonly maxStageVideoChannelUsers: number;
-        readonly maxVideoChannelUsers: number;
+        readonly default_message_notifications: guildDefaultMessageNotifications;
+        readonly explicit_content_filter: guildExplicitContentFilterLevel;
+        readonly max_members: number;
+        readonly max_stage_video_channel_users: number;
+        readonly max_video_channel_users: number;
         readonly boostLevel: guildBoostLevel;
         readonly boostCount: number;
-        readonly systemChannelFlags: number;
-        readonly preferredLocale: guildPreferredLocale;
-        readonly boostProgressBar: boolean;
+        readonly system_channel_flags: number;
+        readonly preferred_locale: guildPreferredLocale;
+        readonly premium_progress_bar_enabled: boolean;
         readonly nsfw: boolean;
-        readonly nsfwLevel: guildNsfwLevel;
+        readonly nsfw_level: guildNsfwLevel;
         readonly createdTimestamp: number;
         readonly createdAt: Date;
         readonly data_is_available: boolean;
@@ -236,6 +256,8 @@ declare module 'devland.js' {
         deleteCommand(command: GuildCommand | object): Promise<boolean>;
         fetchEmojis(emoji_id?: string | Emoji): Promise<Store<String, Emoji> | Emoji>;
         createEmoji(options: createEmojiOptions): Promise<Emoji>;
+        edit(options: editGuildOptions, reason?: string): Promise<Guild>;
+        delete(): Promise<void>;
     }
     export enum channelType {
         GUILD_TEXT = 0,
@@ -299,7 +321,7 @@ declare module 'devland.js' {
         private client: Client;
         readonly guild: Guild;
         readonly id: string;
-        readonly lastMessageId: string;
+        readonly last_message_id: string;
         readonly type: channelType;
         readonly name: string;
         readonly position: number;
@@ -307,7 +329,7 @@ declare module 'devland.js' {
         readonly parentId: string | null;
         readonly topic: string | null;
         readonly guildId: string;
-        readonly rateLimitPerUser: number;
+        readonly rate_limit_per_user: number;
         readonly nsfw: boolean;
         readonly createdTimestamp: number;
         readonly createdAt: Date;
@@ -317,7 +339,7 @@ declare module 'devland.js' {
         private readonly expireAt: number | undefined;
         send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
         fetchMessages(options?: fetchMessagesOptions | string): Promise<Store<String, Message>>;
-        edit(options: channelEditOptions): Promise<TextChannel>;
+        edit(options: channelEditOptions, reason?: string): Promise<TextChannel>;
         delete(reason?: string, time?: number): Promise<TextChannel>;
         clone(reason?: string, time?: number): Promise<TextChannel>;
         setPosition(position: number): Promise<TextChannel>;
@@ -496,7 +518,7 @@ declare module 'devland.js' {
         custom_id?: string;
         customId: string;
         url?: string;
-        emoji?: APIEmoji | string;
+        emoji?: APIEmoji | Emoji | string;
         disabled?: boolean;
         private pack();
     }
@@ -513,7 +535,7 @@ declare module 'devland.js' {
         label: string,
         value: string,
         description?: string,
-        emoji?: APIEmoji | string,
+        emoji?: APIEmoji | Emoji | string,
         default?: string
     }
     export class StringSelect {
@@ -802,7 +824,7 @@ declare module 'devland.js' {
         id?: string;
         name: string;
         moderated?: boolean;
-        emoji?: APIEmoji | string;
+        emoji?: APIEmoji | Emoji | string;
         private pack();
     }
     declare type editEmojiOptions = {

@@ -278,7 +278,7 @@ module.exports = class Message {
             if (reason === null) reason = undefined
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.put(this.client._ENDPOINTS.CHANNEL(this.channelId) + '/pins/' + this.id, {
-                "X-Audit-Log-Reason": reason
+                "reason": reason
             }).then(() => {
                 return resolve()
             }).catch(e => {
@@ -292,7 +292,7 @@ module.exports = class Message {
             if (reason === null) reason = undefined
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.delete(this.client._ENDPOINTS.CHANNEL(this.channelId) + '/pins/' + this.id, {
-                "X-Audit-Log-Reason": reason
+                "reason": reason
             }).then(() => {
                 return resolve()
             }).catch(e => {

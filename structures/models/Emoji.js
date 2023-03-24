@@ -49,7 +49,7 @@ module.exports = class Emoji {
             this.client.rest.patch(this.client._ENDPOINTS.EMOJI(this.guildId, this.id), {
                 name: options.name,
                 roles: options.roles.length < 1 ? undefined : options.roles,
-                "X-Audit-Log-Reason": options.reason,
+                "reason": options.reason,
             }).then(res => {
                 let newEmoji = new Emoji(this.client, this.client.guilds.get(this.guildId)|this.guild, res)
                 Object.keys(newEmoji).map(k => this[k] = newEmoji[k])
@@ -64,7 +64,7 @@ module.exports = class Emoji {
         return new Promise(async(resolve, reject) => {
             if(typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("Delete emoji reason must be a string or a undefined value"))
             this.client.rest.delete(this.client._ENDPOINTS.EMOJI(this.guildId, this.id), {
-                "X-Audit-Log-Reason": reason,
+                "reason": reason,
             }).then(() => {
                 return resolve()
             }).catch(e=>{

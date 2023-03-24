@@ -25,7 +25,7 @@ module.exports = class TextChannel {
         this.guild = guild
 
         this.id = data.id
-        this.lastMessageId = data.last_message_id
+        this.last_message_id = data.last_message_id
         this.type = data.type
         this.name = data.name
         this.position = data.position
@@ -33,7 +33,7 @@ module.exports = class TextChannel {
         this.parentId = data.parentId
         this.topic = data.topic
         this.guildId = data.guild_id
-        this.rateLimitPerUser = data.rate_limit_per_user
+        this.rate_limit_per_user = data.rate_limit_per_user
         this.nsfw = data.nsfw
         this.createdTimestamp = Utils.getTimestampFrom(this.id)
         this.createdAt = new Date(this.createdTimestamp)
@@ -188,7 +188,7 @@ module.exports = class TextChannel {
         })
     }
 
-    async edit(options = {}) {
+    async edit(options = {}, reason) {
         return new Promise(async (resolve, reject) => {
             if (typeof options !== "object") return reject(new TypeError("Invalid options object provided"))
             if (Object.keys(options).length < 1) return reject(new TypeError("You need to provide a minimum of one change"))
@@ -298,6 +298,8 @@ module.exports = class TextChannel {
                 if (options.default_forum_layout === null) options.default_forum_layout = 0
                 if (typeof options.default_forum_layout !== "number") return reject(new TypeError("Default forum layout must be set to null or a number"))
             }
+            if(typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            options["reason"] = reason
             this.client.rest.patch(this.client._ENDPOINTS.CHANNEL(this.id), options).then(res => {
                 let newChannel = new TextChannel(this.client, this.client.guilds.get(res.guild_id) || this.guild, res)
                 Object.keys(newChannel).map(k => this[k] = newChannel[k])
@@ -317,7 +319,7 @@ module.exports = class TextChannel {
             if (typeof time !== "undefined" && typeof time !== "number") return reject(new TypeError("The time before deleting the channel must be a number (ms) or a undefined value"))
             setTimeout(() => {
                 this.client.rest.delete(this.client._ENDPOINTS.CHANNEL(this.id), {
-                    "X-Audit-Log-Reason": reason
+                    "reason": reason
                 }).then(newChannel => {
                     let channel = new TextChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, newChannel)
                     Object.keys(channel).map(k => this[k] = channel[k])
@@ -362,7 +364,7 @@ module.exports = class TextChannel {
                     available_tags: this.availableTags,
                     default_sort_order: this.defaultSortOrder,
                 }
-                if (reason) data['X-Audit-Log-Reason'] = reason
+                if (reason) data['reason'] = reason
                 this.client.rest.post(this.client._ENDPOINTS.SERVER_CHANNEL(this.guildId), data).then(newChannel => {
                     let channel = new TextChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, newChannel)
                     return resolve(channel)
