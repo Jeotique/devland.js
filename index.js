@@ -5,6 +5,13 @@ const Guild = require('./structures/models/Guild')
 const Message = require('./structures/models/Message')
 const Embed = require('./structures/models/Embed')
 const TextChannel = require('./structures/models/TextChannel')
+const VoiceChannel = require('./structures/models/VoiceChannel')
+const CategoryChannel = require('./structures/models/CategoryChannel')
+const Thread = require('./structures/models/Thread')
+const AnnouncementChannel = require('./structures/models/AnnouncementChannel')
+const StageChannel = require('./structures/models/StageChannel')
+const ForumChannel = require('./structures/models/ForumChannel')
+const DmChannel = require('./structures/models/DmChannel')
 const User = require('./structures/models/User')
 const ActionRow = require('./structures/models/ActionRow')
 const Button = require('./structures/models/Button')
@@ -17,6 +24,7 @@ const Permissions = require('./structures/util/Permissions/Permissions')
 const GuildCommand = require('./structures/models/GuildCommand')
 const ForumTag = require('./structures/models/ForumTag')
 const {Store} = require('./structures/util/Store/Store')
+const Emoji = require('./structures/models/Emoji')
 module.exports = {
     Client,
     Utils,
@@ -25,6 +33,13 @@ module.exports = {
     Message,
     Embed,
     TextChannel,
+    VoiceChannel,
+    CategoryChannel,
+    AnnouncementChannel,
+    Thread,
+    StageChannel,
+    ForumChannel,
+    DmChannel,
     User,
     ActionRow,
     Button,
@@ -37,4 +52,5 @@ module.exports = {
     GuildCommand,
     ForumTag,
     Store,
+    Emoji,
 }

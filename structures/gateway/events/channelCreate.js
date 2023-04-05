@@ -1,5 +1,5 @@
 const Client = require('../../client/client')
-const { Guild, TextChannel, Message, VoiceChannel, AnnouncementChannel } = require('../../models')
+const { Guild, TextChannel, Message, VoiceChannel, AnnouncementChannel, StageChannel, ForumChannel } = require('../../models')
 const CategoryChannel = require('../../models/CategoryChannel')
 module.exports = {
     name: 'channelCreate',
@@ -90,6 +90,44 @@ module.exports = {
                     announcement.cachedAt = Date.now()
                     announcement.expireAt = Date.now() + client.options.channelsLifeTime
                     client.announcementChannels.set(announcement.id, announcement)
+                }
+            } else if(data.type === 13) { // stage channel
+                let stage = new StageChannel(client, guild, data)
+                /**
+                * Emitted whenever a channel is created
+                * @event client#channelCreate
+                * @param {StageChannel} stage
+                */
+                client.emit('channelCreate', stage)
+                /**
+                * Emitted whenever a stage channel is created
+                * @event client#channelCreateStage
+                * @param {StageChannel} stage
+                */
+                client.emit('channelCreateStage', stage)
+                if (typeof client.options.channelsLifeTime === "number" && client.options.channelsLifeTime > 0) {
+                    stage.cachedAt = Date.now()
+                    stage.expireAt = Date.now() + client.options.channelsLifeTime
+                    client.stageChannels.set(stage.id, stage)
+                }
+            } else if(data.type === 15) { // forum channel
+                let forum = new ForumChannel(client, guild, data)
+                /**
+                * Emitted whenever a channel is created
+                * @event client#channelCreate
+                * @param {ForumChannel} forum
+                */
+                client.emit('channelCreate', forum)
+                /**
+                * Emitted whenever a forum channel is created
+                * @event client#channelCreateForum
+                * @param {ForumChannel} forum
+                */
+                client.emit('channelCreateForum', forum)
+                if (typeof client.options.channelsLifeTime === "number" && client.options.channelsLifeTime > 0) {
+                    forum.cachedAt = Date.now()
+                    forum.expireAt = Date.now() + client.options.channelsLifeTime
+                    client.forumChannels.set(forum.id, forum)
                 }
             }
         }

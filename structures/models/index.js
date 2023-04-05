@@ -7,6 +7,10 @@ const TextChannel = require('./TextChannel')
 const VoiceChannel = require('./VoiceChannel')
 const CategoryChannel = require('./CategoryChannel')
 const AnnouncementChannel = require('./AnnouncementChannel')
+const Thread = require('./Thread')
+const StageChannel = require('./StageChannel')
+const ForumChannel = require('./ForumChannel')
+const DmChannel = require('./DmChannel')
 const User = require('./User')
 const ActionRow = require('./ActionRow')
 const Button = require('./Button')
@@ -28,6 +32,10 @@ module.exports = {
     VoiceChannel,
     CategoryChannel,
     AnnouncementChannel,
+    Thread,
+    StageChannel,
+    ForumChannel,
+    DmChannel,
     User,
     ActionRow,
     Button,

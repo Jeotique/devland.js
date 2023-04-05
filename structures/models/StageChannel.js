@@ -7,7 +7,7 @@ const ActionRow = require('./ActionRow')
 const { default: Store } = require('../util/Store/Store')
 const Permissions = require('../util/Permissions/Permissions')
 const ForumTag = require('./ForumTag')
-module.exports = class CategoryChannel {
+module.exports = class StageChannel {
     /**
      * 
      * @param {Client} client 
@@ -25,12 +25,18 @@ module.exports = class CategoryChannel {
         this.guild = guild
 
         this.id = data.id
+        this.last_message_id = data.last_message_id
         this.type = data.type
         this.name = data.name
         this.position = data.position
         this.flags = data.flags
+        this.parent_id = data.parentId || data.parent_id
         this.guildId = data.guild_id || guild.id
-        this.childrens = data.childrens || []
+        this.rate_limit_per_user = data.rate_limit_per_user
+        this.nsfw = data.nsfw
+        this.bitrate = data.bitrate
+        this.user_limit = data.user_limit
+        this.rtc_region = data.rtc_region
         this.createdTimestamp = Utils.getTimestampFrom(this.id)
         this.createdAt = new Date(this.createdTimestamp)
         this.permission_overwrites = []
@@ -158,7 +164,7 @@ module.exports = class CategoryChannel {
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             options["reason"] = reason
             this.client.rest.patch(this.client._ENDPOINTS.CHANNEL(this.id), options).then(res => {
-                let newChannel = new CategoryChannel(this.client, this.client.guilds.get(res.guild_id) || this.guild, res)
+                let newChannel = new StageChannel(this.client, this.client.guilds.get(res.guild_id) || this.guild, res)
                 Object.keys(newChannel).map(k => this[k] = newChannel[k])
                 return resolve(newChannel)
             }).catch(e => {
@@ -178,7 +184,7 @@ module.exports = class CategoryChannel {
                 this.client.rest.delete(this.client._ENDPOINTS.CHANNEL(this.id), {
                     "reason": reason
                 }).then(newChannel => {
-                    let channel = new CategoryChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, newChannel)
+                    let channel = new StageChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, newChannel)
                     Object.keys(channel).map(k => this[k] = channel[k])
                     return resolve(channel)
                 }).catch(e => {
@@ -223,7 +229,7 @@ module.exports = class CategoryChannel {
                 }
                 if (reason) data['reason'] = reason
                 this.client.rest.post(this.client._ENDPOINTS.SERVER_CHANNEL(this.guildId), data).then(newChannel => {
-                    let channel = new CategoryChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, newChannel)
+                    let channel = new StageChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, newChannel)
                     return resolve(channel)
                 }).catch(e => {
                     return reject(new Error(e))
@@ -238,7 +244,7 @@ module.exports = class CategoryChannel {
             if (typeof position !== "number") return reject(new TypeError("The channel position must be a number"))
             if (position < 0) return reject(new TypeError("The channel position must be more than 0"))
             this.client.rest.patch(this.client._ENDPOINTS.CHANNEL(this.id), { position: position }).then(res => {
-                let newChannel = new CategoryChannel(this.client, this.client.guilds.get(res.guild_id) || this.guild, res)
+                let newChannel = new StageChannel(this.client, this.client.guilds.get(res.guild_id) || this.guild, res)
                 Object.keys(newChannel).map(k => this[k] = newChannel[k])
                 return resolve(newChannel)
             }).catch(e => {
@@ -247,26 +253,59 @@ module.exports = class CategoryChannel {
         })
     }
 
-    async fetchTextChannels() {
+    async start_stage(options = {}) {
         return new Promise(async (resolve, reject) => {
-            this.client.rest.get(this.client._ENDPOINTS.SERVER_CHANNEL(this.id)).then(res => {
-                res = res.filter(channel => channel.type === 0 || channel.parent_id === this.id || channel.parentId === this.id)
-                let collect = new Store()
-                res.map(channel => collect.set(channel.id, new TextChannel(this.client, this.client.guilds.get(this.id) || this, channel)))
-                return resolve(collect)
+            if (typeof options === "undefined") return reject(new TypeError("The stage start options must be defined"))
+            if (typeof options !== "object") return reject(new TypeError("The stage start options must be a object"))
+            options['channel_id'] = this.id
+            if (typeof options.topic !== "string") return reject(new TypeError("The stage start options topic must be a string"))
+            if (options.topic.length < 1 || options.topic.length > 120) return reject(new TypeError("The stage start options topic length must be between 1 and 120"))
+            if (typeof options.privacy_level !== "undefined" && typeof options.privacy_level !== "number") return reject(new TypeError("The stage start options privacy level must be number"))
+            if (typeof options.privacy_level === "number" && (options.privacy_level < 1 || options.privacy_level > 2)) return reject(new TypeError("The stage start options privacy level must be between 1 and 2"))
+            if (typeof options.send_start_notification !== "boolean") options.send_start_notification = false
+            if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            this.client.rest.post(this.client._ENDPOINTS.STAGE(), options).then((res) => {
+                return resolve(res)
             }).catch(e => {
                 return reject(new Error(e))
             })
         })
     }
 
-    async fetchVoiceChannels() {
+    async stage(){
+        return new Promise(async(resolve, reject) => {
+            this.client.rest.get(this.client._ENDPOINTS.STAGE()+'/'+this.id).then((res) => {
+                return resolve(res)
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async edit_stage(options){
         return new Promise(async (resolve, reject) => {
-            this.client.rest.get(this.client._ENDPOINTS.SERVER_CHANNEL(this.id)).then(res => {
-                res = res.filter(channel => channel.type === 2 || channel.parent_id === this.id || channel.parentId === this.id)
-                let collect = new Store()
-                res.map(channel => collect.set(channel.id, new VoiceChannel(this.client, this.client.guilds.get(this.id) || this, channel)))
-                return resolve(collect)
+            if (typeof options === "undefined") return reject(new TypeError("The stage start options must be defined"))
+            if (typeof options !== "object") return reject(new TypeError("The stage start options must be a object"))
+            if (typeof options.topic !== "string") return reject(new TypeError("The stage start options topic must be a string"))
+            if (options.topic.length < 1 || options.topic.length > 120) return reject(new TypeError("The stage start options topic length must be between 1 and 120"))
+            if (typeof options.privacy_level !== "undefined" && typeof options.privacy_level !== "number") return reject(new TypeError("The stage start options privacy level must be number"))
+            if (typeof options.privacy_level === "number" && (options.privacy_level < 1 || options.privacy_level > 2)) return reject(new TypeError("The stage start options privacy level must be between 1 and 2"))
+            if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            this.client.rest.patch(this.client._ENDPOINTS.STAGE()+'/'+this.id, options).then((res) => {
+                return resolve(res)
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async delete_stage(reason){
+        return new Promise(async(resolve, reject) => {
+            if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            this.client.rest.delete(this.client._ENDPOINTS.STAGE()+'/'+this.id, {
+                reason: reason
+            }).then(() => {
+                return resolve()
             }).catch(e => {
                 return reject(new Error(e))
             })

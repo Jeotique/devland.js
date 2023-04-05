@@ -12,6 +12,14 @@ module.exports = {
         if (client.guilds.has(data.id) && client.guilds.get(data.id).ready === false) {
             data.ready = true
             let guild = new Models.Guild(client, data)
+            if (typeof client.options.usersLifeTime === "number" && client.options.usersLifeTime > 0) {
+                data.members.map(member => {
+                    let user = new Models.User(client, member.user)
+                    user.cachedAt = Date.now()
+                    user.expireAt = Date.now() + client.options.usersLifeTime
+                    client.users.set(user.id, user)
+                })
+            }
             if (typeof client.options.channelsLifeTime === "number" && client.options.channelsLifeTime > 0) {
                 data.channels.filter(channel => channel.type === 0).map(channel => {
                     let text = new Models.TextChannel(client, guild, channel)
@@ -47,6 +55,7 @@ module.exports = {
             data.ready = true
             let guild = new Models.Guild(client, data)
             if (typeof client.options.channelsLifeTime === "number" && client.options.channelsLifeTime > 0) {
+
                 data.channels.filter(channel => channel.type === 0).map(channel => {
                     let text = new Models.TextChannel(client, guild, channel)
                     text.cachedAt = Date.now()

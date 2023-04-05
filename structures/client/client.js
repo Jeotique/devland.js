@@ -4,8 +4,9 @@ const ws = require('ws')
 const util = require('../util')
 const Models = require('../models')
 const { Store } = require('../util/Store/Store')
-const { Message, Guild, TextChannel, User, VoiceChannel, CategoryChannel, AnnouncementChannel } = require('../models')
+const { Message, Guild, TextChannel, User, VoiceChannel, CategoryChannel, AnnouncementChannel, StageChannel, DmChannel } = require('../models')
 const Thread = require('../models/Thread')
+const ForumChannel = require('../models/ForumChannel')
 /**
  * @extends {EventEmitter}
  */
@@ -79,7 +80,7 @@ module.exports = class Client extends EventEmitter {
             SERVERS_USER: (serverID) => { return `${this._ENDPOINTS.ME()}/guilds${serverID ? '/' + serverID : ''}`; },
             SERVER_EMOJIS: (serverID, emojiID) => { return `${this._ENDPOINTS.SERVERS(serverID)}/emojis${emojiID ? '/' + emojiID : ''}`; },
             CHANNEL: (channelID) => { return DiscordAPI + '/channels/' + channelID; },
-            DM_CHANNEL: (channelID) => { return ME + '/channels'; },
+            DM_CHANNEL: () => { return ME + '/channels'; },
             MEMBERS: (serverID, userID) => { return `${this._ENDPOINTS.SERVERS(serverID)}/members${userID ? '/' + userID : ''}`; },
             MEMBER_ROLES: (serverID, userID, roleID) => { return `${this._ENDPOINTS.MEMBERS(serverID, userID)}/roles${roleID ? '/' + roleID : ''}`; },
             USER_DM: (userId) => { return ME + '/' + userId },
@@ -103,6 +104,7 @@ module.exports = class Client extends EventEmitter {
             REACTIONS: (channelID, messageID, emoji, user) => { return `${this._ENDPOINTS.CHANNEL(channelID)}/messages/${messageID}/reactions${emoji ? `/${emoji}${user ? `/${user}` : ``}` : ``}`; },
             EMOJI: (guildID, emoji) => { return `${this._ENDPOINTS.SERVERS(guildID)}/emojis${emoji ? `/${emoji}` : ``}` },
             THREAD_MEMBER: (channelID, user) => { return DiscordAPI + '/channels/' + channelID + 'thread-members' + user ? '/' + user : ''; },
+            STAGE: () => { return `${DiscordAPI}/stage-instances`; },
         }
 
         this.token = options?.token
@@ -185,6 +187,23 @@ module.exports = class Client extends EventEmitter {
          * @type {Store<String, Thread>}
          */
         this.threadChannels = new Store()
+        /**
+         * @type {Store<String, User>}
+         */
+        this.users = new Store()
+        /**
+         * @type {Store<String, StageChannel>}
+         */
+        this.stageChannels = new Store()
+        /**
+         * @type {Store<String, ForumChannel>}
+         */
+        this.forumChannels = new Store()
+        /**
+         * @private
+         * @type {Store<String, DmChannel>}
+         */
+        this.dmChannels = new Store()
         if (this.options && this.options.connect == false) {
             return this;
         } else {
@@ -265,6 +284,22 @@ module.exports = class Client extends EventEmitter {
                 this.guilds.set(guild.id, guild)
             }
             return resolve(guild)
+        })
+    }
+
+    async fetchUser(userId) {
+        return new Promise(async (resolve, reject) => {
+            if(userId instanceof User) userId = userId?.id
+            if(typeof userId !== "string") return reject(new TypeError("userId must be a User instance or User Id"))
+            let result = await this.rest.get(this._ENDPOINTS.USER(userId)).catch(e => { reject(new Error(e)) })
+            if(!result) return reject(new TypeError("Unknow user"))
+            let user = new User(this, result)
+            if (typeof this.options.usersLifeTime && this.options.usersLifeTime > 0) {
+                user.cachedAt = Date.now()
+                user.expireAt = Date.now() + this.options.usersLifeTime
+                this.users.set(user.id, user)
+            }
+            return resolve(user)
         })
     }
 

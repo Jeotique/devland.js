@@ -7,6 +7,9 @@ const Emoji = require('./Emoji')
 const User = require('./User')
 const VoiceChannel = require('./VoiceChannel')
 const CategoryChannel = require('./CategoryChannel')
+const AnnouncementChannel = require('./AnnouncementChannel')
+const StageChannel = require('./StageChannel')
+const ForumChannel = require('./ForumChannel')
 
 module.exports = class Guild {
     /**
@@ -329,7 +332,14 @@ module.exports = class Guild {
                 res = res.filter(channel => channel.type === 0)
                 let collect = new Store()
                 res.map(channel => collect.set(channel.id, new TextChannel(this.client, this.client.guilds.get(this.id) || this, channel)))
-                return resolve(collect)
+                resolve(collect)
+                if (typeof this.client.options.channelsLifeTime === "number" && this.client.options.channelsLifeTime > 0) {
+                    collect.map(channel => {
+                        channel.cachedAt = Date.now()
+                        channel.expireAt = Date.now() + this.client.options.channelsLifeTime
+                        this.client.textChannels.set(channel.id, channel)
+                    })
+                }
             }).catch(e => {
                 return reject(new Error(e))
             })
@@ -342,7 +352,14 @@ module.exports = class Guild {
                 res = res.filter(channel => channel.type === 2)
                 let collect = new Store()
                 res.map(channel => collect.set(channel.id, new VoiceChannel(this.client, this.client.guilds.get(this.id) || this, channel)))
-                return resolve(collect)
+                resolve(collect)
+                if (typeof this.client.options.channelsLifeTime === "number" && this.client.options.channelsLifeTime > 0) {
+                    collect.map(channel => {
+                        channel.cachedAt = Date.now()
+                        channel.expireAt = Date.now() + this.client.options.channelsLifeTime
+                        this.client.voiceChannels.set(channel.id, channel)
+                    })
+                }
             }).catch(e => {
                 return reject(new Error(e))
             })
@@ -358,7 +375,152 @@ module.exports = class Guild {
                     res.filter(child => child.parent_id === channel.id || child.parentId === channel.id).map(child => channel.childrens.push(child.id))
                     collect.set(channel.id, new CategoryChannel(this.client, this.client.guilds.get(this.id) || this, channel))
                 })
-                return resolve(collect)
+                resolve(collect)
+                if (typeof this.client.options.channelsLifeTime === "number" && this.client.options.channelsLifeTime > 0) {
+                    collect.map(channel => {
+                        channel.cachedAt = Date.now()
+                        channel.expireAt = Date.now() + this.client.options.channelsLifeTime
+                        this.client.categoryChannels.set(channel.id, channel)
+                    })
+                }
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async fetchAnnouncementChannels() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.get(this.client._ENDPOINTS.SERVER_CHANNEL(this.id)).then(res => {
+                res = res.filter(channel => channel.type === 5)
+                let collect = new Store()
+                res.map(channel => collect.set(channel.id, new AnnouncementChannel(this.client, this.client.guilds.get(this.id) || this, channel)))
+                resolve(collect)
+                if (typeof this.client.options.channelsLifeTime === "number" && this.client.options.channelsLifeTime > 0) {
+                    collect.map(channel => {
+                        channel.cachedAt = Date.now()
+                        channel.expireAt = Date.now() + this.client.options.channelsLifeTime
+                        this.client.announcementChannels.set(channel.id, channel)
+                    })
+                }
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async fetchStageChannels() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.get(this.client._ENDPOINTS.SERVER_CHANNEL(this.id)).then(res => {
+                res = res.filter(channel => channel.type === 13)
+                let collect = new Store()
+                res.map(channel => collect.set(channel.id, new StageChannel(this.client, this.client.guilds.get(this.id) || this, channel)))
+                resolve(collect)
+                if (typeof this.client.options.channelsLifeTime === "number" && this.client.options.channelsLifeTime > 0) {
+                    collect.map(channel => {
+                        channel.cachedAt = Date.now()
+                        channel.expireAt = Date.now() + this.client.options.channelsLifeTime
+                        this.client.stageChannels.set(channel.id, channel)
+                    })
+                }
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async fetchForumChannels() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.get(this.client._ENDPOINTS.SERVER_CHANNEL(this.id)).then(res => {
+                res = res.filter(channel => channel.type === 15)
+                let collect = new Store()
+                res.map(channel => collect.set(channel.id, new ForumChannel(this.client, this.client.guilds.get(this.id) || this, channel)))
+                resolve(collect)
+                if (typeof this.client.options.channelsLifeTime === "number" && this.client.options.channelsLifeTime > 0) {
+                    collect.map(channel => {
+                        channel.cachedAt = Date.now()
+                        channel.expireAt = Date.now() + this.client.options.channelsLifeTime
+                        this.client.forumChannels.set(channel.id, channel)
+                    })
+                }
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async fetchChannels() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.get(this.client._ENDPOINTS.SERVER_CHANNEL(this.id)).then(res => {
+                let toSend = {
+                    text: new Store(),
+                    voice: new Store(),
+                    category: new Store(),
+                    announcement: new Store(),
+                    stage: new Store(),
+                    forum: new Store(),
+                }
+                res.map(channel => {
+                    switch (channel.type) {
+                        case 0:
+                            let text = new TextChannel(this.client, this.client.guilds.get(this.id) || this, channel)
+                            toSend['text'].set(text.id, text)
+                            if (typeof this.client.options.channelsLifeTime === "number" && this.client.options.channelsLifeTime > 0) {
+                                text.cachedAt = Date.now()
+                                text.expireAt = Date.now() + this.client.options.channelsLifeTime
+                                this.client.textChannels.set(text.id, text)
+                            }
+                            break;
+                        case 2:
+                            let voice = new VoiceChannel(this.client, this.client.guilds.get(this.id) || this, channel)
+                            toSend['voice'].set(voice.id, voice)
+                            if (typeof this.client.options.channelsLifeTime === "number" && this.client.options.channelsLifeTime > 0) {
+                                voice.cachedAt = Date.now()
+                                voice.expireAt = Date.now() + this.client.options.channelsLifeTime
+                                this.client.voiceChannels.set(voice.id, voice)
+                            }
+                            break;
+                        case 4:
+                            let category = new CategoryChannel(this.client, this.client.guilds.get(this.id) || this, channel)
+                            category.childrens = []
+                            res.filter(child => child.parent_id === category.id || child.parentId === category.id).map(child => category.childrens.push(child.id))
+                            toSend['category'].set(category.id, category)
+                            if (typeof this.client.options.channelsLifeTime === "number" && this.client.options.channelsLifeTime > 0) {
+                                category.cachedAt = Date.now()
+                                category.expireAt = Date.now() + this.client.options.channelsLifeTime
+                                this.client.categoryChannels.set(category.id, category)
+                            }
+                            break;
+                        case 5:
+                            let announcement = new AnnouncementChannel(this.client, this.client.guilds.get(this.id) || this, channel)
+                            toSend['announcement'].set(announcement.id, announcement)
+                            if (typeof this.client.options.channelsLifeTime === "number" && this.client.options.channelsLifeTime > 0) {
+                                announcement.cachedAt = Date.now()
+                                announcement.expireAt = Date.now() + this.client.options.channelsLifeTime
+                                this.client.announcementChannels.set(announcement.id, announcement)
+                            }
+                            break;
+                        case 13:
+                            let stage = new StageChannel(this.client, this.client.guilds.get(this.id) || this, channel)
+                            toSend['stage'].set(stage.id, stage)
+                            if (typeof this.client.options.channelsLifeTime === "number" && this.client.options.channelsLifeTime > 0) {
+                                stage.cachedAt = Date.now()
+                                stage.expireAt = Date.now() + this.client.options.channelsLifeTime
+                                this.client.stageChannels.set(stage.id, stage)
+                            }
+                            break;
+                        case 15:
+                            let forum = new ForumChannel(this.client, this.client.guilds.get(this.id) || this, channel)
+                            toSend['forum'].set(forum.id, forum)
+                            if (typeof this.client.options.channelsLifeTime === "number" && this.client.options.channelsLifeTime > 0) {
+                                forum.cachedAt = Date.now()
+                                forum.expireAt = Date.now() + this.client.options.channelsLifeTime
+                                this.client.forumChannels.set(forum.id, forum)
+                            }
+                            break;
+                    }
+                })
+                return resolve(toSend)
             }).catch(e => {
                 return reject(new Error(e))
             })

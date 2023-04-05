@@ -49,7 +49,7 @@ module.exports = class Message {
         this.tts = data.tts
         this.createdTimestamp = Utils.getTimestampFrom(data.id)
         this.createdAt = new Date(this.createdTimestamp)
-        this.guildId = this.guild.id
+        this.guildId = this.guild?.id
         this.editTimestamp = new Date(data.edited_timestamp)
         this.flags = data.flags
         this.components = []
@@ -103,14 +103,14 @@ module.exports = class Message {
             if (typeof options === 'string') {
                 data['content'] = options
                 this.client.rest.patch(this.client._ENDPOINTS.MESSAGES(this.channelId, this.id), data).then(messageData => {
-                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.client.textChannels.get(this.channelId) || this.channel, messageData))
+                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
                 }).catch(e => {
                     return reject(new Error(e))
                 })
             } else if (options instanceof Embed) {
                 data['embeds'].push(options.pack())
                 this.client.rest.patch(this.client._ENDPOINTS.MESSAGES(this.channelId, this.id), data).then(messageData => {
-                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.client.textChannels.get(this.channelId) || this.channel, messageData))
+                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
                 }).catch(e => {
                     return reject(new Error(e))
                 })
@@ -124,7 +124,7 @@ module.exports = class Message {
                     else alrSeen[test.custom_id] = true
                 })
                 this.client.rest.patch(this.client._ENDPOINTS.MESSAGES(this.channelId, this.id), data).then(messageData => {
-                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.client.textChannels.get(this.channelId) || this.channel, messageData))
+                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
                 }).catch(e => {
                     return reject(new Error(e))
                 })
@@ -149,7 +149,7 @@ module.exports = class Message {
                     else alrSeen[test.custom_id] = true
                 })
                 this.client.rest.patch(this.client._ENDPOINTS.MESSAGES(this.channelId, this.id), data).then(messageData => {
-                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.client.textChannels.get(this.channelId) || this.channel, messageData))
+                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
                 }).catch(e => {
                     return reject(new Error(e))
                 })
@@ -207,14 +207,14 @@ module.exports = class Message {
             if (typeof options === 'string') {
                 data['content'] = options
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.channelId), data).then(messageData => {
-                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.client.textChannels.get(this.channelId) || this.channel, messageData))
+                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
                 }).catch(e => {
                     return reject(new Error(e))
                 })
             } else if (options instanceof Embed) {
                 data['embeds'].push(options.pack())
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.channelId), data).then(messageData => {
-                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.client.textChannels.get(this.channelId) || this.channel, messageData))
+                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
                 }).catch(e => {
                     return reject(new Error(e))
                 })
@@ -228,7 +228,7 @@ module.exports = class Message {
                     else alrSeen[test.custom_id] = true
                 })
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.channelId), data).then(messageData => {
-                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.client.textChannels.get(this.channelId) || this.channel, messageData))
+                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
                 }).catch(e => {
                     return reject(new Error(e))
                 })
@@ -252,7 +252,7 @@ module.exports = class Message {
                     else alrSeen[test.custom_id] = true
                 })
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.channelId), data).then(messageData => {
-                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.client.textChannels.get(this.channelId) || this.channel, messageData))
+                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
                 }).catch(e => {
                     return reject(new Error(e))
                 })
@@ -264,7 +264,7 @@ module.exports = class Message {
         return new Promise(async (resolve, reject) => {
             if (this.channel.type !== 5) return reject(new TypeError("The channel must be an announcement channel"))
             this.client.rest.post(`${this.client._ENDPOINTS.MESSAGES(this.channelId, this.id)}/crosspost`).then(message_data => {
-                let message = new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.client.textChannels.get(this.channelId) || this.channel, message_data)
+                let message = new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, message_data)
                 Object.keys(message).map(k => this[k] = message[k])
                 return resolve(message)
             }).catch(e => {

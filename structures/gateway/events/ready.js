@@ -51,13 +51,13 @@ module.exports = {
             }, 1500)
         }
 
-        var x = setInterval(() => {
-            if (typeof client.options.messagesLifeTime !== 'number') return clearInterval(x)
-            if (client.options.messagesLifeTime < 1) return clearInverval(x)
-            client.messages.map(message => {
-                if (Date.now() > message.expireAt) return
-                else client.messages.delete(message.id)
-                client.emit('debug', `(${message.id}) Message removed from the cache`)
+        var w = setInterval(() => {
+            if (typeof client.options.usersLifeTime !== 'number') return clearInterval(w)
+            if (client.options.usersLifeTime < 1) return clearInverval(w)
+            client.users.map(user => {
+                if (Date.now() > user.expireAt) return
+                else client.users.delete(user.id)
+                client.emit('debug', `(${user.id}) User removed from the cache`)
             })
         }, 3000)
         var y = setInterval(() => {
@@ -105,6 +105,16 @@ module.exports = {
                 if (Date.now() > thread.expireAt) return
                 else client.threadChannels.delete(thread.id)
                 client.emit('debug', `(${thread.id}) Thread channel removed from the cache`)
+            })
+            client.stageChannels.map(stage => {
+                if (Date.now() > stage.expireAt) return
+                else client.stageChannels.delete(stage.id)
+                client.emit('debug', `(${stage.id}) Stage channel removed from the cache`)
+            })
+            client.forumChannels.map(forum => {
+                if (Date.now() > forum.expireAt) return
+                else client.forumChannels.delete(forum.id)
+                client.emit('debug', `(${forum.id}) Forum channel removed from the cache`)
             })
         }, 3000)
     }

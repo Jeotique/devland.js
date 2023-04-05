@@ -302,7 +302,7 @@ module.exports = class AnnouncementChannel {
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             options["reason"] = reason
             this.client.rest.patch(this.client._ENDPOINTS.CHANNEL(this.id), options).then(res => {
-                let newChannel = new TextChannel(this.client, this.client.guilds.get(res.guild_id) || this.guild, res)
+                let newChannel = new AnnouncementChannel(this.client, this.client.guilds.get(res.guild_id) || this.guild, res)
                 Object.keys(newChannel).map(k => this[k] = newChannel[k])
                 return resolve(newChannel)
             }).catch(e => {
@@ -322,7 +322,7 @@ module.exports = class AnnouncementChannel {
                 this.client.rest.delete(this.client._ENDPOINTS.CHANNEL(this.id), {
                     "reason": reason
                 }).then(newChannel => {
-                    let channel = new TextChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, newChannel)
+                    let channel = new AnnouncementChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, newChannel)
                     Object.keys(channel).map(k => this[k] = channel[k])
                     return resolve(channel)
                 }).catch(e => {
@@ -367,7 +367,7 @@ module.exports = class AnnouncementChannel {
                 }
                 if (reason) data['reason'] = reason
                 this.client.rest.post(this.client._ENDPOINTS.SERVER_CHANNEL(this.guildId), data).then(newChannel => {
-                    let channel = new TextChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, newChannel)
+                    let channel = new AnnouncementChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, newChannel)
                     return resolve(channel)
                 }).catch(e => {
                     return reject(new Error(e))
@@ -382,7 +382,7 @@ module.exports = class AnnouncementChannel {
             if (typeof position !== "number") return reject(new TypeError("The channel position must be a number"))
             if (position < 0) return reject(new TypeError("The channel position must be more than 0"))
             this.client.rest.patch(this.client._ENDPOINTS.CHANNEL(this.id), { position: position }).then(res => {
-                let newChannel = new TextChannel(this.client, this.client.guilds.get(res.guild_id) || this.guild, res)
+                let newChannel = new AnnouncementChannel(this.client, this.client.guilds.get(res.guild_id) || this.guild, res)
                 Object.keys(newChannel).map(k => this[k] = newChannel[k])
                 return resolve(newChannel)
             }).catch(e => {

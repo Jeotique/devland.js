@@ -37,5 +37,8 @@ module.exports = {
     'INVITE_DELETE': 'inviteDelete',
     'THREAD_CREATE': 'threadCreate',
     'THREAD_UPDATE': 'threadUpdate',
-    'THREAD_DELETE': 'threadDelete' 
+    'THREAD_DELETE': 'threadDelete',
+    'STAGE_INSTANCE_CREATE': 'stageInstanceCreate',
+    'STAGE_INSTANCE_UPDATE': 'stageInstanceUpdate',
+    'STAGE_INSTANCE_DELETE': 'stageInstanceDelete', 
 }

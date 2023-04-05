@@ -40,6 +40,18 @@ module.exports = {
                     client.emit('channelDelete', channel)
                     client.emit('channelDeleteAnnouncement', channel)
                     client.announcementChannels.delete(data.id)
+                } else if (data.type === 13){ // stage channel
+                    let channel = client.stageChannels.get(data.id)
+                    channel.guild = guild
+                    client.emit('channelDelete', channel)
+                    client.emit('channelDeleteStage', channel)
+                    client.stageChannels.delete(data.id)
+                } else if (data.type === 15){ // forum channel
+                    let channel = client.forumChannels.get(data.id)
+                    channel.guild = guild
+                    client.emit('channelDelete', channel)
+                    client.emit('channelDeleteForum', channel)
+                    client.forumChannels.delete(data.id)
                 }
             } else {
                 let channel = { error: "Enable the guilds cache to get the old guild data", id: data.id, data_is_available: false }
@@ -48,6 +60,8 @@ module.exports = {
                 else if (data.type === 2) client.emit('channelDeleteVoice', channel)
                 else if (data.type === 4) client.emit('channelDeleteCategory', channel)
                 else if (data.type === 5) client.emit('channelDeleteAnnouncement', channel)
+                else if (data.type === 13) client.emit('channelDeleteStage', channel)
+                else if (data.type === 15) client.emit('channelDeleteForum', channel)
             }
         }
     }

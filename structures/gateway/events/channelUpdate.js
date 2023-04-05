@@ -1,5 +1,5 @@
 const Client = require('../../client/client')
-const { Guild, TextChannel, Message, VoiceChannel, AnnouncementChannel, CategoryChannel } = require('../../models')
+const { Guild, TextChannel, Message, VoiceChannel, AnnouncementChannel, CategoryChannel, StageChannel, ForumChannel } = require('../../models')
 module.exports = {
     name: 'channelUpdate',
     /**
@@ -19,14 +19,14 @@ module.exports = {
                 let text = new TextChannel(client, guild, data)
                 if (client.textChannels.has(text.id)) oldChannel = client.textChannels.get(text.id)
                 /**
-                * Emitted whenever a channel is created
+                * Emitted whenever a channel is stage
                 * @event client#channelUpdate
                 * @param {TextChannel} oldChannel
                 * @param {TextChannel} text
                 */
                 client.emit('channelUpdate', oldChannel, text)
                 /**
-                * Emitted whenever a text channel is created
+                * Emitted whenever a text channel is stage
                 * @event client#channelUpdateText
                 * @param {TextChannel} oldChannel
                 * @param {TextChannel} text
@@ -41,14 +41,14 @@ module.exports = {
                 let voice = new VoiceChannel(client, guild, data)
                 if (client.voiceChannels.has(voice.id)) oldChannel = client.voiceChannels.get(voice.id)
                 /**
-                * Emitted whenever a channel is created
+                * Emitted whenever a channel is stage
                 * @event client#channelUpdate
                 * @param {VoiceChannel} oldChannel
                 * @param {VoiceChannel} voice
                 */
                 client.emit('channelUpdate', oldChannel, voice)
                 /**
-                * Emitted whenever a text channel is created
+                * Emitted whenever a text channel is stage
                 * @event client#channelUpdateVoice
                 * @param {VoiceChannel} oldChannel
                 * @param {VoiceChannel} voice
@@ -63,14 +63,14 @@ module.exports = {
                 let category = new CategoryChannel(client, guild, data)
                 if (client.categoryChannels.has(category.id)) oldChannel = client.categoryChannels.get(category.id)
                 /**
-                * Emitted whenever a channel is created
+                * Emitted whenever a channel is stage
                 * @event client#channelUpdate
                 * @param {CategoryChannel} oldChannel
                 * @param {CategoryChannel} category
                 */
                 client.emit('channelUpdate', oldChannel, category)
                 /**
-                * Emitted whenever a category channel is created
+                * Emitted whenever a category channel is stage
                 * @event client#channelUpdateCategory
                 * @param {CategoryChannel} oldChannel
                 * @param {CategoryChannel} category
@@ -85,14 +85,14 @@ module.exports = {
                 let announcement = new AnnouncementChannel(client, guild, data)
                 if (client.announcementChannels.has(announcement.id)) oldChannel = client.announcementChannels.get(announcement.id)
                 /**
-                * Emitted whenever a channel is created
+                * Emitted whenever a channel is stage
                 * @event client#channelUpdate
                 * @param {CategoryChannel} oldChannel
                 * @param {AnnouncementChannel} announcement
                 */
                 client.emit('channelUpdate', oldChannel, announcement)
                 /**
-                * Emitted whenever a announcement channel is created
+                * Emitted whenever a announcement channel is stage
                 * @event client#channelUpdateAnnouncement
                 * @param {AnnouncementChannel} oldChannel
                 * @param {AnnouncementChannel} announcement
@@ -102,6 +102,50 @@ module.exports = {
                     announcement.cachedAt = Date.now()
                     announcement.expireAt = Date.now() + client.options.channelsLifeTime
                     client.announcementChannels.set(announcement.id, announcement)
+                }
+            } else if (data.type === 13) { // stage channel
+                let stage = new StageChannel(client, guild, data)
+                if (client.stageChannels.has(stage.id)) oldChannel = client.stageChannels.get(stage.id)
+                /**
+                * Emitted whenever a channel is updated
+                * @event client#channelUpdate
+                * @param {CategoryChannel} oldChannel
+                * @param {StageChannel} stage
+                */
+                client.emit('channelUpdate', oldChannel, stage)
+                /**
+                * Emitted whenever a stage channel is stage
+                * @event client#channelUpdateStage
+                * @param {StageChannel} oldChannel
+                * @param {StageChannel} stage
+                */
+                client.emit('channelUpdateStage', oldChannel, stage)
+                if (typeof client.options.channelsLifeTime === "number" && client.options.channelsLifeTime > 0) {
+                    stage.cachedAt = Date.now()
+                    stage.expireAt = Date.now() + client.options.channelsLifeTime
+                    client.stageChannels.set(stage.id, stage)
+                }
+            } else if (data.type === 15) { // forum channel
+                let forum = new ForumChannel(client, guild, data)
+                if (client.forumChannels.has(forum.id)) oldChannel = client.forumChannels.get(forum.id)
+                /**
+                * Emitted whenever a channel is updated
+                * @event client#channelUpdate
+                * @param {CategoryChannel} oldChannel
+                * @param {ForumChannel} forum
+                */
+                client.emit('channelUpdate', oldChannel, forum)
+                /**
+                * Emitted whenever a forum channel is stage
+                * @event client#channelUpdateForum
+                * @param {ForumChannel} oldChannel
+                * @param {ForumChannel} forum
+                */
+                client.emit('channelUpdateForum', oldChannel, forum)
+                if (typeof client.options.channelsLifeTime === "number" && client.options.channelsLifeTime > 0) {
+                    forum.cachedAt = Date.now()
+                    forum.expireAt = Date.now() + client.options.channelsLifeTime
+                    client.forumChannels.set(forum.id, forum)
                 }
             }
         }

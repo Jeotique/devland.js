@@ -14,10 +14,22 @@ client.on('ready', async () => {
     let guild = await client.fetchGuild("974284423979745370")
    // guild.fetchCategoryChannels().then(a => console.log(a))
 
-   guild.client.rest.get(guild.client._ENDPOINTS.CHANNEL("1093130130169278465")).then(res => console.log(res))
+   //guild.client.rest.get(guild.client._ENDPOINTS.CHANNEL("1093191652945965137")).then(res => console.log(res))
+   let user = await client.fetchUser("484412542530224128")
+   //user.send("test")
 })
 
 client.on('message', async message => {
+
+    if(message.guild){
+        console.log(message)
+        console.log("message venant d'un serveur")
+    } else {
+        console.log(message)
+        console.log("message venant d'un salon privé")
+    }
+
+    return;
     if (message.content === '+test') {
         console.log('test')
         let select = new Discord.MentionableSelect()
