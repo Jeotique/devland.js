@@ -34,5 +34,8 @@ module.exports = {
     'USER_UPDATE': 'userUpdate',
     'TYPING_START': 'userTypingStart',
     'INVITE_CREATE': 'inviteCreate',
-    'INVITE_DELETE': 'inviteDelete', 
+    'INVITE_DELETE': 'inviteDelete',
+    'THREAD_CREATE': 'threadCreate',
+    'THREAD_UPDATE': 'threadUpdate',
+    'THREAD_DELETE': 'threadDelete' 
 }

@@ -12,6 +12,28 @@ module.exports = {
         if (client.guilds.has(data.id) && client.guilds.get(data.id).ready === false) {
             data.ready = true
             let guild = new Models.Guild(client, data)
+            if (typeof client.options.channelsLifeTime === "number" && client.options.channelsLifeTime > 0) {
+                data.channels.filter(channel => channel.type === 0).map(channel => {
+                    let text = new Models.TextChannel(client, guild, channel)
+                    text.cachedAt = Date.now()
+                    text.expireAt = Date.now() + client.options.channelsLifeTime
+                    client.textChannels.set(text.id, text)
+                })
+                data.channels.filter(channel => channel.type === 2).map(channel => {
+                    let voice = new Models.VoiceChannel(client, guild, channel)
+                    voice.cachedAt = Date.now()
+                    voice.expireAt = Date.now() + client.options.channelsLifeTime
+                    client.voiceChannels.set(voice.id, voice)
+                })
+                data.channels.filter(channel => channel.type === 4).map(channel => {
+                    let category = new Models.CategoryChannel(client, guild, channel)
+                    data.channels.filter(child => child.parent_id === category.id || child.parentId === category.id).map(child => category.childrens.push(child))
+                    category.cachedAt = Date.now()
+                    category.expireAt = Date.now() + client.options.channelsLifeTime
+                    client.categoryChannels.set(category.id, category)
+                })
+            }
+
             /**
              * Emitted whenever the guild data is available
              * @event client#guildAvailable
@@ -23,8 +45,34 @@ module.exports = {
             client.guilds.set(guild.id, guild)
         } else {
             data.ready = true
-            data.ready = true
             let guild = new Models.Guild(client, data)
+            if (typeof client.options.channelsLifeTime === "number" && client.options.channelsLifeTime > 0) {
+                data.channels.filter(channel => channel.type === 0).map(channel => {
+                    let text = new Models.TextChannel(client, guild, channel)
+                    text.cachedAt = Date.now()
+                    text.expireAt = Date.now() + client.options.channelsLifeTime
+                    client.textChannels.set(text.id, text)
+                })
+                data.channels.filter(channel => channel.type === 2).map(channel => {
+                    let voice = new Models.VoiceChannel(client, guild, channel)
+                    voice.cachedAt = Date.now()
+                    voice.expireAt = Date.now() + client.options.channelsLifeTime
+                    client.voiceChannels.set(voice.id, voice)
+                })
+                data.channels.filter(channel => channel.type === 4).map(channel => {
+                    let category = new Models.CategoryChannel(client, guild, channel)
+                    data.channels.filter(child => child.parent_id === category.id || child.parentId === category.id).map(child => category.childrens.push(child))
+                    category.cachedAt = Date.now()
+                    category.expireAt = Date.now() + client.options.channelsLifeTime
+                    client.categoryChannels.set(category.id, category)
+                })
+                data.channels.filter(channel => channel.type === 5).map(channel => {
+                    let announcement = new Models.AnnouncementChannel(client, guild, channel)
+                    announcement.cachedAt = Date.now()
+                    announcement.expireAt = Date.now() + client.options.channelsLifeTime
+                    client.announcementChannels.set(announcement.id, announcement)
+                })
+            }
             /**
              * Emitted whenever the bot join a new guild
              * @event client#guildAdded

@@ -7,7 +7,8 @@ const ActionRow = require('./ActionRow')
 const { default: Store } = require('../util/Store/Store')
 const Permissions = require('../util/Permissions/Permissions')
 const ForumTag = require('./ForumTag')
-module.exports = class TextChannel {
+const User = require('./User')
+module.exports = class Thread {
     /**
      * 
      * @param {Client} client 
@@ -26,27 +27,20 @@ module.exports = class TextChannel {
 
         this.id = data.id
         this.last_message_id = data.last_message_id
+        this.total_message_sent = data.total_message_sent
+        this.message_count = data.message_count
+        this.member_count = data.member_count
+        this.owner_id = data.owner_id
         this.type = data.type
         this.name = data.name
-        this.position = data.position
         this.flags = data.flags
         this.parent_id = data.parentId || data.parent_id
-        this.topic = data.topic
         this.guildId = data.guild_id || guild.id
         this.rate_limit_per_user = data.rate_limit_per_user
-        this.nsfw = data.nsfw
         this.createdTimestamp = Utils.getTimestampFrom(this.id)
         this.createdAt = new Date(this.createdTimestamp)
-        this.permission_overwrites = []
+        this.thread_metadata = data.thread_metadata
         this.data_is_available = true
-        data.permission_overwrites.map(perm => {
-            this.permission_overwrites.push({
-                id: perm.id,
-                type: perm.type,
-                allow: perm.allow && perm.allow.length > 0 ? new Permissions(perm.allow).toArray() : [],
-                deny: perm.deny && perm.deny.length > 0 ? new Permissions(perm.deny).toArray() : []
-            })
-        })
     }
     /**
      * @typedef {object} MessageOptions
@@ -233,7 +227,7 @@ module.exports = class TextChannel {
                 else if (options.user_limit > 10000 && this.type === 13) return reject(new TypeError("The channel user limit must be less than 10000"))
             }
             if (typeof options.parent_id !== "undefined") {
-                if(options.parent_id instanceof CategoryChannel){
+                if (options.parent_id instanceof CategoryChannel) {
                     options.parent_id = options.parent_id.id
                 }
                 if (options.parent_id !== null && typeof options.parent_id !== "string") return reject(new TypeError("The channel parent id must be a string"))
@@ -299,7 +293,7 @@ module.exports = class TextChannel {
                 if (options.default_forum_layout === null) options.default_forum_layout = 0
                 if (typeof options.default_forum_layout !== "number") return reject(new TypeError("Default forum layout must be set to null or a number"))
             }
-            if(typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             options["reason"] = reason
             this.client.rest.patch(this.client._ENDPOINTS.CHANNEL(this.id), options).then(res => {
                 let newChannel = new TextChannel(this.client, this.client.guilds.get(res.guild_id) || this.guild, res)
@@ -329,65 +323,6 @@ module.exports = class TextChannel {
                     return reject(new Error(e))
                 })
             }, time)
-        })
-    }
-
-    async clone(reason, time) {
-        return new Promise(async (resolve, reject) => {
-            if (reason === null) reason = undefined
-            if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
-            if (time === null) time = 0
-            if (!time) time = 0
-            if (typeof time !== "undefined" && typeof time !== "number") return reject(new TypeError("The time before deleting the channel must be a number (ms) or a undefined value"))
-            setTimeout(() => {
-                let data = {
-                    name: this.name,
-                    type: this.type,
-                    topic: this.topic,
-                    bitrate: this.bitrate,
-                    user_limit: this.userLimit,
-                    rate_limit_per_user: this.rateLimitPerUser,
-                    position: this.position,
-                    permission_overwrites: this.permission_overwrites.map(perm => {
-                        return {
-                            id: perm.id,
-                            type: perm.type,
-                            allow: perm.allow.length < 1 ? undefined : new Permissions(perm.allow).bitfield.toString(),
-                            deny: perm.deny.length < 1 ? undefined : new Permissions(perm.deny).bitfield.toString()
-                        }
-                    }),
-                    parent_id: this.parentId||this.parent_id,
-                    nsfw: this.nsfw,
-                    rtc_region: this.rtcRegion,
-                    video_quality_mode: this.videoQualityMode,
-                    default_auto_archive_duration: this.defaultAutoArchiveDuration,
-                    default_reaction_emoji: this.defaultReactionEmoji,
-                    available_tags: this.availableTags,
-                    default_sort_order: this.defaultSortOrder,
-                }
-                if (reason) data['reason'] = reason
-                this.client.rest.post(this.client._ENDPOINTS.SERVER_CHANNEL(this.guildId), data).then(newChannel => {
-                    let channel = new TextChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, newChannel)
-                    return resolve(channel)
-                }).catch(e => {
-                    return reject(new Error(e))
-                })
-            }, time)
-        })
-    }
-
-    async setPosition(position) {
-        return new Promise(async (resolve, reject) => {
-            if (typeof position === "undefined") return reject(new TypeError("The channel position must be a number"))
-            if (typeof position !== "number") return reject(new TypeError("The channel position must be a number"))
-            if (position < 0) return reject(new TypeError("The channel position must be more than 0"))
-            this.client.rest.patch(this.client._ENDPOINTS.CHANNEL(this.id), {position: position}).then(res => {
-                let newChannel = new TextChannel(this.client, this.client.guilds.get(res.guild_id) || this.guild, res)
-                Object.keys(newChannel).map(k => this[k] = newChannel[k])
-                return resolve(newChannel)
-            }).catch(e => {
-                return reject(new Error(e))
-            })
         })
     }
 
@@ -428,15 +363,63 @@ module.exports = class TextChannel {
         })
     }
 
-    async getPinnedMessages(){
-        return new Promise(async(resolve, reject) => {
-            this.client.rest.get(this.client._ENDPOINTS.CHANNEL(this.id)+'/pins').then(messages => {
+    async getPinnedMessages() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.get(this.client._ENDPOINTS.CHANNEL(this.id) + '/pins').then(messages => {
                 let collect = new Store()
                 messages.map(msg => {
-                    collect.set(msg.id, new Message(this.client, this.client.guilds.get(this.guildId)||this.guild, this.client.textChannels.get(this.id)||this,msg))
+                    collect.set(msg.id, new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.client.textChannels.get(this.id) || this, msg))
                 })
                 return resolve(collect)
-            }).catch(e=>{
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async join() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.put(this.client._ENDPOINTS.THREAD_MEMBER(this.id, "@me")).then(() => {
+                return resolve()
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async leave() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.delete(this.client._ENDPOINTS.THREAD_MEMBER(this.id, "@me")).then(() => {
+                return resolve()
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async add(member){
+        return new Promise(async(resolve, reject) => {
+            if(typeof member === "undefined") return reject(new TypeError("Member must be defined by a Member instance or a Member Id"))
+            if(member instanceof User) member = member.id
+            if(member instanceof Member) member = member.id
+            if(typeof member !== "string") return reject(new TypeError("Member must be defined by a Member instance or a Member Id"))
+            this.client.rest.put(this.client._ENDPOINTS.THREAD_MEMBER(this.id, member)).then(() => {
+                return resolve()
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async remove(member){
+        return new Promise(async(resolve, reject) => {
+            if(typeof member === "undefined") return reject(new TypeError("Member must be defined by a Member instance or a Member Id"))
+            if(member instanceof User) member = member.id
+            if(member instanceof Member) member = member.id
+            if(typeof member !== "string") return reject(new TypeError("Member must be defined by a Member instance or a Member Id"))
+            this.client.rest.delete(this.client._ENDPOINTS.THREAD_MEMBER(this.id, member)).then(() => {
+                return resolve()
+            }).catch(e => {
                 return reject(new Error(e))
             })
         })

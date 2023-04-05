@@ -7,7 +7,7 @@ const ActionRow = require('./ActionRow')
 const { default: Store } = require('../util/Store/Store')
 const Permissions = require('../util/Permissions/Permissions')
 const ForumTag = require('./ForumTag')
-module.exports = class TextChannel {
+module.exports = class VoiceChannel {
     /**
      * 
      * @param {Client} client 
@@ -31,10 +31,12 @@ module.exports = class TextChannel {
         this.position = data.position
         this.flags = data.flags
         this.parent_id = data.parentId || data.parent_id
-        this.topic = data.topic
         this.guildId = data.guild_id || guild.id
         this.rate_limit_per_user = data.rate_limit_per_user
         this.nsfw = data.nsfw
+        this.bitrate = data.bitrate
+        this.user_limit = data.user_limit
+        this.rtc_region = data.rtc_region
         this.createdTimestamp = Utils.getTimestampFrom(this.id)
         this.createdAt = new Date(this.createdTimestamp)
         this.permission_overwrites = []
@@ -345,7 +347,7 @@ module.exports = class TextChannel {
                     type: this.type,
                     topic: this.topic,
                     bitrate: this.bitrate,
-                    user_limit: this.userLimit,
+                    user_limit: this.user_limit,
                     rate_limit_per_user: this.rateLimitPerUser,
                     position: this.position,
                     permission_overwrites: this.permission_overwrites.map(perm => {
@@ -425,20 +427,6 @@ module.exports = class TextChannel {
                     return reject(new Error(e))
                 })
             }
-        })
-    }
-
-    async getPinnedMessages(){
-        return new Promise(async(resolve, reject) => {
-            this.client.rest.get(this.client._ENDPOINTS.CHANNEL(this.id)+'/pins').then(messages => {
-                let collect = new Store()
-                messages.map(msg => {
-                    collect.set(msg.id, new Message(this.client, this.client.guilds.get(this.guildId)||this.guild, this.client.textChannels.get(this.id)||this,msg))
-                })
-                return resolve(collect)
-            }).catch(e=>{
-                return reject(new Error(e))
-            })
         })
     }
 }

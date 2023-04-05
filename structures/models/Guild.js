@@ -5,6 +5,8 @@ const GuildCommand = require('./GuildCommand')
 const { Store } = require('../util/Store/Store')
 const Emoji = require('./Emoji')
 const User = require('./User')
+const VoiceChannel = require('./VoiceChannel')
+const CategoryChannel = require('./CategoryChannel')
 
 module.exports = class Guild {
     /**
@@ -103,7 +105,7 @@ module.exports = class Guild {
             if (guildResult.safety_alerts_channel_id) safetyChannel = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(guildResult.safety_alerts_channel_id)).catch(e => reject(new Error(e)))
             if (guildResult.public_updates_channel_id) publicUpdatesChannel = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(guildResult.public_updates_channel_id)).catch(e => { reject(new Error(e)) })
             if (systemChannel) systemChannel = new TextChannel(this.client, this, systemChannel)
-            //if (afkChannel) afkChannel = new VoiceChannel(this.client, this, afkChannel)
+            if (afkChannel) afkChannel = new VoiceChannel(this.client, this, afkChannel)
             if (widgetChannel) widgetChannel = new TextChannel(this.client, this, widgetChannel)
             if (rulesChannel) rulesChannel = new TextChannel(this.client, this, rulesChannel)
             if (safetyChannel) safetyChannel = new TextChannel(this.client, this, safetyChannel)
@@ -315,6 +317,48 @@ module.exports = class Guild {
             if (this.ownerId !== this.client.user.id) return reject(new TypeError("The bot need to be the owner to do this action"))
             this.client.rest.delete(this.client._ENDPOINTS.SERVERS(this.id)).then(() => {
                 return resolve()
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async fetchTextChannels() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.get(this.client._ENDPOINTS.SERVER_CHANNEL(this.id)).then(res => {
+                res = res.filter(channel => channel.type === 0)
+                let collect = new Store()
+                res.map(channel => collect.set(channel.id, new TextChannel(this.client, this.client.guilds.get(this.id) || this, channel)))
+                return resolve(collect)
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async fetchVoiceChannels() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.get(this.client._ENDPOINTS.SERVER_CHANNEL(this.id)).then(res => {
+                res = res.filter(channel => channel.type === 2)
+                let collect = new Store()
+                res.map(channel => collect.set(channel.id, new VoiceChannel(this.client, this.client.guilds.get(this.id) || this, channel)))
+                return resolve(collect)
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async fetchCategoryChannels() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.get(this.client._ENDPOINTS.SERVER_CHANNEL(this.id)).then(res => {
+                let collect = new Store()
+                res.filter(channel => channel.type === 4).map(channel => {
+                    channel.childrens = []
+                    res.filter(child => child.parent_id === channel.id || child.parentId === channel.id).map(child => channel.childrens.push(child.id))
+                    collect.set(channel.id, new CategoryChannel(this.client, this.client.guilds.get(this.id) || this, channel))
+                })
+                return resolve(collect)
             }).catch(e => {
                 return reject(new Error(e))
             })

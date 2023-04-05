@@ -27,5 +27,11 @@ module.exports = {
              */
             client.emit("guildRemoved", {error: "Enable the guilds cache to get the old guild data", id: data.id, data_is_available: false})
         }
+        client.textChannels.filter(channel => channel.guildId === guild.id).map(channel => {
+            client.textChannels.delete(channel.id)
+        })
+        client.voiceChannels.filter(channel => channel.guildId === guild.id).map(channel => {
+            client.voiceChannels.delete(channel.id)
+        })
     }
 }

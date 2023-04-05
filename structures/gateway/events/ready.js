@@ -38,24 +38,6 @@ module.exports = {
                     * @param {Client} client
                     */
                     client.emit('ready', client)
-                    var x = setInterval(() => {
-                        if (typeof client.options.messagesLifeTime !== 'number') return clearInterval(x)
-                        if (client.options.messagesLifeTime < 1) return clearInverval(x)
-                        client.messages.map(message => {
-                            if (Date.now() > message.expireAt) return
-                            else client.messages.delete(message.id)
-                            client.emit('debug', `(${message.id}) Message removed from the cache`)
-                        })
-                    }, 3000)
-                    var y = setInterval(() => {
-                        if (typeof client.options.guildsLifeTime !== 'number') return clearInterval(y)
-                        if (client.options.guildsLifeTime < 1) return clearInverval(y)
-                        client.guilds.map(guild => {
-                            if (Date.now() > guild.expireAt) return
-                            else client.guilds.delete(guild.id)
-                            client.emit('debug', `(${guild.id}) Guild removed from the cache`)
-                        })
-                    }, 3000)
                 }
             })
         } else {
@@ -66,16 +48,64 @@ module.exports = {
                  * @param {Client} client
                  */
                 client.emit('ready', client)
-                var x = setInterval(() => {
-                    if (typeof client.options.messagesLifeTime !== 'number') return clearInterval(x)
-                    if (client.options.messagesLifeTime < 1) return clearInverval(x)
-                    client.messages.map(message => {
-                        if (Date.now() > message.expireAt) return
-                        else client.messages.delete(message.id)
-                        client.emit('debug', `(${message.id}) Message removed from the cache`)
-                    })
-                }, 3000)
             }, 1500)
         }
+
+        var x = setInterval(() => {
+            if (typeof client.options.messagesLifeTime !== 'number') return clearInterval(x)
+            if (client.options.messagesLifeTime < 1) return clearInverval(x)
+            client.messages.map(message => {
+                if (Date.now() > message.expireAt) return
+                else client.messages.delete(message.id)
+                client.emit('debug', `(${message.id}) Message removed from the cache`)
+            })
+        }, 3000)
+        var y = setInterval(() => {
+            if (typeof client.options.guildsLifeTime !== 'number') return clearInterval(y)
+            if (client.options.guildsLifeTime < 1) return clearInverval(y)
+            client.guilds.map(guild => {
+                if (Date.now() > guild.expireAt) return
+                else client.guilds.delete(guild.id)
+                client.emit('debug', `(${guild.id}) Guild removed from the cache`)
+            })
+        }, 3000)
+        var x = setInterval(() => {
+            if (typeof client.options.messagesLifeTime !== 'number') return clearInterval(x)
+            if (client.options.messagesLifeTime < 1) return clearInverval(x)
+            client.messages.map(message => {
+                if (Date.now() > message.expireAt) return
+                else client.messages.delete(message.id)
+                client.emit('debug', `(${message.id}) Message removed from the cache`)
+            })
+        }, 3000)
+        var z = setInterval(() => {
+            if (typeof client.options.channelsLifeTime !== 'number') return clearInterval(z)
+            if (client.options.channelsLifeTime < 1) return clearInverval(z)
+            client.textChannels.map(text => {
+                if (Date.now() > text.expireAt) return
+                else client.textChannels.delete(text.id)
+                client.emit('debug', `(${text.id}) Text channel removed from the cache`)
+            })
+            client.voiceChannels.map(voice => {
+                if (Date.now() > voice.expireAt) return
+                else client.voiceChannels.delete(voice.id)
+                client.emit('debug', `(${voice.id}) Voice channel removed from the cache`)
+            })
+            client.categoryChannels.map(category => {
+                if (Date.now() > category.expireAt) return
+                else client.categoryChannels.delete(category.id)
+                client.emit('debug', `(${category.id}) Category channel removed from the cache`)
+            })
+            client.announcementChannels.map(announcement => {
+                if (Date.now() > announcement.expireAt) return
+                else client.announcementChannels.delete(announcement.id)
+                client.emit('debug', `(${announcement.id}) Announcement channel removed from the cache`)
+            })
+            client.threadChannels.map(thread => {
+                if (Date.now() > thread.expireAt) return
+                else client.threadChannels.delete(thread.id)
+                client.emit('debug', `(${thread.id}) Thread channel removed from the cache`)
+            })
+        }, 3000)
     }
 }

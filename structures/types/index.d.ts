@@ -16,6 +16,8 @@ declare module 'devland.js' {
         channelsLifeTimeResetAfterEvents: boolean;
         usersLifeTime: number;
         usersLifeTimeResetAfterEvents: boolean;
+        threadsLifeTime: number;
+        threadsLifeTimeResetAfterEvents: boolean;
     }
     declare type wsOptions = {
         large_threshold: number;
@@ -61,6 +63,10 @@ declare module 'devland.js' {
         readonly messages: Store<string, Message>;
         readonly guilds: Store<string, Guild>;
         readonly textChannels: Store<string, TextChannel>;
+        readonly voiceChannels: Store<string, VoiceChannel>;
+        readonly categoryChannels: Store<string, CategoryChannel>;
+        readonly announcementChannels: Store<string, AnnouncementChannel>;
+        readonly threadChannels: Store<string, Thread>;
         readonly version: string;
         connect(token?: string): Client;
         toJSON(): JSON;
@@ -99,6 +105,16 @@ declare module 'devland.js' {
         id: string;
         data_is_available: boolean;
     }
+    export type invalid_Channel = {
+        error: string;
+        id: string;
+        data_is_available: boolean;
+    }
+    export type invalid_Thread = {
+        error: string,
+        id: string,
+        data_is_available: boolean,
+    }
     declare interface ClientEvents {
         debug: [data: string];
         ready: [client: Client];
@@ -108,6 +124,24 @@ declare module 'devland.js' {
         guildAvailable: [guild: Guild];
         guildAdded: [guild: Guild];
         guildRemoved: [guild: Guild | invalid_Guild];
+        channelCreate: [channel: TextChannel | VoiceChannel | CategoryChannel | AnnouncementChannel];
+        channelCreateText: [channel: TextChannel];
+        channelCreateVoice: [channel: VoiceChannel];
+        channelCreateCategory: [channel: CategoryChannel];
+        channelCreateAnnouncement: [channel: AnnouncementChannel];
+        channelUpdate: [old_channel: TextChannel | VoiceChannel | CategoryChannel | AnnouncementChannel | invalid_Channel, channel: TextChannel | VoiceChannel | CategoryChannel | AnnouncementChannel];
+        channelUpdateText: [old_channel: TextChannel | invalid_Channel, channel: TextChannel];
+        channelUpdateVoice: [old_channel: VoiceChannel | invalid_Channel, channel: VoiceChannel];
+        channelUpdateCategory: [old_channel: CategoryChannel | invalid_Channel, channel: CategoryChannel];
+        channelUpdateAnnouncement: [old_channel: AnnouncementChannel | invalid_Channel, channel: AnnouncementChannel];
+        channelDelete: [channel: TextChannel | VoiceChannel | CategoryChannel | AnnouncementChannel | invalid_Channel];
+        channelDeleteText: [channel: TextChannel | invalid_Channel];
+        channelDeleteVoice: [channel: VoiceChannel | invalid_Channel];
+        channelDeleteCategory: [channel: CategoryChannel | invalid_Channel];
+        channelDeleteAnnouncement: [channel: AnnouncementChannel | invalid_Channel];
+        threadCreate: [thread: Thread];
+        threadDelete: [thread: Thread | invalid_Thread];
+        threadUpdate: [old_thread: Thread | invalid_Thread, thread: Thread];
     }
     declare class RESTHandler {
         private constructor(client: Client);
@@ -200,17 +234,17 @@ declare module 'devland.js' {
         verification_level?: guildVerificationLevel,
         default_message_notifications?: guildDefaultMessageNotifications,
         explicit_content_filter?: guildExplicitContentFilterLevel,
-        afk_channel_id?: string|VoiceChannel,
+        afk_channel_id?: string | VoiceChannel,
         afk_timeout?: number,
         icon?: any,
-        owner_id?: User|string,
+        owner_id?: User | string,
         splash?: any,
         discovery_splash?: any,
         banner?: any,
-        system_channel_id?: string|TextChannel,
-        system_channel_flags?: number|string,
-        rules_channel_id?: string|TextChannel,
-        public_updates_channel_id?: string|TextChannel,
+        system_channel_id?: string | TextChannel,
+        system_channel_flags?: number | string,
+        rules_channel_id?: string | TextChannel,
+        public_updates_channel_id?: string | TextChannel,
         peferred_locale?: guildPreferredLocale,
         features?: guildFeatures[],
         description?: string,
@@ -258,6 +292,9 @@ declare module 'devland.js' {
         createEmoji(options: createEmojiOptions): Promise<Emoji>;
         edit(options: editGuildOptions, reason?: string): Promise<Guild>;
         delete(): Promise<void>;
+        fetchTextChannels(): Promise<Store<String, TextChannel>>;
+        fetchVoiceChannels(): Promise<Store<String, VoiceChannel>>;
+        fetchCategoryChannels(): Promise<Store<String, CategoryChannel>>;
     }
     export enum channelType {
         GUILD_TEXT = 0,
@@ -326,7 +363,7 @@ declare module 'devland.js' {
         readonly name: string;
         readonly position: number;
         readonly flags: number;
-        readonly parentId: string | null;
+        readonly parent_id: string | null;
         readonly topic: string | null;
         readonly guildId: string;
         readonly rate_limit_per_user: number;
@@ -345,6 +382,129 @@ declare module 'devland.js' {
         setPosition(position: number): Promise<TextChannel>;
         bulkDelete(data: number | Message[] | string[]): Promise<void>;
         getPinnedMessages(): Promise<Store<String, Message>>;
+    }
+    export type voiceBitrate = 8000 | 128000 | 256000 | 384000;
+    export class VoiceChannel {
+        private constructor(client: Client, guild: Guild, data: object)
+        private client: Client;
+        readonly guild: Guild;
+        readonly id: string;
+        readonly last_message_id: string;
+        readonly type: channelType;
+        readonly name: string;
+        readonly position: number;
+        readonly flags: number;
+        readonly parent_id: string | null;
+        readonly guildId: string;
+        readonly rate_limit_per_user: number;
+        readonly nsfw: boolean;
+        readonly createdTimestamp: number;
+        readonly createdAt: Date;
+        readonly data_is_available: boolean;
+        readonly permission_overwrites: PermissionOverwritesResolvable[];
+        readonly bitrate: voiceBitrate;
+        readonly user_limit: number;
+        readonly rtc_region: string;
+        private readonly cachedAt: number | undefined;
+        private readonly expireAt: number | undefined;
+        send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
+        fetchMessages(options?: fetchMessagesOptions | string): Promise<Store<String, Message>>;
+        edit(options: channelEditOptions, reason?: string): Promise<TextChannel>;
+        delete(reason?: string, time?: number): Promise<TextChannel>;
+        clone(reason?: string, time?: number): Promise<TextChannel>;
+        setPosition(position: number): Promise<TextChannel>;
+        bulkDelete(data: number | Message[] | string[]): Promise<void>;
+    }
+    export class CategoryChannel {
+        private constructor(client: Client, guild: Guild, data: object)
+        private client: Client;
+        readonly guild: Guild;
+        readonly id: string;
+        readonly type: channelType;
+        readonly name: string;
+        readonly position: number;
+        readonly flags: number;
+        readonly guildId: string;
+        readonly childrens: string[];
+        readonly createdTimestamp: number;
+        readonly createdAt: Date;
+        readonly data_is_available: boolean;
+        readonly permission_overwrites: PermissionOverwritesResolvable[];
+        private readonly cachedAt: number | undefined;
+        private readonly expireAt: number | undefined;
+        edit(options: channelEditOptions, reason?: string): Promise<TextChannel>;
+        delete(reason?: string, time?: number): Promise<TextChannel>;
+        clone(reason?: string, time?: number): Promise<TextChannel>;
+        setPosition(position: number): Promise<TextChannel>;
+        fetchTextChannels(): Promise<Store<String, TextChannel>>;
+        fetchVoiceChannels(): Promise<Store<String, VoiceChannel>>;
+    }
+    export class AnnouncementChannel {
+        private constructor(client: Client, guild: Guild, data: object)
+        private client: Client;
+        readonly guild: Guild;
+        readonly id: string;
+        readonly last_message_id: string;
+        readonly type: channelType;
+        readonly name: string;
+        readonly position: number;
+        readonly flags: number;
+        readonly parent_id: string | null;
+        readonly topic: string | null;
+        readonly guildId: string;
+        readonly rate_limit_per_user: number;
+        readonly nsfw: boolean;
+        readonly createdTimestamp: number;
+        readonly createdAt: Date;
+        readonly data_is_available: boolean;
+        readonly permission_overwrites: PermissionOverwritesResolvable[];
+        private readonly cachedAt: number | undefined;
+        private readonly expireAt: number | undefined;
+        send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
+        fetchMessages(options?: fetchMessagesOptions | string): Promise<Store<String, Message>>;
+        edit(options: channelEditOptions, reason?: string): Promise<TextChannel>;
+        delete(reason?: string, time?: number): Promise<TextChannel>;
+        clone(reason?: string, time?: number): Promise<TextChannel>;
+        setPosition(position: number): Promise<TextChannel>;
+        bulkDelete(data: number | Message[] | string[]): Promise<void>;
+        getPinnedMessages(): Promise<Store<String, Message>>;
+        crosspost(message: Message | string): Promise<Message>;
+    }
+    declare type ThreadMetadata = {
+        archived: boolean,
+        active_timestamp: string,
+        auto_archive_duration: number,
+        locked: boolean,
+        create_timestamp: string,
+    }
+    export class Thread {
+        private constructor(client: Client, guild: Guild, data: object)
+        private client: Client;
+        readonly guild: Guild;
+        readonly id: string;
+        readonly last_message_id: string;
+        readonly type: channelType;
+        readonly name: string;
+        readonly flags: number;
+        readonly parent_id: string | null;
+        readonly guildId: string;
+        readonly rate_limit_per_user: number;
+        readonly createdTimestamp: number;
+        readonly createdAt: Date;
+        readonly thread_metadata: ThreadMetadata;
+        readonly data_is_available: boolean;
+        private readonly cachedAt: number | undefined;
+        private readonly expireAt: number | undefined;
+        send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
+        fetchMessages(options?: fetchMessagesOptions | string): Promise<Store<String, Message>>;
+        edit(options: channelEditOptions, reason?: string): Promise<TextChannel>;
+        delete(reason?: string, time?: number): Promise<TextChannel>;
+        bulkDelete(data: number | Message[] | string[]): Promise<void>;
+        getPinnedMessages(): Promise<Store<String, Message>>;
+        join(): Promise<void>;
+        leave(): Promise<void>;
+        add(member: User | Member | string): Promise<void>;
+        remove(member: User | Member | string): Promise<void>;
     }
     declare type webhookId = string;
     declare type getUsersFromReactionOptions = {

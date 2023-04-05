@@ -7,7 +7,7 @@ const ActionRow = require('./ActionRow')
 const { default: Store } = require('../util/Store/Store')
 const Permissions = require('../util/Permissions/Permissions')
 const ForumTag = require('./ForumTag')
-module.exports = class TextChannel {
+module.exports = class CategoryChannel {
     /**
      * 
      * @param {Client} client 
@@ -25,16 +25,12 @@ module.exports = class TextChannel {
         this.guild = guild
 
         this.id = data.id
-        this.last_message_id = data.last_message_id
         this.type = data.type
         this.name = data.name
         this.position = data.position
         this.flags = data.flags
-        this.parent_id = data.parentId || data.parent_id
-        this.topic = data.topic
         this.guildId = data.guild_id || guild.id
-        this.rate_limit_per_user = data.rate_limit_per_user
-        this.nsfw = data.nsfw
+        this.childrens = data.childrens || []
         this.createdTimestamp = Utils.getTimestampFrom(this.id)
         this.createdAt = new Date(this.createdTimestamp)
         this.permission_overwrites = []
@@ -46,146 +42,6 @@ module.exports = class TextChannel {
                 allow: perm.allow && perm.allow.length > 0 ? new Permissions(perm.allow).toArray() : [],
                 deny: perm.deny && perm.deny.length > 0 ? new Permissions(perm.deny).toArray() : []
             })
-        })
-    }
-    /**
-     * @typedef {object} MessageOptions
-     * @property {string} content
-     * @property {Embed[]} embeds
-     * @property {boolean} tts
-     * @property {string} nonce
-     * @property {'roles'|'users'|'everyone'} allowedMentions
-     * @property {ActionRow[]} components
-     */
-    /**
-     * Send a message is the channel
-     * @param {MessageOptions|string} options 
-     * @returns {Promise<Message>}
-     */
-    async send(options) {
-        return new Promise(async (resolve, reject) => {
-            let data = {
-                content: undefined,
-                embeds: [],
-                tts: false,
-                nonce: undefined,
-                allowed_mentions: undefined,
-                components: []
-            }
-            if (typeof options === 'string') {
-                data['content'] = options
-                this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id), data).then(messageData => {
-                    return resolve(new Message(this.client, this.guild, this, messageData))
-                }).catch(e => {
-                    return reject(new Error(e))
-                })
-            } else if (options instanceof Embed) {
-                data['embeds'].push(options.pack())
-                this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id), data).then(messageData => {
-                    return resolve(new Message(this.client, this.guild, this, messageData))
-                }).catch(e => {
-                    return reject(new Error(e))
-                })
-            } else if (options instanceof ActionRow) {
-                data['components'].push(options.pack())
-                let toTestCustomId = []
-                let alrSeen = {}
-                data['components']?.map(ar => ar?.components.map(comp => toTestCustomId.push(comp)))
-                if (toTestCustomId.length > 0) toTestCustomId.map(test => {
-                    if (alrSeen[test.custom_id]) return reject(new TypeError("Duplicated custom Id"))
-                    else alrSeen[test.custom_id] = true
-                })
-                this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.channelId), data).then(messageData => {
-                    return resolve(new Message(this.client, this.guild, this, messageData))
-                }).catch(e => {
-                    return reject(new Error(e))
-                })
-            } else if (typeof options === 'object') {
-                data['content'] = options['content']
-                if (typeof options['embeds'] === 'object') options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
-                data['embeds'] = options['embeds']
-                data['tts'] = options['tts']
-                data['nonce'] = options['nonce']
-                data['allowed_mentions'] = options['allowedMentions']
-                data['components'] = []
-                options['components']?.map(comp => {
-                    if (comp instanceof ActionRow) data['components'].push(comp.pack())
-                    else return reject(new TypeError("Invalid component, must be a ActionRow instance"))
-                })
-                let toTestCustomId = []
-                let alrSeen = {}
-                data['components']?.map(ar => ar?.components.map(comp => toTestCustomId.push(comp)))
-                if (toTestCustomId.length > 0) toTestCustomId.map(test => {
-                    if (alrSeen[test.custom_id]) return reject(new TypeError("Duplicated custom Id"))
-                    else alrSeen[test.custom_id] = true
-                })
-                this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id), data).then(messageData => {
-                    return resolve(new Message(this.client, this.guild, this, messageData))
-                }).catch(e => {
-                    return reject(new Error(e))
-                })
-            } else return reject(new TypeError("Send without any options is not authorized"))
-        })
-    }
-
-    async fetchMessages(options) {
-        return new Promise(async (resolve, reject) => {
-            if (options && typeof options === "string") {
-                this.client.rest.get(this.client._ENDPOINTS.MESSAGES(this.id, options)).then(data => {
-                    let message = new Message(this.client, this.guild, this, data)
-                    resolve(new Store().set(message.id, message))
-                    if (typeof this.client.options.messagesLifeTime === "number" && this.client.options.messagesLifeTime > 0) {
-                        message.cachedAt = Date.now()
-                        message.expireAt = Date.now() + this.client.options.messagesLifeTime
-                        this.client.messages.set(message.id, message)
-                    }
-                }).catch(e => {
-                    return reject(new Error(e))
-                })
-            } else if (typeof options === "object") {
-                if (options.limit && typeof options.limit !== "number") return reject(new TypeError("Limit must be a number"))
-                if (options.limit && options.limit > 100) return reject(new TypeError("The limit can't be more than 100"))
-                if (options.limit && options.limit < 1) return reject(new TypeError("The limit can't be less than 1"))
-                if (typeof options.around !== "undefined" && typeof options.around !== "string") return reject(new TypeError("The around value must be a string (message Id)"))
-                if (typeof options.before !== "undefined" && typeof options.before !== "string") return reject(new TypeError("The before value must be a string (message Id)"))
-                if (typeof options.after !== "undefined" && typeof options.after !== "string") return reject(new TypeError("The after value must be a string (message Id)"))
-                let used = 0
-                if (options.around) used++
-                if (options.before) used++
-                if (options.after) used++
-                if (used > 1) return reject(new TypeError("You can only use one filter (around | before | after)"))
-                this.client.rest.get(`${this.client._ENDPOINTS.MESSAGES(this.id)}${options.limit ? `?limit=${options.limit}${options.around ? `&around=${options.around}` : `${options.before ? `&before=${options.before}` : `${options.after ? `&after=${options.after}` : ``}`}`}` : `${options.around ? `?around=${options.around}` : `${options.before ? `?before=${options.before}` : `${options.after ? `?after=${options.after}` : ``}`}`}`}`).then(data => {
-                    let cache = new Store()
-                    data.map(message_data => {
-                        let message = new Message(this.client, this.guild, this, message_data)
-                        cache.set(message.id, message)
-                        if (typeof this.client.options.messagesLifeTime === "number" && this.client.options.messagesLifeTime > 0) {
-                            message.cachedAt = Date.now()
-                            message.expireAt = Date.now() + this.client.options.messagesLifeTime
-                            this.client.messages.set(message.id, message)
-                        }
-                    })
-                    return resolve(cache)
-                }).catch(e => {
-                    return reject(new Error(e))
-                })
-            } else if (typeof options === "undefined") {
-                this.client.rest.get(this.client._ENDPOINTS.MESSAGES(this.id)).then(data => {
-                    let cache = new Store()
-                    data.map(message_data => {
-                        let message = new Message(this.client, this.guild, this, message_data)
-                        cache.set(message.id, message)
-                        if (typeof this.client.options.messagesLifeTime === "number" && this.client.options.messagesLifeTime > 0) {
-                            message.cachedAt = Date.now()
-                            message.expireAt = Date.now() + this.client.options.messagesLifeTime
-                            this.client.messages.set(message.id, message)
-                        }
-                    })
-                    return resolve(cache)
-                }).catch(e => {
-                    return reject(new Error(e))
-                })
-            } else return reject(new TypeError("Invalid fetch messages options provided"))
         })
     }
 
@@ -233,7 +89,7 @@ module.exports = class TextChannel {
                 else if (options.user_limit > 10000 && this.type === 13) return reject(new TypeError("The channel user limit must be less than 10000"))
             }
             if (typeof options.parent_id !== "undefined") {
-                if(options.parent_id instanceof CategoryChannel){
+                if (options.parent_id instanceof CategoryChannel) {
                     options.parent_id = options.parent_id.id
                 }
                 if (options.parent_id !== null && typeof options.parent_id !== "string") return reject(new TypeError("The channel parent id must be a string"))
@@ -299,7 +155,7 @@ module.exports = class TextChannel {
                 if (options.default_forum_layout === null) options.default_forum_layout = 0
                 if (typeof options.default_forum_layout !== "number") return reject(new TypeError("Default forum layout must be set to null or a number"))
             }
-            if(typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             options["reason"] = reason
             this.client.rest.patch(this.client._ENDPOINTS.CHANNEL(this.id), options).then(res => {
                 let newChannel = new TextChannel(this.client, this.client.guilds.get(res.guild_id) || this.guild, res)
@@ -345,7 +201,7 @@ module.exports = class TextChannel {
                     type: this.type,
                     topic: this.topic,
                     bitrate: this.bitrate,
-                    user_limit: this.userLimit,
+                    user_limit: this.user_limit,
                     rate_limit_per_user: this.rateLimitPerUser,
                     position: this.position,
                     permission_overwrites: this.permission_overwrites.map(perm => {
@@ -356,7 +212,7 @@ module.exports = class TextChannel {
                             deny: perm.deny.length < 1 ? undefined : new Permissions(perm.deny).bitfield.toString()
                         }
                     }),
-                    parent_id: this.parentId||this.parent_id,
+                    parent_id: this.parentId || this.parent_id,
                     nsfw: this.nsfw,
                     rtc_region: this.rtcRegion,
                     video_quality_mode: this.videoQualityMode,
@@ -381,7 +237,7 @@ module.exports = class TextChannel {
             if (typeof position === "undefined") return reject(new TypeError("The channel position must be a number"))
             if (typeof position !== "number") return reject(new TypeError("The channel position must be a number"))
             if (position < 0) return reject(new TypeError("The channel position must be more than 0"))
-            this.client.rest.patch(this.client._ENDPOINTS.CHANNEL(this.id), {position: position}).then(res => {
+            this.client.rest.patch(this.client._ENDPOINTS.CHANNEL(this.id), { position: position }).then(res => {
                 let newChannel = new TextChannel(this.client, this.client.guilds.get(res.guild_id) || this.guild, res)
                 Object.keys(newChannel).map(k => this[k] = newChannel[k])
                 return resolve(newChannel)
@@ -391,52 +247,27 @@ module.exports = class TextChannel {
         })
     }
 
-    async bulkDelete(data) {
+    async fetchTextChannels() {
         return new Promise(async (resolve, reject) => {
-            if (typeof data === "undefined") return reject(new TypeError("You must provide how many message you want to delete"))
-            if (typeof data === "object") {
-                let res = []
-                data.map(d => {
-                    if (d instanceof Message) {
-                        res.push(d.id)
-                    } else if (typeof d === "string") res.push(d)
-                    else return reject(new TypeError("Unknow message"))
-                })
-                this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id) + "/bulk-delete", {
-                    messages: res
-                }).then(() => {
-                    return resolve()
-                }).catch(e => {
-                    return reject(new Error(e))
-                })
-            } else if (typeof data === "number") {
-                let res = []
-                if (data < 2) return reject(new TypeError("The message count must be more than 1"))
-                if (data > 100) return reject(new TypeError("The message count must be less than 100"))
-                let all = await this.fetchMessages({ limit: data }).catch(e => {
-                    return reject(new Error(e))
-                })
-                all.map(message => res.push(message.id))
-                this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id) + "/bulk-delete", {
-                    messages: res
-                }).then(() => {
-                    return resolve()
-                }).catch(e => {
-                    return reject(new Error(e))
-                })
-            }
+            this.client.rest.get(this.client._ENDPOINTS.SERVER_CHANNEL(this.id)).then(res => {
+                res = res.filter(channel => channel.type === 0 || channel.parent_id === this.id || channel.parentId === this.id)
+                let collect = new Store()
+                res.map(channel => collect.set(channel.id, new TextChannel(this.client, this.client.guilds.get(this.id) || this, channel)))
+                return resolve(collect)
+            }).catch(e => {
+                return reject(new Error(e))
+            })
         })
     }
 
-    async getPinnedMessages(){
-        return new Promise(async(resolve, reject) => {
-            this.client.rest.get(this.client._ENDPOINTS.CHANNEL(this.id)+'/pins').then(messages => {
+    async fetchVoiceChannels() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.get(this.client._ENDPOINTS.SERVER_CHANNEL(this.id)).then(res => {
+                res = res.filter(channel => channel.type === 2 || channel.parent_id === this.id || channel.parentId === this.id)
                 let collect = new Store()
-                messages.map(msg => {
-                    collect.set(msg.id, new Message(this.client, this.client.guilds.get(this.guildId)||this.guild, this.client.textChannels.get(this.id)||this,msg))
-                })
+                res.map(channel => collect.set(channel.id, new VoiceChannel(this.client, this.client.guilds.get(this.id) || this, channel)))
                 return resolve(collect)
-            }).catch(e=>{
+            }).catch(e => {
                 return reject(new Error(e))
             })
         })

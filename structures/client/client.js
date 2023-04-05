@@ -4,7 +4,8 @@ const ws = require('ws')
 const util = require('../util')
 const Models = require('../models')
 const { Store } = require('../util/Store/Store')
-const { Message, Guild, TextChannel, User } = require('../models')
+const { Message, Guild, TextChannel, User, VoiceChannel, CategoryChannel, AnnouncementChannel } = require('../models')
+const Thread = require('../models/Thread')
 /**
  * @extends {EventEmitter}
  */
@@ -39,6 +40,8 @@ module.exports = class Client extends EventEmitter {
      * @property {boolean} usersLifeTimeResetAfterEvents
      * @property {number} channelsLifeTime
      * @property {boolean} channelsLifeTimeResetAfterEvents
+     * @property {number} threadsLifeTime
+     * @property {boolean} threadsLifeTimeResetAfterEvents
      */
     /**
      * The client options
@@ -99,6 +102,7 @@ module.exports = class Client extends EventEmitter {
             SERVER_CHANNEL: (serverID, channelID) => { return `${DiscordAPI}/guilds/${serverID}/channels${channelID ? `/${channelID}` : ``}`; },
             REACTIONS: (channelID, messageID, emoji, user) => { return `${this._ENDPOINTS.CHANNEL(channelID)}/messages/${messageID}/reactions${emoji ? `/${emoji}${user ? `/${user}` : ``}` : ``}`; },
             EMOJI: (guildID, emoji) => { return `${this._ENDPOINTS.SERVERS(guildID)}/emojis${emoji ? `/${emoji}` : ``}` },
+            THREAD_MEMBER: (channelID, user) => { return DiscordAPI + '/channels/' + channelID + 'thread-members' + user ? '/' + user : ''; },
         }
 
         this.token = options?.token
@@ -165,6 +169,22 @@ module.exports = class Client extends EventEmitter {
          * @type {Store<String, TextChannel>}
          */
         this.textChannels = new Store()
+        /**
+         * @type {Store<String, VoiceChannel>}
+         */
+        this.voiceChannels = new Store()
+        /**
+         * @type {Store<String, CategoryChannel>}
+         */
+        this.categoryChannels = new Store()
+        /**
+         * @type {Store<String, AnnouncementChannel>}
+         */
+        this.announcementChannels = new Store()
+        /**
+         * @type {Store<String, Thread>}
+         */
+        this.threadChannels = new Store()
         if (this.options && this.options.connect == false) {
             return this;
         } else {

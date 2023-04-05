@@ -28,6 +28,12 @@ module.exports = {
                 message.expireAt = Date.now()+client.options.messagesLifeTime
                 client.messages.set(message.id, message)
             }
+            if(client.textChannels.has(message.channelId)){
+                client.textChannels.set(message.channelId, message.channel)
+            }
+            if(client.voiceChannels.has(message.channelId)){
+                client.voiceChannels.set(message.channelId, message.channel)
+            }
         }
         
     }

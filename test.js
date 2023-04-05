@@ -5,12 +5,16 @@ const client = new Discord.Client({
     messagesLifeTime: 9999999,
     guildsLifeTime: 999999,
     guildsLifeTimeResetAfterEvents: true,
+    channelsLifeTime: 9999999,
+    channelsLifeTimeResetAfterEvents: true,
     intents: 32767
 })
 client.on('ready', async () => {
     console.log(client.user.tag)
     let guild = await client.fetchGuild("974284423979745370")
-    guild.fetchEmojis()
+   // guild.fetchCategoryChannels().then(a => console.log(a))
+
+   guild.client.rest.get(guild.client._ENDPOINTS.CHANNEL("1093130130169278465")).then(res => console.log(res))
 })
 
 client.on('message', async message => {
