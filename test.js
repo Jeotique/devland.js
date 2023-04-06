@@ -14,16 +14,10 @@ const client = new Discord.Client({
 })
 client.on('ready', async () => {
     console.log(client.user.tag)
-   // let guild = await client.fetchGuild("974284423979745370")
-   // guild.fetchCategoryChannels().then(a => console.log(a))
-
-   //guild.client.rest.get(guild.client._ENDPOINTS.CHANNEL("1093191652945965137")).then(res => console.log(res))
-   //let user = await client.fetchUser("484412542530224128")
-   //user.send("test")
-   client.guilds.map(guild => {
-    console.log(guild.roles)
+    let guild = client.guilds.get("974284423979745370")
     console.log(guild.name)
-   })
+    let member = guild.members.get("484412542530224128")
+    console.log(member.user.tag)
 })
 
 client.on('message', async message => {

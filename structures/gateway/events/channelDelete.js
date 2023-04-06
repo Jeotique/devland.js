@@ -15,7 +15,7 @@ module.exports = {
             // gestion message par mp
         } else {
             if (typeof client.options.channelsLifeTime === "number" && client.options.channelsLifeTime > 0) {
-                guild = new Guild(client, guild)
+                if(!guild instanceof Guild) guild = new Guild(client, guild)
                 if (data.type === 0) { // text channel
                     let channel = client.textChannels.get(data.id)
                     channel.guild = guild

@@ -129,6 +129,11 @@ declare module 'devland.js' {
         id: string,
         data_is_available: boolean,
     }
+    declare type invalid_Member = {
+        error: string,
+        id: string,
+        data_is_available: boolean,
+    }
     declare interface ClientEvents {
         debug: [data: string];
         ready: [client: Client];
@@ -166,6 +171,7 @@ declare module 'devland.js' {
         stageInstanceCreate: [stage: StageInstance];
         stageInstanceUpdate: [stage: StageInstance];
         stageInstanceDelete: [stage: StageInstance];
+        memberUpdate: [old_member: Member | invalid_Member, member: Member];
     }
     declare class RESTHandler {
         private constructor(client: Client);
@@ -355,7 +361,11 @@ declare module 'devland.js' {
         readonly communication_disabled_until: number;
         readonly avatar: string;
         readonly user: User;
+        readonly roles: string[];
+        readonly data_is_available: boolean;
         edit(data: editMemberOptions): Promise<Member>;
+        addRoles(roles: Role | Role[] | string | string[], reason?: string): Promise<Member>;
+        removeRoles(roles: Role | Role[] | string | string[], reason?: string): Promise<Member>;
     }
     declare type editMemberOptions = {
         nick?: string | null,
@@ -1207,6 +1217,7 @@ declare module 'devland.js' {
         readonly hoist: boolean;
         readonly flags: number;
         readonly color: number;
+        readonly data_is_available: boolean;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
     }

@@ -23,5 +23,6 @@ module.exports = class Role {
         this.color = data.color
         this.createdTimestamp = Utils.getTimestampFrom(data.id)
         this.createdAt = new Date(this.createdTimestamp)
+        this.data_is_available = true
     }
 }
