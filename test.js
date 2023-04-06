@@ -7,16 +7,22 @@ const client = new Discord.Client({
     guildsLifeTimeResetAfterEvents: true,
     channelsLifeTime: 9999999,
     channelsLifeTimeResetAfterEvents: true,
+    usersLifeTime: 999999999,
+    membersLifeTime: 999999,
     intents: 32767
 })
 client.on('ready', async () => {
     console.log(client.user.tag)
-    let guild = await client.fetchGuild("974284423979745370")
+   // let guild = await client.fetchGuild("974284423979745370")
    // guild.fetchCategoryChannels().then(a => console.log(a))
 
    //guild.client.rest.get(guild.client._ENDPOINTS.CHANNEL("1093191652945965137")).then(res => console.log(res))
-   let user = await client.fetchUser("484412542530224128")
+   //let user = await client.fetchUser("484412542530224128")
    //user.send("test")
+   client.guilds.map(guild => {
+    console.log(guild.members)
+    console.log(guild.name)
+   })
 })
 
 client.on('message', async message => {

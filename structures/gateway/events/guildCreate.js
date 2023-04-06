@@ -1,5 +1,6 @@
 const Client = require('../../client/client')
 const Models = require('../../models')
+const Member = require('../../models/Member')
 module.exports = {
     name: 'guildCreate',
     /**
@@ -18,6 +19,14 @@ module.exports = {
                     user.cachedAt = Date.now()
                     user.expireAt = Date.now() + client.options.usersLifeTime
                     client.users.set(user.id, user)
+                })
+            }
+            if(typeof client.options.membersLifeTime === "number" && client.options.membersLifeTime > 0) {
+                data.members.map(member_data => {
+                    let member = new Member(client, guild, member_data)
+                    member.cachedAt = Date.now()
+                    member.expireAt = Date.now() + client.options.membersLifeTime
+                    guild.members.set(member.id, member)
                 })
             }
             if (typeof client.options.channelsLifeTime === "number" && client.options.channelsLifeTime > 0) {
@@ -54,6 +63,14 @@ module.exports = {
         } else {
             data.ready = true
             let guild = new Models.Guild(client, data)
+            if (typeof client.options.usersLifeTime === "number" && client.options.usersLifeTime > 0) {
+                data.members.map(member => {
+                    let user = new Models.User(client, member.user)
+                    user.cachedAt = Date.now()
+                    user.expireAt = Date.now() + client.options.usersLifeTime
+                    client.users.set(user.id, user)
+                })
+            }
             if (typeof client.options.channelsLifeTime === "number" && client.options.channelsLifeTime > 0) {
 
                 data.channels.filter(channel => channel.type === 0).map(channel => {

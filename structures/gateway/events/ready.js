@@ -51,11 +51,25 @@ module.exports = {
             }, 1500)
         }
 
+        var t = setInterval(() => {
+            if (typeof client.options.guildsLifeTime !== 'number') return clearInterval(t)
+            if (client.options.guildsLifeTime < 1) return clearInverval(t)
+            if (typeof client.options.membersLifeTime !== 'number') return clearInterval(t)
+            if (client.options.membersLifeTime < 1) return clearInverval(t)
+            client.guilds.map(guild => {
+                guild.members.map(member => {
+                    if (Date.now() < member.expireAt) return
+                    else guild.members.delete(member.id)
+                    client.emit('debug', `(${member.id}) Member removed from the cache`)
+                    client.guilds.set(guild.id, guild)
+                })
+            })
+        }, 3000)
         var w = setInterval(() => {
             if (typeof client.options.usersLifeTime !== 'number') return clearInterval(w)
             if (client.options.usersLifeTime < 1) return clearInverval(w)
             client.users.map(user => {
-                if (Date.now() > user.expireAt) return
+                if (Date.now() < user.expireAt) return
                 else client.users.delete(user.id)
                 client.emit('debug', `(${user.id}) User removed from the cache`)
             })
@@ -64,7 +78,7 @@ module.exports = {
             if (typeof client.options.guildsLifeTime !== 'number') return clearInterval(y)
             if (client.options.guildsLifeTime < 1) return clearInverval(y)
             client.guilds.map(guild => {
-                if (Date.now() > guild.expireAt) return
+                if (Date.now() < guild.expireAt) return
                 else client.guilds.delete(guild.id)
                 client.emit('debug', `(${guild.id}) Guild removed from the cache`)
             })
@@ -73,7 +87,7 @@ module.exports = {
             if (typeof client.options.messagesLifeTime !== 'number') return clearInterval(x)
             if (client.options.messagesLifeTime < 1) return clearInverval(x)
             client.messages.map(message => {
-                if (Date.now() > message.expireAt) return
+                if (Date.now() < message.expireAt) return
                 else client.messages.delete(message.id)
                 client.emit('debug', `(${message.id}) Message removed from the cache`)
             })
@@ -82,37 +96,37 @@ module.exports = {
             if (typeof client.options.channelsLifeTime !== 'number') return clearInterval(z)
             if (client.options.channelsLifeTime < 1) return clearInverval(z)
             client.textChannels.map(text => {
-                if (Date.now() > text.expireAt) return
+                if (Date.now() < text.expireAt) return
                 else client.textChannels.delete(text.id)
                 client.emit('debug', `(${text.id}) Text channel removed from the cache`)
             })
             client.voiceChannels.map(voice => {
-                if (Date.now() > voice.expireAt) return
+                if (Date.now() < voice.expireAt) return
                 else client.voiceChannels.delete(voice.id)
                 client.emit('debug', `(${voice.id}) Voice channel removed from the cache`)
             })
             client.categoryChannels.map(category => {
-                if (Date.now() > category.expireAt) return
+                if (Date.now() < category.expireAt) return
                 else client.categoryChannels.delete(category.id)
                 client.emit('debug', `(${category.id}) Category channel removed from the cache`)
             })
             client.announcementChannels.map(announcement => {
-                if (Date.now() > announcement.expireAt) return
+                if (Date.now() < announcement.expireAt) return
                 else client.announcementChannels.delete(announcement.id)
                 client.emit('debug', `(${announcement.id}) Announcement channel removed from the cache`)
             })
             client.threadChannels.map(thread => {
-                if (Date.now() > thread.expireAt) return
+                if (Date.now() < thread.expireAt) return
                 else client.threadChannels.delete(thread.id)
                 client.emit('debug', `(${thread.id}) Thread channel removed from the cache`)
             })
             client.stageChannels.map(stage => {
-                if (Date.now() > stage.expireAt) return
+                if (Date.now() < stage.expireAt) return
                 else client.stageChannels.delete(stage.id)
                 client.emit('debug', `(${stage.id}) Stage channel removed from the cache`)
             })
             client.forumChannels.map(forum => {
-                if (Date.now() > forum.expireAt) return
+                if (Date.now() < forum.expireAt) return
                 else client.forumChannels.delete(forum.id)
                 client.emit('debug', `(${forum.id}) Forum channel removed from the cache`)
             })

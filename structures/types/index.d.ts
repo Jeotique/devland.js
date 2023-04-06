@@ -18,6 +18,8 @@ declare module 'devland.js' {
         usersLifeTimeResetAfterEvents: boolean;
         threadsLifeTime: number;
         threadsLifeTimeResetAfterEvents: boolean;
+        membersLifeTime: number;
+        membersLifeTimeResetAfterEvents: boolean;
     }
     declare type wsOptions = {
         large_threshold: number;
@@ -308,6 +310,7 @@ declare module 'devland.js' {
         readonly nsfw_level: guildNsfwLevel;
         readonly createdTimestamp: number;
         readonly createdAt: Date;
+        readonly members: Store<String, Member>;
         readonly data_is_available: boolean;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
@@ -327,6 +330,39 @@ declare module 'devland.js' {
         fetchAnnouncementChannels(): Promise<Store<String, AnnouncementChannel>>;
         fetchStageChannels(): Promise<Store<String, StageChannel>>;
         fetchForumChannels(): Promise<Store<String, ForumChannel>>;
+        fetchMember(user: User | Member | string): Promise<Member>;
+        fetchMembers(options: fetchMembersOptions): Promise<Store<String, Member>>;
+    }
+    declare type fetchMembersOptions = {
+        limit: number,
+        after: number
+    }
+    export class Member {
+        constructor(client: Client, guild: Guild, data: any);
+        readonly guild: Guild;
+        readonly guildId: string;
+        readonly id: string;
+        readonly premium_since: string;
+        readonly pending: boolean;
+        readonly nick: string;
+        readonly voice: { mute: boolean, deaf: boolean };
+        readonly joined_at: string;
+        readonly joinedTimestamp: number;
+        readonly flags: number;
+        readonly communication_disabled_until: number;
+        readonly avatar: string;
+        readonly user: User;
+        edit(data: editMemberOptions): Promise<Member>;
+    }
+    declare type editMemberOptions = {
+        nick?: string | null,
+        roles?: Role[] | string[],
+        mute?: boolean,
+        deaf?: boolean,
+        channel_id?: string | VoiceChannel | StageChannel | null,
+        communication_disabled_until?: number | null,
+        flags?: number,
+        reason?: string,
     }
     export enum channelType {
         GUILD_TEXT = 0,

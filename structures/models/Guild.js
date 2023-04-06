@@ -10,6 +10,7 @@ const CategoryChannel = require('./CategoryChannel')
 const AnnouncementChannel = require('./AnnouncementChannel')
 const StageChannel = require('./StageChannel')
 const ForumChannel = require('./ForumChannel')
+const Member = require('./Member')
 
 module.exports = class Guild {
     /**
@@ -52,6 +53,7 @@ module.exports = class Guild {
         this.nsfw_level = data.nsfw_level
         this.createdTimestamp = Utils.getTimestampFrom(this.id)
         this.createdAt = new Date(this.createdTimestamp)
+        this.members = new Store()
         this.data_is_available = true
     }
     /**
@@ -523,6 +525,53 @@ module.exports = class Guild {
                 return resolve(toSend)
             }).catch(e => {
                 return reject(new Error(e))
+            })
+        })
+    }
+
+    async fetchMember(user) {
+        return new Promise(async (resolve, reject) => {
+            if (user instanceof User) user = user.id
+            if (user instanceof Member) user = user.id
+            if (typeof user !== "string") return reject(new TypeError("The user must be a string or a valid User instance"))
+            this.client.rest.get(this.client._ENDPOINTS.MEMBERS(this.id, user)).then(res => {
+                let member = new Member(this.client, this, res)
+                resolve(member)
+                if (typeof this.client.options.membersLifeTime === "number" && this.client.options.membersLifeTime > 0) {
+                    member.cachedAt = Date.now()
+                    member.expireAt = Date.now() + this.client.options.membersLifeTime
+                    this.members.set(member.id, member)
+                }
+            }).catch(e => {
+                return new Error(e)
+            })
+        })
+    }
+
+    async fetchMembers(options = {
+        limit: 1000,
+        after: 0
+    }) {
+        return new Promise(async (resolve, reject) => {
+            if (typeof options.limit !== "number") return reject(new TypeError("The limit must be a number"))
+            if (options.limit < 1 || options.limit > 1000) return reject(new TypeError("The limit must be between 1 and 1000"))
+            if (typeof options.after !== "number") return reject(new TypeError("After must be a number"))
+            this.client.rest.get(`${this.client._ENDPOINTS.MEMBERS(this.id)}?limit=${options.limit}&after=${options.after}`).then(res => {
+                let collect = new Store()
+                res.map(member_data => {
+                    let member = new Member(this.client, this, member_data)
+                    collect.set(member.id, member)
+                })
+                resolve(collect)
+                if (typeof this.client.options.membersLifeTime === "number" && this.client.options.membersLifeTime > 0) {
+                    collect.map(member => {
+                        member.cachedAt = Date.now()
+                        member.expireAt = Date.now() + this.client.options.membersLifeTime
+                        this.members.set(member.id, member)
+                    })
+                }
+            }).catch(e => {
+                return new Error(e)
             })
         })
     }

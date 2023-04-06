@@ -40,6 +40,8 @@ module.exports.createDefaultOptions = () => {
     usersLifeTimeResetAfterEvents: true,
     threadsLifeTime: null,
     threadsLifeTimeResetAfterEvents: true,
+    membersLifeTime: null,
+    membersLifeTimeResetAfterEvents: true,
     token: null,
   }
 }
