@@ -25,6 +25,7 @@ const GuildCommand = require('./structures/models/GuildCommand')
 const ForumTag = require('./structures/models/ForumTag')
 const {Store} = require('./structures/util/Store/Store')
 const Emoji = require('./structures/models/Emoji')
+const Member = require('./structures/models/Member')
 module.exports = {
     Client,
     Utils,
@@ -53,4 +54,5 @@ module.exports = {
     ForumTag,
     Store,
     Emoji,
+    Member,
 }

@@ -22,6 +22,7 @@ const ChannelSelect = require('./ChannelSelect')
 const GuildCommand = require('./GuildCommand')
 const ForumTag = require('./ForumTag')
 const Emoji = require('./Emoji')
+const Member = require('./Member')
 module.exports = {
     ClientUser,
     Attachment,
@@ -47,4 +48,5 @@ module.exports = {
     GuildCommand,
     ForumTag,
     Emoji,
+    Member,
 }

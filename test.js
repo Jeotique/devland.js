@@ -9,6 +9,7 @@ const client = new Discord.Client({
     channelsLifeTimeResetAfterEvents: true,
     usersLifeTime: 999999999,
     membersLifeTime: 999999,
+    rolesLifeTime: 999999,
     intents: 32767
 })
 client.on('ready', async () => {
@@ -20,7 +21,7 @@ client.on('ready', async () => {
    //let user = await client.fetchUser("484412542530224128")
    //user.send("test")
    client.guilds.map(guild => {
-    console.log(guild.members)
+    console.log(guild.roles)
     console.log(guild.name)
    })
 })

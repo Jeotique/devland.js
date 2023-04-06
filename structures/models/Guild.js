@@ -54,6 +54,7 @@ module.exports = class Guild {
         this.createdTimestamp = Utils.getTimestampFrom(this.id)
         this.createdAt = new Date(this.createdTimestamp)
         this.members = new Store()
+        this.roles = new Store()
         this.data_is_available = true
     }
     /**

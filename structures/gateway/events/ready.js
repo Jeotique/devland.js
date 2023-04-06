@@ -51,6 +51,20 @@ module.exports = {
             }, 1500)
         }
 
+        var o = setInterval(() => {
+            if (typeof client.options.guildsLifeTime !== 'number') return clearInterval(o)
+            if (client.options.guildsLifeTime < 1) return clearInverval(o)
+            if (typeof client.options.rolesLifeTime !== 'number') return clearInterval(o)
+            if (client.options.rolesLifeTime < 1) return clearInverval(o)
+            client.guilds.map(guild => {
+                guild.roles.map(role => {
+                    if (Date.now() < role.expireAt) return
+                    else guild.roles.delete(role.id)
+                    client.emit('debug', `(${role.id}) Role removed from the cache`)
+                    client.guilds.set(guild.id, guild)
+                })
+            })
+        }, 3000)
         var t = setInterval(() => {
             if (typeof client.options.guildsLifeTime !== 'number') return clearInterval(t)
             if (client.options.guildsLifeTime < 1) return clearInverval(t)

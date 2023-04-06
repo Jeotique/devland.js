@@ -45,6 +45,8 @@ module.exports = class Client extends EventEmitter {
      * @property {boolean} threadsLifeTimeResetAfterEvents
      * @property {number} membersLifeTime
      * @property {boolean} membersLifeTimeResetAfterEvents
+     * @property {number} rolesLifeTime
+     * @property {boolean} rolesLifeTimeResetAfterEvents
      */
     /**
      * The client options
@@ -159,7 +161,14 @@ module.exports = class Client extends EventEmitter {
          * @type {clientOptions}
          */
         this.options = util.mergeDefault(util.createDefaultOptions(), options)
-        if(this.options.membersLifeTime > 0 && !this.options.guildsLifeTime) process.emitWarning("The guilds cache must be enabled if you want to use the members cache")
+        if (this.options.membersLifeTime > 0 && !this.options.guildsLifeTime) {
+            this.options.membersLifeTime = null
+            process.emitWarning("The guilds cache must be enabled if you want to use the members cache")
+        }
+        if (this.options.rolesLifeTime > 0 && !this.options.guildsLifeTime) {
+            this.options.rolesLifeTime = null
+            process.emitWarning("The guilds cache must be enabled if you want to use the roles cache")
+        }
         this.rest = new RESTHandler(this)
         this.user = new Models.ClientUser(this)
         /**
@@ -248,7 +257,7 @@ module.exports = class Client extends EventEmitter {
                 if (!result) return reject(new TypeError("One guild has not result"))
                 let oldGuild = this.guilds.get(i)
                 let guild = new Guild(this, result)
-                if(oldGuild) guild.members = oldGuild.members
+                if (oldGuild) guild.members = oldGuild.members
                 res.set(result.id, guild)
                 if (typeof this.options.guildsLifeTime && this.options.guildsLifeTime > 0) {
                     guild.cachedAt = Date.now()
@@ -262,7 +271,7 @@ module.exports = class Client extends EventEmitter {
                 if (!result) return reject(new TypeError("One guild has not result"))
                 let oldGuild = this.guilds.get(i)
                 let guild = new Guild(this, result)
-                if(oldGuild) guild.members = oldGuild.members
+                if (oldGuild) guild.members = oldGuild.members
                 res.set(result.id, guild)
                 if (typeof this.options.guildsLifeTime && this.options.guildsLifeTime > 0) {
                     guild.cachedAt = Date.now()
@@ -286,7 +295,7 @@ module.exports = class Client extends EventEmitter {
             if (!result) return reject(new TypeError("Unknow guild"))
             let oldGuild = this.guilds.get(guildId)
             let guild = new Guild(this, result)
-            if(oldGuild) guild.members = oldGuild.members
+            if (oldGuild) guild.members = oldGuild.members
             if (typeof this.options.guildsLifeTime && this.options.guildsLifeTime > 0) {
                 guild.cachedAt = Date.now()
                 guild.expireAt = Date.now() + this.options.guildsLifeTime
@@ -298,10 +307,10 @@ module.exports = class Client extends EventEmitter {
 
     async fetchUser(userId) {
         return new Promise(async (resolve, reject) => {
-            if(userId instanceof User) userId = userId?.id
-            if(typeof userId !== "string") return reject(new TypeError("userId must be a User instance or User Id"))
+            if (userId instanceof User) userId = userId?.id
+            if (typeof userId !== "string") return reject(new TypeError("userId must be a User instance or User Id"))
             let result = await this.rest.get(this._ENDPOINTS.USER(userId)).catch(e => { reject(new Error(e)) })
-            if(!result) return reject(new TypeError("Unknow user"))
+            if (!result) return reject(new TypeError("Unknow user"))
             let user = new User(this, result)
             if (typeof this.options.usersLifeTime && this.options.usersLifeTime > 0) {
                 user.cachedAt = Date.now()

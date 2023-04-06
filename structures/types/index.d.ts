@@ -20,6 +20,8 @@ declare module 'devland.js' {
         threadsLifeTimeResetAfterEvents: boolean;
         membersLifeTime: number;
         membersLifeTimeResetAfterEvents: boolean;
+        rolesLifeTime: number;
+        rolesLifeTimeResetAfterEvents: boolean;
     }
     declare type wsOptions = {
         large_threshold: number;
@@ -311,6 +313,7 @@ declare module 'devland.js' {
         readonly createdTimestamp: number;
         readonly createdAt: Date;
         readonly members: Store<String, Member>;
+        readonly roles: Store<String, Role>;
         readonly data_is_available: boolean;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
@@ -1185,5 +1188,26 @@ declare module 'devland.js' {
         private pack();
         edit(options: editEmojiOptions): Promise<Emoji>;
         delete(reason?: string): Promise<void>;
+    }
+    export class Role {
+        constructor(client: Client, guild: Guild, data: any);
+        private client: Client;
+        readonly guild: Guild;
+        readonly id: string;
+        readonly version: number;
+        readonly unicode_emoji: string | null;
+        readonly tags: object;
+        readonly position: number;
+        readonly permissions_new: Permissions;
+        readonly permissions: Permissions;
+        readonly name: string;
+        readonly mentionable: boolean;
+        readonly managed: boolean;
+        readonly icon: string | null;
+        readonly hoist: boolean;
+        readonly flags: number;
+        readonly color: number;
+        private readonly cachedAt: number | undefined;
+        private readonly expireAt: number | undefined;
     }
 }
