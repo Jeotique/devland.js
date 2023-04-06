@@ -23,6 +23,7 @@ const GuildCommand = require('./GuildCommand')
 const ForumTag = require('./ForumTag')
 const Emoji = require('./Emoji')
 const Member = require('./Member')
+const Role = require('./Role')
 module.exports = {
     ClientUser,
     Attachment,
@@ -49,4 +50,5 @@ module.exports = {
     ForumTag,
     Emoji,
     Member,
+    Role,
 }
