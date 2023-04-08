@@ -10,7 +10,10 @@ const client = new Discord.Client({
     usersLifeTime: 999999999,
     membersLifeTime: 999999,
     rolesLifeTime: 999999,
-    intents: 32767
+    intents: 32767,
+    presence: {
+        status: "dnd"
+    }
 })
 client.on('ready', async () => {
     console.log(client.user.tag)
@@ -34,6 +37,10 @@ client.on('roleUpdate', (old, newr) => {
 client.on('roleDelete', role => {
     console.log(role)
     console.log("rôle supprimé")
+})
+
+client.on('guildAuditLogEntryCreate', log => {
+    console.log(log)
 })
 
 client.on('message', async message => {

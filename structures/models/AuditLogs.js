@@ -9,6 +9,8 @@ module.exports = class AuditLogs {
         data.audit_log_entries.map(d => {
             let obj = {}
             obj.id = d.id
+            obj.guild = data.guild
+            obj.guildId = data.guild.id
             obj.user = data.users.find(u => u.id === d.user_id)
             obj.user.tag = obj.user.username + '#' + obj.user.discriminator
             obj.action_type = d.action_type

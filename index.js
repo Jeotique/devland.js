@@ -30,6 +30,7 @@ const Role = require('./structures/models/Role')
 const AuditLogs = require('./structures/models/AuditLogs')
 const Log = require('./structures/models/Log')
 const Invite = require('./structures/models/Invite')
+const Webhook = require('./structures/models/Webhook')
 module.exports = {
     Client,
     Utils,
@@ -63,4 +64,5 @@ module.exports = {
     AuditLogs,
     Log,
     Invite,
+    Webhook,
 }

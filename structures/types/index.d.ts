@@ -36,8 +36,23 @@ declare module 'devland.js' {
         $device: string;
     }
     type presenceOptions = {
-        status: string;
+        status: "dnd"|"online"|"invisible"|"idle"|"offline";
         afk: boolean;
+        activities: simpleActivity[];
+        since: number;
+    }
+    type simpleActivity = {
+        name: string,
+        type: ActivityType,
+        url?: string,
+    }
+    export enum ActivityType {
+        Game = 0,
+        Streaming = 1,
+        Listening = 2,
+        Watching = 3,
+        Custom = 4,
+        Competing = 5
     }
     type wsClientData = {
         socket: ws;
@@ -149,6 +164,14 @@ declare module 'devland.js' {
         channel?: TextChannel | VoiceChannel | AnnouncementChannel | Thread | StageChannel | ForumChannel
         data_is_available: boolean,
     }
+    type threadMembersUpdateData = {
+        id: string,
+        guild: Guild,
+        guild_id: string,
+        member_count: number,
+        added_members: Store<String, Member>;
+        removed_members?: string[];
+    }
     interface ClientEvents {
         debug: [data: string];
         ready: [client: Client];
@@ -158,6 +181,7 @@ declare module 'devland.js' {
         guildAvailable: [guild: Guild];
         guildAdded: [guild: Guild];
         guildRemoved: [guild: Guild | invalid_Guild];
+        guildUpdate: [old_guild: Guild | invalid_Guild, guild: Guild];
         channelCreate: [channel: TextChannel | VoiceChannel | CategoryChannel | AnnouncementChannel | StageChannel | ForumChannel];
         channelCreateText: [channel: TextChannel];
         channelCreateVoice: [channel: VoiceChannel];
@@ -197,6 +221,15 @@ declare module 'devland.js' {
         memberUnban: [user: User | invalid_User];
         inviteCreate: [invite: Invite];
         inviteDelete: [invite: Invite | invalid_Invite];
+        webhookCreate: [channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel];
+        webhookUpdate: [channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel];
+        webhookDelete: [channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel];
+        channelPinsUpdate: [channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel];
+        threadMemberUpdate: [member: Member];
+        threadMembersUpdate: [data: threadMembersUpdateData];
+        guildAuditLogEntryCreate: [log: Log];
+        guildEmojisUpdate: [guild: Guild, emojis: Store<String, Emoji>];
+        guildIntegrationsUpdate: [guild: Guild];
     }
     class RESTHandler {
         private constructor(client: Client);
@@ -227,7 +260,7 @@ declare module 'devland.js' {
             readonly bot: boolean;
             readonly avatar: string;
             readonly tag: string;
-            fetchGuilds(max?: number): Promise<Store<String, Guild>>;
+            setPresence(presence: presenceOptions);
         }
     }
     type guildFeatures = "ANIMATED_BANNER" | "ANIMATED_ICON" | "APPLICATION_COMMAND_PERMISSIONS_V2" | "AUTO_MODERATOR" | "BANNER" | "COMMUNITY" | "CREATOR_MODETIZABLE_PROVISIONAL" | "CREATOR_STORE_PAGE" | "DEVELOPER_SUPPORT_SERVER" | "DISCOVERABLE" | "FEATURABLE" | "INVITES_DISABLED" | "INVITE_SPLASH" | "MEMBER_VERIFICATION_GATE_ENABLED" | "MORE_STICKERS" | "NEWS" | "PARTNERED" | "PREVIEW_ENABLED" | "ROLE_ICONS" | "ROLE_SUBSCRIPTIONS_AVAILABLE_FOR_PURCHASE" | "ROLE_SUBSCRIPTIONS_ENABLED" | "TICKETED_EVENTS_ENABLED" | "VANITY_URL" | "VERIFIED" | "VIP_REGIONS" | "WELCOME_SCREEN_ENABLED"
@@ -399,6 +432,7 @@ declare module 'devland.js' {
         fetchBan(user: string | User | Member): Promise<Ban>;
         prune(options: pruneOptions): Promise<Guild>;
         fetchInvite(): Promise<Store<String, Invite>>;
+        fetchWebhooks(): Promise<Store<String, Webhook>>;
     }
     type fetchMembersOptions = {
         limit: number,
@@ -495,6 +529,11 @@ declare module 'devland.js' {
         default_sort_order?: number,
         default_forum_layout?: number,
     }
+    type createWebhookOptions = {
+        name: string,
+        avatar?: any,
+        reason?: string,
+    }
     export class TextChannel {
         private constructor(client: Client, guild: Guild, data: object)
         private client: Client;
@@ -524,6 +563,8 @@ declare module 'devland.js' {
         setPosition(position: number): Promise<TextChannel>;
         bulkDelete(data: number | Message[] | string[]): Promise<void>;
         getPinnedMessages(): Promise<Store<String, Message>>;
+        createWebhook(options: createWebhookOptions): Promise<Webhook>;
+        fetchWebhooks(): Promise<Store<String, Webhook>>;
     }
     export class DmChannel {
         private constructor(client: Client, guild: Guild, data: object)
@@ -609,6 +650,8 @@ declare module 'devland.js' {
         clone(reason?: string, time?: number): Promise<VoiceChannel>;
         setPosition(position: number): Promise<VoiceChannel>;
         bulkDelete(data: number | Message[] | string[]): Promise<void>;
+        join();
+        leave();
     }
     type stageStartOptions = {
         topic: string,
@@ -720,6 +763,8 @@ declare module 'devland.js' {
         bulkDelete(data: number | Message[] | string[]): Promise<void>;
         getPinnedMessages(): Promise<Store<String, Message>>;
         crosspost(message: Message | string): Promise<Message>;
+        createWebhook(options: createWebhookOptions): Promise<Webhook>;
+        fetchWebhooks(): Promise<Store<String, Webhook>>;
     }
     type ThreadMetadata = {
         archived: boolean,
@@ -1309,6 +1354,8 @@ declare module 'devland.js' {
         constructor(client: Client, data: any);
         private client: Client;
         readonly id: string;
+        readonly guild: Guild;
+        readonly guildId: string;
         readonly executor: User;
         readonly type: logsType;
         readonly targetId?: string;
@@ -1343,5 +1390,48 @@ declare module 'devland.js' {
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
         delete(reason?: string): Promise<Invite>;
+    }
+    export enum webhookType {
+        Incoming = 1,
+        ChannelFollower = 2,
+        Application = 3
+    }
+    type partialGuild = {
+        id: string,
+        name: string,
+        icon: string,
+    }
+    type partialChannel = {
+        id: string,
+        name: string,
+    }
+    type editWebhookOptions = {
+        name: string,
+        avatar?: any,
+        channel_id?: string | TextChannel | AnnouncementChannel | ForumChannel,
+        reason?: string,
+    }
+    export class Webhook {
+        constructor(client: Client, guild: Guild, data: any);
+        private client: Client;
+        readonly guild?: Guild;
+        readonly guildId?: string;
+        readonly id: string;
+        readonly type: webhookType;
+        readonly channel: TextChannel | AnnouncementChannel | null;
+        readonly channelId?: string;
+        readonly user: User | null;
+        readonly name: string;
+        readonly avatar: string;
+        readonly token?: string;
+        readonly application_id: string;
+        readonly source_guild?: partialGuild;
+        readonly source_channel?: partialChannel;
+        readonly url?: string;
+        readonly createdTimestamp: number;
+        readonly createdAt: Date;
+        edit(options: editWebhookOptions): Promise<Webhook>;
+        delete(reason?: string): Promise<void>;
+        send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
     }
 }

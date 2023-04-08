@@ -27,6 +27,7 @@ const Role = require('./Role')
 const AuditLogs = require('./AuditLogs')
 const Log = require('./Log')
 const Invite = require('./Invite')
+const Webhook = require('./Webhook')
 module.exports = {
     ClientUser,
     Attachment,
@@ -57,4 +58,5 @@ module.exports = {
     AuditLogs,
     Log,
     Invite,
+    Webhook,
 }

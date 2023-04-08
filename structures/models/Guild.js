@@ -671,6 +671,7 @@ module.exports = class Guild {
             let limitQuery = query.limit ? `&limit=${query.limit}` : null
             let userIdQuery = query.user_id ? `&user_id=${query.user_id}` : null
             this.client.rest.get(`${this.client._ENDPOINTS.SERVERS(this.id)}/audit-logs?${typeQuery ? typeQuery : ''}${limitQuery ? limitQuery : ''}${userIdQuery ? userIdQuery : ''}`).then(auditResult => {
+                auditResult.guild = this
                 let audit = new AuditLogs(this.client, auditResult)
                 return resolve(audit)
             }).catch(e => {
@@ -821,6 +822,18 @@ module.exports = class Guild {
                         this.client.guilds.set(this.id, this)
                     })
                 }
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async fetchWebhooks() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.get(this.client._ENDPOINTS.SERVER_WEBHOOKS(this.id)).then(res => {
+                let collect = new Store()
+                res.map(web => collect.set(web.id, new Webhook(this.client, this.client.guilds.get(this.id) || this, web)))
+                resolve(collect)
             }).catch(e => {
                 return reject(new Error(e))
             })

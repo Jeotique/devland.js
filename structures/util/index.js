@@ -6,7 +6,7 @@ module.exports.mergeDefault = (def, given) => {
     if (!has(given, key) || given[key] === undefined) {
       given[key] = def[key];
     } else if (given[key] === Object(given[key])) {
-      given[key] = Util.mergeDefault(def[key], given[key]);
+      given[key] = this.mergeDefault(def[key], given[key]);
     }
   }
   return given;
@@ -16,6 +16,7 @@ module.exports.createDefaultOptions = () => {
   return {
     connect: false,
     presence: {
+      activities: [],
       status: 'online',
       afk: false
     },

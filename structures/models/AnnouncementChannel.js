@@ -7,6 +7,7 @@ const ActionRow = require('./ActionRow')
 const { default: Store } = require('../util/Store/Store')
 const Permissions = require('../util/Permissions/Permissions')
 const ForumTag = require('./ForumTag')
+const Webhook = require('./Webhook')
 module.exports = class AnnouncementChannel {
     /**
      * 
@@ -95,7 +96,7 @@ module.exports = class AnnouncementChannel {
                     if (alrSeen[test.custom_id]) return reject(new TypeError("Duplicated custom Id"))
                     else alrSeen[test.custom_id] = true
                 })
-                this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.channelId), data).then(messageData => {
+                this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id), data).then(messageData => {
                     return resolve(new Message(this.client, this.guild, this, messageData))
                 }).catch(e => {
                     return reject(new Error(e))
@@ -450,6 +451,32 @@ module.exports = class AnnouncementChannel {
             this.client.rest.post(`${this.client._ENDPOINTS.MESSAGES(this.id, message)}/crosspost`).then(message_data => {
                 let newMessage = new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.client.textChannels.get(this.id) || this, message_data)
                 return resolve(newMessage)
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async createWebhook(options = {}) {
+        return new Promise(async (resolve, reject) => {
+            if (typeof options !== "object") return reject(new TypeError("Create webhook options must be a object"))
+            if (typeof options.name !== "string") return reject(new TypeError("Create webhook options name must be provided (string)"))
+            if (options.name.length < 1 || options.name.length > 80) return reject(new TypeError("Create webhook options name must have a length between 1 and 80"))
+            if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            this.client.rest.post(this.client._ENDPOINTS.CHANNEL_WEBHOOKS(this.id), options).then(res => {
+                resolve(new Webhook(this.client, this.client.guilds.get(this.guildId) || this.guild, res))
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async fetchWebhooks() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.get(this.client._ENDPOINTS.CHANNEL_WEBHOOKS(this.id)).then(res => {
+                let collect = new Store()
+                res.map(web => collect.set(web.id, new Webhook(this.client, this.client.guilds.get(this.guildId) || this.guild, web)))
+                resolve(collect)
             }).catch(e => {
                 return reject(new Error(e))
             })

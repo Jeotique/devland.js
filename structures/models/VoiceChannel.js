@@ -97,7 +97,7 @@ module.exports = class VoiceChannel {
                     if (alrSeen[test.custom_id]) return reject(new TypeError("Duplicated custom Id"))
                     else alrSeen[test.custom_id] = true
                 })
-                this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.channelId), data).then(messageData => {
+                this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id), data).then(messageData => {
                     return resolve(new Message(this.client, this.guild, this, messageData))
                 }).catch(e => {
                     return reject(new Error(e))
@@ -235,7 +235,7 @@ module.exports = class VoiceChannel {
                 else if (options.user_limit > 10000 && this.type === 13) return reject(new TypeError("The channel user limit must be less than 10000"))
             }
             if (typeof options.parent_id !== "undefined") {
-                if(options.parent_id instanceof CategoryChannel){
+                if (options.parent_id instanceof CategoryChannel) {
                     options.parent_id = options.parent_id.id
                 }
                 if (options.parent_id !== null && typeof options.parent_id !== "string") return reject(new TypeError("The channel parent id must be a string"))
@@ -301,7 +301,7 @@ module.exports = class VoiceChannel {
                 if (options.default_forum_layout === null) options.default_forum_layout = 0
                 if (typeof options.default_forum_layout !== "number") return reject(new TypeError("Default forum layout must be set to null or a number"))
             }
-            if(typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             options["reason"] = reason
             this.client.rest.patch(this.client._ENDPOINTS.CHANNEL(this.id), options).then(res => {
                 let newChannel = new VoiceChannel(this.client, this.client.guilds.get(res.guild_id) || this.guild, res)
@@ -358,7 +358,7 @@ module.exports = class VoiceChannel {
                             deny: perm.deny.length < 1 ? undefined : new Permissions(perm.deny).bitfield.toString()
                         }
                     }),
-                    parent_id: this.parentId||this.parent_id,
+                    parent_id: this.parentId || this.parent_id,
                     nsfw: this.nsfw,
                     rtc_region: this.rtcRegion,
                     video_quality_mode: this.videoQualityMode,
@@ -383,7 +383,7 @@ module.exports = class VoiceChannel {
             if (typeof position === "undefined") return reject(new TypeError("The channel position must be a number"))
             if (typeof position !== "number") return reject(new TypeError("The channel position must be a number"))
             if (position < 0) return reject(new TypeError("The channel position must be more than 0"))
-            this.client.rest.patch(this.client._ENDPOINTS.CHANNEL(this.id), {position: position}).then(res => {
+            this.client.rest.patch(this.client._ENDPOINTS.CHANNEL(this.id), { position: position }).then(res => {
                 let newChannel = new VoiceChannel(this.client, this.client.guilds.get(res.guild_id) || this.guild, res)
                 Object.keys(newChannel).map(k => this[k] = newChannel[k])
                 return resolve(newChannel)
@@ -428,5 +428,30 @@ module.exports = class VoiceChannel {
                 })
             }
         })
+    }
+
+    join(mute, deaf) {
+        if (typeof mute === "undefined") mute = false
+        if (typeof deaf === "undefined") deaf = false
+        if (typeof mute !== "boolean") throw new TypeError("Mute state must be a boolean")
+        if (typeof deaf !== "boolean") throw new TypeError("Deaf state must be a boolean")
+        this.client.ws.socket.send(JSON.stringify({
+            op: 4,
+            d: {
+                guild_id: this.guildId,
+                channel_id: this.id,
+                self_mute: mute,
+                self_deaf: deaf
+            }
+        }))
+    }
+    leave() {
+        this.client.ws.socket.send(JSON.stringify({
+            op: 4,
+            d: {
+                guild_id: this.guildId,
+                channel_id: null,
+            }
+        }))
     }
 }

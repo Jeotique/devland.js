@@ -79,7 +79,7 @@ module.exports = class DmChannel {
                     if (alrSeen[test.custom_id]) return reject(new TypeError("Duplicated custom Id"))
                     else alrSeen[test.custom_id] = true
                 })
-                this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.channelId), data).then(messageData => {
+                this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id), data).then(messageData => {
                     return resolve(new Message(this.client, this.guild, this, messageData))
                 }).catch(e => {
                     return reject(new Error(e))

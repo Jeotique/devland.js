@@ -103,6 +103,7 @@ module.exports = class Client extends EventEmitter {
             CHANNEL_WEBHOOKS: (channelID) => { return `${this._ENDPOINTS.CHANNEL(channelID)}/webhooks`; },
             WEBHOOKS: (webhookID) => { return DiscordAPI + '/webhooks/' + webhookID; },
             WEBHOOKS_TOKEN: (webhookID, webhookToken) => { return DiscordAPI + '/webhooks/' + webhookID + '/' + webhookToken; },
+            WEBHOOKS_MESSAGE: (webhookID, webhookToken, messageID) => { return DiscordAPI + '/webhooks/' + webhookID + '/' + webhookToken + '/messages/' + messageID; },
             BULD_DELETE: (channelID) => { return `${this._ENDPOINTS.CHANNEL(channelID)}/messages/bulk-delete`; },
             TYPING: (channelID) => { return `${this._ENDPOINTS.CHANNEL(channelID)}/typing`; },
             COMMANDS: (guildId, commandId) => { return `${this._ENDPOINTS.API}/applications/${this.user.id}/guilds/${guildId}/commands${commandId ? `/${commandId}` : ``}` },

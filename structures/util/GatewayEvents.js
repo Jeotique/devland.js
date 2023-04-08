@@ -38,7 +38,10 @@ module.exports = {
     'THREAD_CREATE': 'threadCreate',
     'THREAD_UPDATE': 'threadUpdate',
     'THREAD_DELETE': 'threadDelete',
+    'THREAD_MEMBER_UPDATE': 'threadMemberUpdate',
+    'THREAD_MEMBERS_UPDATE': 'threadMembersUpdate',
     'STAGE_INSTANCE_CREATE': 'stageInstanceCreate',
     'STAGE_INSTANCE_UPDATE': 'stageInstanceUpdate',
     'STAGE_INSTANCE_DELETE': 'stageInstanceDelete', 
+    'GUILD_AUDIT_LOG_ENTRY_CREATE': 'guildAuditLogEntryCreate',
 }

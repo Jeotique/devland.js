@@ -38,8 +38,10 @@ module.exports = async (client) => {
                         compress: client.options.ws.compress,
                         large_threshold: client.options.ws.large_threshold,
                         presence: {
+                            activities: client.options.presence.activities,
                             status: client.options.presence.status,
                             afk: client.options.presence.afk,
+                            since: client.options.presence.since,
                         },
                         intents: client.options.intents
                     }
