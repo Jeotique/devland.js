@@ -29,6 +29,7 @@ const Member = require('./structures/models/Member')
 const Role = require('./structures/models/Role')
 const AuditLogs = require('./structures/models/AuditLogs')
 const Log = require('./structures/models/Log')
+const Invite = require('./structures/models/Invite')
 module.exports = {
     Client,
     Utils,
@@ -61,4 +62,5 @@ module.exports = {
     Role,
     AuditLogs,
     Log,
+    Invite,
 }

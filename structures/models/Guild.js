@@ -16,6 +16,7 @@ const Permissions = require('../util/Permissions/Permissions')
 const Constants = require('../util/Constants')
 const AuditLogs = require('./AuditLogs')
 const Ban = require('./Ban')
+const Invite = require('./Invite')
 
 module.exports = class Guild {
     /**
@@ -60,6 +61,7 @@ module.exports = class Guild {
         this.createdAt = new Date(this.createdTimestamp)
         this.members = new Store()
         this.roles = new Store()
+        this.invites = new Store()
         this.data_is_available = true
     }
     /**
@@ -770,6 +772,55 @@ module.exports = class Guild {
             if (typeof user !== "string") return reject(new TypeError("The user must be a valid User or Member instance or a valid Id"))
             this.client.rest.get(this.client._ENDPOINTS.BANS(this.id, user)).then(res => {
                 return resolve(new Ban(this.client, res))
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async prune(options = {}) {
+        return new Promise(async (resolve, reject) => {
+            if (typeof options !== "object") return reject(new TypeError("Prune options must be a object"))
+            if (typeof options.days !== "undefined") {
+                if (typeof options.days !== "number") return reject(new TypeError("Prune options days must be a number"))
+                if (options.days < 1 || options.days > 30) return reject(new TypeError("Prune options days must be between 1 and 30"))
+            }
+            if (typeof options.compute_prune_count !== "undefined") {
+                if (typeof options.compute_prune_count !== "boolean") return reject(new TypeError("Prune options compute_prune_count must be a boolean"))
+            }
+            if (typeof options.include_roles !== "undefined") {
+                if (typeof options.include_roles !== "object") return reject(new TypeError("Prune options include_roles must be a array"))
+                let a = []
+                options.include_roles.map(role => {
+                    if (role instanceof Role) a.push(role.id)
+                    else if (typeof role === "string") a.push(role)
+                    else return reject(new TypeError("Prune options include_roles must contains valid role Id or Role instance"))
+                })
+                options.include_roles = a
+            }
+            if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            this.client.rest.post(this.client._ENDPOINTS.PRUNE(this.id), options).then(() => {
+                return resolve(this)
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async fetchInvites() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.get(this.client._ENDPOINTS.SERVER_INVITES(this.id)).then(res => {
+                let collect = new Store()
+                res.map(invite => collect.set(invite.code, new Invite(this.client, this.client.guilds.get(this.id) || this, invite)))
+                resolve(collect)
+                if (typeof this.client.options.invitesLifeTime === "number" && this.client.options.invitesLifeTime > 0) {
+                    collect.map(invite => {
+                        invite.cachedAt = Date.now()
+                        invite.expireAt = Date.now() + this.client.options.invitesLifeTime
+                        this.invites.set(invite.code, invite)
+                        this.client.guilds.set(this.id, this)
+                    })
+                }
             }).catch(e => {
                 return reject(new Error(e))
             })

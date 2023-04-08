@@ -22,6 +22,8 @@ declare module 'devland.js' {
         membersLifeTimeResetAfterEvents: boolean;
         rolesLifeTime: number;
         rolesLifeTimeResetAfterEvents: boolean;
+        invitesLifeTime: number;
+        invitesLifeTimeResetAfterEvents: boolean;
     }
     type wsOptions = {
         large_threshold: number;
@@ -140,6 +142,13 @@ declare module 'devland.js' {
         id: string,
         data_is_available: boolean,
     }
+    type invalid_Invite = {
+        error: string,
+        code: string,
+        guild?: Guild,
+        channel?: TextChannel | VoiceChannel | AnnouncementChannel | Thread | StageChannel | ForumChannel
+        data_is_available: boolean,
+    }
     interface ClientEvents {
         debug: [data: string];
         ready: [client: Client];
@@ -186,6 +195,8 @@ declare module 'devland.js' {
         roleDelete: [role: Role | invalid_Role];
         memberBan: [user: User | invalid_User];
         memberUnban: [user: User | invalid_User];
+        inviteCreate: [invite: Invite];
+        inviteDelete: [invite: Invite | invalid_Invite];
     }
     class RESTHandler {
         private constructor(client: Client);
@@ -316,6 +327,12 @@ declare module 'devland.js' {
         user_id?: string,
         type?: logsType,
     }
+    type pruneOptions = {
+        days?: number,
+        compute_prune_count?: boolean,
+        include_roles?: Role[] | string[],
+        reason?: string,
+    } 
     export class Guild {
         private constructor(client: Client, data: object);
         private client: Client;
@@ -380,6 +397,8 @@ declare module 'devland.js' {
         unbanMember(user: string | User | Member, reason?: string): Promise<boolean>;
         fetchBans(): Promise<Store<String, Ban>>;
         fetchBan(user: string | User | Member): Promise<Ban>;
+        prune(options: pruneOptions): Promise<Guild>;
+        fetchInvite(): Promise<Store<String, Invite>>;
     }
     type fetchMembersOptions = {
         limit: number,
@@ -1303,5 +1322,26 @@ declare module 'devland.js' {
         constructor(client: Client, data: any);
         readonly reason?: string;
         readonly user: User;
+    }
+    export class Invite {
+        constructor(client: Client, guild: Guild, data: any, channel?: any);
+        private client: Client;
+        readonly code: string;
+        readonly expireAt: string | number;
+        readonly guild: Guild;
+        readonly guildId: string;
+        readonly channel?: TextChannel | VoiceChannel | AnnouncementChannel | Thread | StageChannel | ForumChannel | null;
+        readonly channelId: string;
+        readonly inviter: User;
+        readonly uses: number;
+        readonly maxUses: number;
+        readonly maxAge: number;
+        readonly temporary: boolean;
+        readonly createdAt: string | number;
+        readonly guild_scheduled_event?: object;
+        readonly data_is_available: boolean;
+        private readonly cachedAt: number | undefined;
+        private readonly expireAt: number | undefined;
+        delete(reason?: string): Promise<Invite>;
     }
 }

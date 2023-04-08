@@ -44,6 +44,8 @@ module.exports.createDefaultOptions = () => {
     membersLifeTimeResetAfterEvents: true,
     rolesLifeTime: null,
     rolesLifeTimeResetAfterEvents: true,
+    invitesLifeTime: null,
+    invitesLifeTimeResetAfterEvents: true,
     token: null,
   }
 }

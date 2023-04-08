@@ -47,6 +47,8 @@ module.exports = class Client extends EventEmitter {
      * @property {boolean} membersLifeTimeResetAfterEvents
      * @property {number} rolesLifeTime
      * @property {boolean} rolesLifeTimeResetAfterEvents
+     * @property {number} invitesLifeTime
+     * @property {boolean} invitesLifeTimeResetAfterEvents
      */
     /**
      * The client options
@@ -109,6 +111,8 @@ module.exports = class Client extends EventEmitter {
             EMOJI: (guildID, emoji) => { return `${this._ENDPOINTS.SERVERS(guildID)}/emojis${emoji ? `/${emoji}` : ``}` },
             THREAD_MEMBER: (channelID, user) => { return DiscordAPI + '/channels/' + channelID + 'thread-members' + user ? '/' + user : ''; },
             STAGE: () => { return `${DiscordAPI}/stage-instances`; },
+            PRUNE: (serverID) => { return `${this._ENDPOINTS.SERVERS(serverID)}/prune`; },
+            SERVER_INVITES: (serverID) => { return `${this._ENDPOINTS.SERVERS(serverID)}/invites`; },
         }
 
         this.token = options?.token
@@ -168,6 +172,10 @@ module.exports = class Client extends EventEmitter {
         if (this.options.rolesLifeTime > 0 && !this.options.guildsLifeTime) {
             this.options.rolesLifeTime = null
             process.emitWarning("The guilds cache must be enabled if you want to use the roles cache")
+        }
+        if (this.options.invitesLifeTime > 0 && !this.options.guildsLifeTime) {
+            this.options.invitesLifeTime = null
+            process.emitWarning("The guilds cache must be enabled if you want to use the invites cache")
         }
         this.rest = new RESTHandler(this)
         this.user = new Models.ClientUser(this)

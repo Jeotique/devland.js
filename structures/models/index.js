@@ -26,6 +26,7 @@ const Member = require('./Member')
 const Role = require('./Role')
 const AuditLogs = require('./AuditLogs')
 const Log = require('./Log')
+const Invite = require('./Invite')
 module.exports = {
     ClientUser,
     Attachment,
@@ -55,4 +56,5 @@ module.exports = {
     Role,
     AuditLogs,
     Log,
+    Invite,
 }

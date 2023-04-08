@@ -51,11 +51,19 @@ module.exports = {
             }, 1500)
         }
 
-        var o = setInterval(() => {
-            if (typeof client.options.guildsLifeTime !== 'number') return clearInterval(o)
-            if (client.options.guildsLifeTime < 1) return clearInverval(o)
-            if (typeof client.options.rolesLifeTime !== 'number') return clearInterval(o)
-            if (client.options.rolesLifeTime < 1) return clearInverval(o)
+        client.cacheInverval = setInterval(() => {
+            checkGuildsCache()
+            checkRoleCache()
+            checkMembersCache()
+            checkUsersCache()
+            checkMessagesCache()
+            checkChannelsCache()
+        }, 4000)
+        async function checkRoleCache() {
+            if (typeof client.options.guildsLifeTime !== 'number') return
+            if (client.options.guildsLifeTime < 1) return
+            if (typeof client.options.rolesLifeTime !== 'number') return
+            if (client.options.rolesLifeTime < 1) return
             client.guilds.map(guild => {
                 guild.roles.map(role => {
                     if (Date.now() < role.expireAt) return
@@ -64,12 +72,12 @@ module.exports = {
                     client.guilds.set(guild.id, guild)
                 })
             })
-        }, 3000)
-        var t = setInterval(() => {
-            if (typeof client.options.guildsLifeTime !== 'number') return clearInterval(t)
-            if (client.options.guildsLifeTime < 1) return clearInverval(t)
-            if (typeof client.options.membersLifeTime !== 'number') return clearInterval(t)
-            if (client.options.membersLifeTime < 1) return clearInverval(t)
+        }
+        async function checkMembersCache() {
+            if (typeof client.options.guildsLifeTime !== 'number') return
+            if (client.options.guildsLifeTime < 1) return
+            if (typeof client.options.membersLifeTime !== 'number') return
+            if (client.options.membersLifeTime < 1) return
             client.guilds.map(guild => {
                 guild.members.map(member => {
                     if (Date.now() < member.expireAt) return
@@ -78,37 +86,37 @@ module.exports = {
                     client.guilds.set(guild.id, guild)
                 })
             })
-        }, 3000)
-        var w = setInterval(() => {
-            if (typeof client.options.usersLifeTime !== 'number') return clearInterval(w)
-            if (client.options.usersLifeTime < 1) return clearInverval(w)
+        }
+        async function checkUsersCache() {
+            if (typeof client.options.usersLifeTime !== 'number') return
+            if (client.options.usersLifeTime < 1) return
             client.users.map(user => {
                 if (Date.now() < user.expireAt) return
                 else client.users.delete(user.id)
                 client.emit('debug', `(${user.id}) User removed from the cache`)
             })
-        }, 3000)
-        var y = setInterval(() => {
-            if (typeof client.options.guildsLifeTime !== 'number') return clearInterval(y)
-            if (client.options.guildsLifeTime < 1) return clearInverval(y)
+        }
+        async function checkGuildsCache() {
+            if (typeof client.options.guildsLifeTime !== 'number') return
+            if (client.options.guildsLifeTime < 1) return
             client.guilds.map(guild => {
                 if (Date.now() < guild.expireAt) return
                 else client.guilds.delete(guild.id)
                 client.emit('debug', `(${guild.id}) Guild removed from the cache`)
             })
-        }, 3000)
-        var x = setInterval(() => {
-            if (typeof client.options.messagesLifeTime !== 'number') return clearInterval(x)
-            if (client.options.messagesLifeTime < 1) return clearInverval(x)
+        }
+        async function checkMessagesCache() {
+            if (typeof client.options.messagesLifeTime !== 'number') return
+            if (client.options.messagesLifeTime < 1) return
             client.messages.map(message => {
                 if (Date.now() < message.expireAt) return
                 else client.messages.delete(message.id)
                 client.emit('debug', `(${message.id}) Message removed from the cache`)
             })
-        }, 3000)
-        var z = setInterval(() => {
-            if (typeof client.options.channelsLifeTime !== 'number') return clearInterval(z)
-            if (client.options.channelsLifeTime < 1) return clearInverval(z)
+        }
+        async function checkChannelsCache() {
+            if (typeof client.options.channelsLifeTime !== 'number') return
+            if (client.options.channelsLifeTime < 1) return
             client.textChannels.map(text => {
                 if (Date.now() < text.expireAt) return
                 else client.textChannels.delete(text.id)
@@ -144,6 +152,6 @@ module.exports = {
                 else client.forumChannels.delete(forum.id)
                 client.emit('debug', `(${forum.id}) Forum channel removed from the cache`)
             })
-        }, 3000)
+        }
     }
 }
