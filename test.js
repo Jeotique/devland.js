@@ -1,7 +1,7 @@
 const Discord = require('./index')
 const client = new Discord.Client({
     connect: true,
-    token: "OTkzNDk3NDA0MjEwOTU0MzMy.G3bJUt.uGPsjuWpTcHV-zk6la0GXMPsf6bHHjiObVxFS8",
+    token: "OTkzNDk3NDA0MjEwOTU0MzMy.GoKyNU.pVKI2neNuxtQaw1t0t9xleuZBPP8FgFMkrlx5M",
     messagesLifeTime: 9999999,
     guildsLifeTime: 999999,
     guildsLifeTimeResetAfterEvents: true,
@@ -16,8 +16,24 @@ client.on('ready', async () => {
     console.log(client.user.tag)
     let guild = client.guilds.get("974284423979745370")
     console.log(guild.name)
-    let member = guild.members.get("484412542530224128")
+    let member = guild.members.get("1072553881134972970")
     console.log(member.user.tag)
+    //guild.createRole({name: "test create lib 2", permissions: new Discord.Permissions(["ADMINISTRATOR"])})
+    console.log(member.hasPermissions("ADMINISTRATOR"))
+})
+
+client.on('roleCreate', role => {
+    console.log(role)
+    console.log("rôle créé")
+})
+
+client.on('roleUpdate', (old, newr) => {
+    console.log(`${old.name} -> ${newr.name}`)
+})
+
+client.on('roleDelete', role => {
+    console.log(role)
+    console.log("rôle supprimé")
 })
 
 client.on('message', async message => {

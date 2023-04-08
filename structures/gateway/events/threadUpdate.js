@@ -20,7 +20,7 @@ module.exports = {
             let oldThread = client.threadChannels.get(thread.id)
             if(!oldThread) oldThread = { error: "Enable the threads cache to get the old thread data", id: data.id, data_is_available: false }
             /**
-            * Emitted whenever a thread is deleted
+            * Emitted whenever a thread is updated
             * @event client#threadUpdate
             * @param {Thread} oldThread
             * @param {Thread} thread

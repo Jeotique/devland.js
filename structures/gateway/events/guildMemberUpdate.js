@@ -15,9 +15,12 @@ module.exports = {
         let oldMember = guild.members.get(member.id)
         if (oldMember) {
             client.emit('memberUpdate', oldMember, member)
-            member.cachedAt = Date.now()
-            member.expireAt = Date.now() + client.options.membersLifeTime
-            guild.members.set(member.id, member)
+            if (typeof client.options.membersLifeTime === "number" && client.options.membersLifeTime > 0) {
+                member.cachedAt = Date.now()
+                member.expireAt = Date.now() + client.options.membersLifeTime
+                guild.members.set(member.id, member)
+                client.guilds.set(guild.id, guild)
+            }
         } else {
             /**
                  * Emitted whenever a member is updated

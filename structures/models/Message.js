@@ -58,6 +58,7 @@ module.exports = class Message {
         this.webhookId = data.webhook_id
         this.author = this.webhookId ? null : new User(this.client, data.author)
         this.authorId = this.webhookId ? this.webhookId : data.author.id
+        this.member = this.webhookId ? null : this.guildId ? this.guild.members.get(this.authorId) : null
         this.data_is_available = true
 
         data.attachments.map(attach => this.attachments.set(attach.id, new Attachment(this.client, this, attach)))
@@ -165,6 +166,7 @@ module.exports = class Message {
         return new Promise(async (resolve, reject) => {
             if (typeof delay !== 'number') delay = 0
             setTimeout(() => {
+                if(this.deleted) return resolve(this)
                 this.client.rest.delete(this.client._ENDPOINTS.MESSAGES(this.channelId, this.id)).then(() => {
                     this.deleted = true
                     return resolve(this)

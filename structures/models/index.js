@@ -24,6 +24,8 @@ const ForumTag = require('./ForumTag')
 const Emoji = require('./Emoji')
 const Member = require('./Member')
 const Role = require('./Role')
+const AuditLogs = require('./AuditLogs')
+const Log = require('./Log')
 module.exports = {
     ClientUser,
     Attachment,
@@ -51,4 +53,6 @@ module.exports = {
     Emoji,
     Member,
     Role,
+    AuditLogs,
+    Log,
 }

@@ -2,7 +2,7 @@ import EventEmitter from "events"
 import ws from 'ws'
 import Store from '../util/Store/Store'
 declare module 'devland.js' {
-    declare type clientOptions = {
+    type clientOptions = {
         connect: boolean;
         ws: wsOptions;
         presence: presenceOptions;
@@ -23,36 +23,37 @@ declare module 'devland.js' {
         rolesLifeTime: number;
         rolesLifeTimeResetAfterEvents: boolean;
     }
-    declare type wsOptions = {
+    type wsOptions = {
         large_threshold: number;
         compress: boolean;
         properties: propertiesOptions;
     }
-    declare type propertiesOptions = {
+    type propertiesOptions = {
         $os: string | NodeJS.Platform;
         $browser: string;
         $device: string;
     }
-    declare type presenceOptions = {
+    type presenceOptions = {
         status: string;
         afk: boolean;
     }
-    declare type wsClientData = {
+    type wsClientData = {
         socket: ws;
         connected: boolean;
         gateway: gatewayClientData;
     }
-    declare type gatewayClientData = {
+    type gatewayClientData = {
         url: string;
         obtainedAt: number;
         heartbeat: heartbeatClientData;
     }
-    declare type heartbeatClientData = {
+    type heartbeatClientData = {
         interval: number;
         last: number;
         recieved: boolean;
         seq: any;
     }
+    export type Awaitable<T> = T | PromiseLike<T>;
     export class Client extends EventEmitter {
         constructor(options: clientOptions);
         readonly ready: boolean;
@@ -102,39 +103,44 @@ declare module 'devland.js' {
         public removeAllListeners<K extends keyof ClientEvents>(event?: K): this;
         public removeAllListeners<S extends string | symbol>(event?: Exclude<S, keyof ClientEvents>): this;
     }
-    declare type invalid_Message = {
+    type invalid_Message = {
         error: string;
         guild: Guild;
         channel: TextChannel;
         id: string;
         data_is_available: boolean;
     }
-    declare type invalid_Guild = {
+    type invalid_Guild = {
         error: string;
         id: string;
         data_is_available: boolean;
     }
-    declare type invalid_Channel = {
+    type invalid_Channel = {
         error: string;
         id: string;
         data_is_available: boolean;
     }
-    declare type invalid_Thread = {
+    type invalid_Thread = {
         error: string,
         id: string,
         data_is_available: boolean,
     }
-    declare type invalid_User = {
+    type invalid_User = {
         error: string,
         id: string,
         data_is_available: boolean,
     }
-    declare type invalid_Member = {
+    type invalid_Member = {
         error: string,
         id: string,
         data_is_available: boolean,
     }
-    declare interface ClientEvents {
+    type invalid_Role = {
+        error: string,
+        id: string,
+        data_is_available: boolean,
+    }
+    interface ClientEvents {
         debug: [data: string];
         ready: [client: Client];
         message: [message: Message];
@@ -171,9 +177,17 @@ declare module 'devland.js' {
         stageInstanceCreate: [stage: StageInstance];
         stageInstanceUpdate: [stage: StageInstance];
         stageInstanceDelete: [stage: StageInstance];
+        memberJoin: [member: Member];
         memberUpdate: [old_member: Member | invalid_Member, member: Member];
+        memberLeave: [member: Member | invalid_Member];
+        roleCreate: [role: Role];
+        roleUpdate: [old_role: Role | invalid_Role, role: Role];
+        roleFakeUpdate: [old_role: Role, role: Role];
+        roleDelete: [role: Role | invalid_Role];
+        memberBan: [user: User | invalid_User];
+        memberUnban: [user: User | invalid_User];
     }
-    declare class RESTHandler {
+    class RESTHandler {
         private constructor(client: Client);
         readonly handling: boolean;
         readonly _ratelimits: [];
@@ -188,7 +202,7 @@ declare module 'devland.js' {
         patch(endpoint: string, body: any, options?: object): Promise<any>;
         delete(endpoint: string, options?: object): Promise<any>;
     }
-    declare namespace Client {
+    namespace Client {
         export class ClientUser {
             private constructor(client: Client, data: object);
             private client: Client;
@@ -205,7 +219,7 @@ declare module 'devland.js' {
             fetchGuilds(max?: number): Promise<Store<String, Guild>>;
         }
     }
-    declare type guildFeatures = "ANIMATED_BANNER" | "ANIMATED_ICON" | "APPLICATION_COMMAND_PERMISSIONS_V2" | "AUTO_MODERATOR" | "BANNER" | "COMMUNITY" | "CREATOR_MODETIZABLE_PROVISIONAL" | "CREATOR_STORE_PAGE" | "DEVELOPER_SUPPORT_SERVER" | "DISCOVERABLE" | "FEATURABLE" | "INVITES_DISABLED" | "INVITE_SPLASH" | "MEMBER_VERIFICATION_GATE_ENABLED" | "MORE_STICKERS" | "NEWS" | "PARTNERED" | "PREVIEW_ENABLED" | "ROLE_ICONS" | "ROLE_SUBSCRIPTIONS_AVAILABLE_FOR_PURCHASE" | "ROLE_SUBSCRIPTIONS_ENABLED" | "TICKETED_EVENTS_ENABLED" | "VANITY_URL" | "VERIFIED" | "VIP_REGIONS" | "WELCOME_SCREEN_ENABLED"
+    type guildFeatures = "ANIMATED_BANNER" | "ANIMATED_ICON" | "APPLICATION_COMMAND_PERMISSIONS_V2" | "AUTO_MODERATOR" | "BANNER" | "COMMUNITY" | "CREATOR_MODETIZABLE_PROVISIONAL" | "CREATOR_STORE_PAGE" | "DEVELOPER_SUPPORT_SERVER" | "DISCOVERABLE" | "FEATURABLE" | "INVITES_DISABLED" | "INVITE_SPLASH" | "MEMBER_VERIFICATION_GATE_ENABLED" | "MORE_STICKERS" | "NEWS" | "PARTNERED" | "PREVIEW_ENABLED" | "ROLE_ICONS" | "ROLE_SUBSCRIPTIONS_AVAILABLE_FOR_PURCHASE" | "ROLE_SUBSCRIPTIONS_ENABLED" | "TICKETED_EVENTS_ENABLED" | "VANITY_URL" | "VERIFIED" | "VIP_REGIONS" | "WELCOME_SCREEN_ENABLED"
     export enum guildVerificationLevel {
         NONE = 0,
         LOW = 1,
@@ -232,18 +246,18 @@ declare module 'devland.js' {
         TIER_2 = 2,
         TIER_3 = 3
     }
-    declare type guildPreferredLocale = "id" | "da" | "de" | "en-GB" | "en-US" | "es-ES" | "fr" | "hr" | "it" | "lt" | "hu" | "nl" | "no" | "pl" | "pt-BR" | "ro" | "fi" | "sv-SE" | "vi" | "tr" | "cs" | "el" | "bg" | "ru" | "uk" | "hi" | "th" | "zh-CN" | "ja" | "zh-TW" | "ko"
+    type guildPreferredLocale = "id" | "da" | "de" | "en-GB" | "en-US" | "es-ES" | "fr" | "hr" | "it" | "lt" | "hu" | "nl" | "no" | "pl" | "pt-BR" | "ro" | "fi" | "sv-SE" | "vi" | "tr" | "cs" | "el" | "bg" | "ru" | "uk" | "hi" | "th" | "zh-CN" | "ja" | "zh-TW" | "ko"
     export enum guildNsfwLevel {
         DEFAULT = 0,
         EXPLICIT = 1,
         SAFE = 2,
         AGE_RESTRICTED = 3
     }
-    declare type guildVanityData = {
+    type guildVanityData = {
         code: string | null,
         uses: number | null
     }
-    declare type utilsChannels = {
+    type utilsChannels = {
         systemChannel: TextChannel | null;
         afkTimeout: number;
         afkChannel: VoiceChannel | null;
@@ -253,13 +267,13 @@ declare module 'devland.js' {
         safetyChannel: TextChannel | null;
         publicUpdatesChannel: TextChannel | null;
     }
-    declare type createEmojiOptions = {
+    type createEmojiOptions = {
         name: string,
         roles?: string[],
         image: any,
         reason?: string,
     }
-    declare type editGuildOptions = {
+    type editGuildOptions = {
         name?: string,
         verification_level?: guildVerificationLevel,
         default_message_notifications?: guildDefaultMessageNotifications,
@@ -280,13 +294,27 @@ declare module 'devland.js' {
         description?: string,
         premium_progress_bar_enabled?: boolean,
     }
-    declare type guildChannels = {
+    type guildChannels = {
         text: Store<String, TextChannel>,
         voice: Store<String, VoiceChannel>,
         category: Store<String, CategoryChannel>,
         announcement: Store<String, AnnouncementChannel>,
         stage: Store<String, StageChannel>,
         forum: Store<String, ForumChannel>,
+    }
+    type createRoleOptions = {
+        name?: string,
+        permissions?: Permissions | PermissionResolvable | string[] | number | BitField,
+        color?: string | number,
+        hoist?: boolean,
+        unicode_emoji?: Emoji | string,
+        mentionable?: boolean,
+        reason?: string,
+    }
+    type fetchLogsOptions = {
+        limit?: number,
+        user_id?: string,
+        type?: logsType,
     }
     export class Guild {
         private constructor(client: Client, data: object);
@@ -320,12 +348,14 @@ declare module 'devland.js' {
         readonly createdAt: Date;
         readonly members: Store<String, Member>;
         readonly roles: Store<String, Role>;
+        readonly premiumSubscriberRole: Role | null;
+        readonly everyoneRole: Role | null;
         readonly data_is_available: boolean;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
         fetchVanity(): Promise<guildVanityData>;
         fetchUtilsChannels(): Promise<utilsChannels>;
-        setCommands(...commands: GuildCommand): Promise<boolean>;
+        setCommands(...commands: GuildCommand[]): Promise<boolean>;
         getCommands(): Promise<GuildCommand[]>;
         deleteCommand(command: GuildCommand | object): Promise<boolean>;
         fetchEmojis(emoji_id?: string | Emoji): Promise<Store<String, Emoji> | Emoji>;
@@ -341,8 +371,17 @@ declare module 'devland.js' {
         fetchForumChannels(): Promise<Store<String, ForumChannel>>;
         fetchMember(user: User | Member | string): Promise<Member>;
         fetchMembers(options: fetchMembersOptions): Promise<Store<String, Member>>;
+        fetchRoles(): Promise<Store<String, Role>>;
+        createRole(options?: createRoleOptions): Promise<Role>;
+        fetchLogs(options: fetchLogsOptions): Promise<AuditLogs>;
+        leave(): Promise<void>;
+        kickMember(user: string | User | Member, reason?: string): Promise<Member?>;
+        banMember(user: string | User | Member, delete_message_seconds?: number, reason?: string): Promise<Member?>;
+        unbanMember(user: string | User | Member, reason?: string): Promise<boolean>;
+        fetchBans(): Promise<Store<String, Ban>>;
+        fetchBan(user: string | User | Member): Promise<Ban>;
     }
-    declare type fetchMembersOptions = {
+    type fetchMembersOptions = {
         limit: number,
         after: number
     }
@@ -366,8 +405,11 @@ declare module 'devland.js' {
         edit(data: editMemberOptions): Promise<Member>;
         addRoles(roles: Role | Role[] | string | string[], reason?: string): Promise<Member>;
         removeRoles(roles: Role | Role[] | string | string[], reason?: string): Promise<Member>;
+        hasPermissions(permission: string | PermissionResolvable): boolean;
+        kick(reason?: string): Promise<Member?>;
+        ban(delete_message_seconds?: number, reason?: string): Promise<Member?>;
     }
-    declare type editMemberOptions = {
+    type editMemberOptions = {
         nick?: string | null,
         roles?: Role[] | string[],
         mute?: boolean,
@@ -391,12 +433,12 @@ declare module 'devland.js' {
         GUILD_DIRECTORY = 14,
         GUILD_FORUM = 15
     }
-    declare type MessageOptions = {
+    type MessageOptions = {
         content: string,
         embeds: Embed[];
         components: ActionRow[];
     }
-    declare type fetchMessagesOptions = {
+    type fetchMessagesOptions = {
         limit?: number,
         around?: string,
         before?: string,
@@ -410,13 +452,13 @@ declare module 'devland.js' {
         ROLE = 0,
         USER = 1
     }
-    declare type PermissionOverwritesResolvable = {
+    type PermissionOverwritesResolvable = {
         id: string | User | Member | Role,
         type?: PermissionIdType,
         allow?: PermissionString[] | PermissionResolvable,
         deny?: PermissionString[] | PermissionResolvable,
     }
-    declare type channelEditOptions = {
+    type channelEditOptions = {
         name?: string,
         position?: number,
         topic?: string,
@@ -549,13 +591,13 @@ declare module 'devland.js' {
         setPosition(position: number): Promise<VoiceChannel>;
         bulkDelete(data: number | Message[] | string[]): Promise<void>;
     }
-    declare type stageStartOptions = {
+    type stageStartOptions = {
         topic: string,
         privacy_level?: stagePrivacyLevel,
         send_start_notification?: boolean,
         reason?: string,
     }
-    declare type stageEditOptions = {
+    type stageEditOptions = {
         topic?: string,
         privacy_level?: stagePrivacyLevel,
         reason?: string,
@@ -564,7 +606,7 @@ declare module 'devland.js' {
         PUBLIC = 1,
         GUILD_ONLY = 2,
     }
-    declare type StageInstance = {
+    type StageInstance = {
         id: string,
         guild_id: string,
         channel_id: string,
@@ -660,7 +702,7 @@ declare module 'devland.js' {
         getPinnedMessages(): Promise<Store<String, Message>>;
         crosspost(message: Message | string): Promise<Message>;
     }
-    declare type ThreadMetadata = {
+    type ThreadMetadata = {
         archived: boolean,
         active_timestamp: string,
         auto_archive_duration: number,
@@ -696,15 +738,15 @@ declare module 'devland.js' {
         add(member: User | Member | string): Promise<void>;
         remove(member: User | Member | string): Promise<void>;
     }
-    declare type webhookId = string;
-    declare type getUsersFromReactionOptions = {
+    type webhookId = string;
+    type getUsersFromReactionOptions = {
         limit: number,
         after?: User | string,
     }
     export class Message {
         private constructor(client: Client, guild: Guild, channel: TextChannel, data: object)
         private client: Client;
-        readonly guild: Guild;
+        readonly guild?: Guild;
         readonly channel: TextChannel | AnnouncementChannel | VoiceChannel | Thread | ForumChannel | DmChannel;
         readonly id: string;
         readonly type: number;
@@ -718,7 +760,7 @@ declare module 'devland.js' {
         readonly tts: boolean;
         readonly createdTimestamp: number;
         readonly createdAt: Date;
-        readonly guildId: string;
+        readonly guildId?: string;
         readonly editTimestamp: number | null;
         readonly flags: number;
         readonly components: ActionRow[];
@@ -726,6 +768,7 @@ declare module 'devland.js' {
         readonly deleted: boolean;
         readonly data_is_available: boolean;
         readonly author?: User;
+        readonly member?: Member;
         readonly authorId: string | webhookId;
         readonly webhookId?: webhookId;
         private readonly cachedAt: number | undefined;
@@ -754,29 +797,29 @@ declare module 'devland.js' {
         readonly url: string;
         readonly proxyUrl: string;
         readonly height: number | undefined;
-        readonly width: number | indefined;
+        readonly width: number | undefined;
         readonly ephemeral: boolean | undefined;
     }
-    declare type fieldOptions = {
+    type fieldOptions = {
         name: string,
         value: string,
         inline?: boolean
     }
-    declare type authorOptions = {
+    type authorOptions = {
         name: string,
         icon_url?: string
     }
-    declare type footerOptions = {
+    type footerOptions = {
         text: string,
         icon_url?: string
     }
-    declare type imageOptions = {
+    type imageOptions = {
         url: string
     }
-    declare type thumbnailOptions = {
+    type thumbnailOptions = {
         url: string
     }
-    declare type embedOptions = {
+    type embedOptions = {
         fields?: fieldOptions[],
         title?: string,
         description?: string,
@@ -838,20 +881,20 @@ declare module 'devland.js' {
         Danger = 4,
         Link = 5
     }
-    declare type APIEmoji = {
+    type APIEmoji = {
         animated: boolean,
         id: string | null,
         name: string
     }
-    declare type resolvableComponents = Button | StringSelect | RoleSelect | MentionableSelect | ChannelSelect | UserData | buttonData | stringData | roleData | userData | mentionableData | channelData;
+    type resolvableComponents = Button | StringSelect | RoleSelect | MentionableSelect | ChannelSelect | userData | buttonData | stringData | roleData | userData | mentionableData | channelData;
     export class ActionRow {
-        constructor(...components?: resolvableComponents);
+        constructor(...components: resolvableComponents[]);
         readonly components: resolvableComponents[];
         private readonly type: number;
         private pack();
-        addComponents(...components: resolvableComponents);
+        addComponents(...components: resolvableComponents[]);
     }
-    declare type buttonData = {
+    type buttonData = {
         label?: string,
         style: ButtonStyle,
         custom_id?: string,
@@ -872,7 +915,7 @@ declare module 'devland.js' {
         disabled?: boolean;
         private pack();
     }
-    declare type stringData = {
+    type stringData = {
         placeholder?: string,
         custom_id?: string,
         customId: string,
@@ -881,7 +924,7 @@ declare module 'devland.js' {
         options: selectOptions[],
         disabled?: boolean
     }
-    declare type selectOptions = {
+    type selectOptions = {
         label: string,
         value: string,
         description?: string,
@@ -898,11 +941,11 @@ declare module 'devland.js' {
         customId: string;
         options: selectOptions[];
         disabled?: boolean;
-        addOptions(...options: selectOptions);
-        setOptions(...options: selectOptions);
+        addOptions(...options: selectOptions[]);
+        setOptions(...options: selectOptions[]);
         private pack();
     }
-    declare type roleData = {
+    type roleData = {
         placeholder?: string,
         custom_id?: string,
         customId: string,
@@ -921,7 +964,7 @@ declare module 'devland.js' {
         disabled?: boolean;
         private pack();
     }
-    declare type userData = {
+    type userData = {
         placeholder?: string,
         custom_id?: string,
         customId: string,
@@ -940,7 +983,7 @@ declare module 'devland.js' {
         disabled?: boolean;
         private pack();
     }
-    declare type mentionableData = {
+    type mentionableData = {
         placeholder?: string,
         custom_id?: string,
         customId: string,
@@ -959,7 +1002,7 @@ declare module 'devland.js' {
         disabled?: boolean;
         private pack();
     }
-    declare type channelData = {
+    type channelData = {
         placeholder?: string,
         custom_id?: string,
         customId: string,
@@ -1088,7 +1131,7 @@ declare module 'devland.js' {
         NUMBER = 10,
         ATTACHMENT = 11
     }
-    declare type localizationsOptions = {
+    type localizationsOptions = {
         id: string,
         da: string,
         de: string,
@@ -1121,7 +1164,7 @@ declare module 'devland.js' {
         "zh-TW": string,
         ko: string
     }
-    declare type GuildCommandOptions = {
+    type GuildCommandOptions = {
         name: string,
         type?: commandType,
         description?: string,
@@ -1131,12 +1174,12 @@ declare module 'devland.js' {
         description_localizations?: localizationsOptions,
         nsfw?: boolean,
     }
-    declare type commandChoicesOptions = {
+    type commandChoicesOptions = {
         name: string,
         name_localizations?: localizationsOptions,
         value: string | number;
     }
-    declare type commandOptions = {
+    type commandOptions = {
         type: commandOptionsType,
         name: string,
         name_localizations?: localizationsOptions,
@@ -1160,10 +1203,10 @@ declare module 'devland.js' {
         options?: commandOptions[];
         default_member_permissions?: PermissionString[] | PermissionResolvable;
         name_localizations?: localizationsOptions;
-        description_localizations?: localizationOptions;
+        description_localizations?: localizationsOptions;
         nsfw?: boolean;
     }
-    declare type tagOptions = {
+    type tagOptions = {
         id?: string,
         name: string,
         moderated?: boolean,
@@ -1177,7 +1220,7 @@ declare module 'devland.js' {
         emoji?: APIEmoji | Emoji | string;
         private pack();
     }
-    declare type editEmojiOptions = {
+    type editEmojiOptions = {
         name?: string,
         roles?: string[],
         reason?: string,
@@ -1199,6 +1242,16 @@ declare module 'devland.js' {
         edit(options: editEmojiOptions): Promise<Emoji>;
         delete(reason?: string): Promise<void>;
     }
+    type editRoleOptions = {
+        name?: string,
+        permissions?: Permissions | PermissionResolvable | string[] | number | BitField,
+        color?: string | number,
+        hoist?: boolean,
+        unicode_emoji?: Emoji | string,
+        mentionable?: boolean,
+        position?: number,
+        reason?: string,
+    }
     export class Role {
         constructor(client: Client, guild: Guild, data: any);
         private client: Client;
@@ -1218,7 +1271,37 @@ declare module 'devland.js' {
         readonly flags: number;
         readonly color: number;
         readonly data_is_available: boolean;
+        readonly createdTimestamp: number;
+        readonly createdAt: Date;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
+        edit(options: editRoleOptions): Promise<Role>;
+        delete(reason?: string): Promise<Role>;
+        readonly hexColor: string;
+        comparePositions(role: Role | string): number;
+    }
+    export class AuditLogs {
+        constructor(client: Client, data: any);
+        private client: Client;
+        readonly entries: Store<String, Log>;
+    }
+    type logsType = "GUILD_UPDATE" | "CHANNEL_CREATE" | "CHANNEL_UPDATE" | "CHANNEL_DELETE" | "CHANNEL_OVERWRITE_CREATE" | "CHANNEL_OVERWRITE_UPDATE" | "CHANNEL_OVERWRITE_DELETE" | "MEMBER_KICK" | "MEMBER_PRUNE" | "MEMBER_BAN_ADD" | "MEMBER_BAN_REMOVE" | "MEMBER_UPDATE" | "MEMBER_ROLE_UPDATE" | "MEMBER_MOVE" | "MEMBER_DISCONNECT" | "BOT_ADD" | "ROLE_CREATE" | "ROLE_UPDATE" | "ROLE_DELETE" | "INVITE_CREATE" | "INVITE_UPDATE" | "INVITE_DELETE" | "WEBHOOK_CREATE" | "WEBHOOK_UPDATE" | "WEBHOOK_DELETE" | "EMOJI_CREATE" | "EMOJI_UPDATE" | "EMOJI_DELETE" | "MESSAGE_DELETE" | "MESSAGE_BULK_DELETE" | "MESSAGE_PIN" | "MESSAGE_UNPIN" | "INTEGRATION_CREATE" | "INTEGRATION_UPDATE" | "INTEGRATION_DELETE" | "STAGE_INSTANCE_CREATE" | "STAGE_INSTANCE_UPDATE" | "STAGE_INSTANCE_DELETE" | "STICKER_CREATE" | "STICKER_UPDATE" | "STICKER_DELETE" | "GUILD_SCHEDULED_EVENT_CREATE" | "GUILD_SCHEDULED_EVENT_UPDATE" | "GUILD_SCHEDULED_EVENT_DELETE" | "THREAD_CREATE" | "THREAD_UPDATE" | "THREAD_DELETE";
+    export class Log {
+        constructor(client: Client, data: any);
+        private client: Client;
+        readonly id: string;
+        readonly executor: User;
+        readonly type: logsType;
+        readonly targetId?: string;
+        readonly changes?: [];
+        readonly reason: string | null;
+        readonly extra?: [] | null;
+        readonly createdTimestamp: number;
+        readonly createdAt: Date;
+    }
+    export class Ban {
+        constructor(client: Client, data: any);
+        readonly reason?: string;
+        readonly user: User;
     }
 }

@@ -1,3 +1,4 @@
+const Permissions = require('../util/Permissions/Permissions')
 const Guild = require('./Guild')
 const Role = require('./Role')
 const StageChannel = require('./StageChannel')
@@ -25,6 +26,14 @@ module.exports = class Member {
         this.roles = data.roles
         this.data_is_available = true
         this.user = this.client.users.get(data.user.id) || new User(client, data.user)
+        this.permissions = (this.id === this.guild.ownerId) ? new Permissions("ADMINISTRATOR") : new Permissions(this.roles.map(role_id => {
+            return this.guild.roles.get(role_id)?.permissions
+        }))
+    }
+
+    hasPermissions(permission) {
+        if (this.id === this.guild.ownerId) return true
+        else return this.permissions.has(permission, true)
     }
 
     async edit(data = {}) {
@@ -141,6 +150,29 @@ module.exports = class Member {
                     this.guild.members.set(newMember.id, newMember)
                     newMember.guild.members.set(newMember.id, newMember)
                 }
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async kick(reason) {
+        return new Promise(async (resolve, reject) => {
+            if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            this.guild.kickMember(this.id, reason).then(member => {
+                return resolve(member)
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async ban(delete_message_seconds, reason) {
+        return new Promise(async (resolve, reject) => {
+            if (typeof delete_message_seconds !== "undefined" && typeof delete_message_seconds !== "number") return reject(new TypeError("delete_message_seconds must be a number"))
+            if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            this.guild.banMember(this.id, delete_message_seconds, reason).then(member => {
+                return resolve(member)
             }).catch(e => {
                 return reject(new Error(e))
             })

@@ -11,6 +11,11 @@ const AnnouncementChannel = require('./AnnouncementChannel')
 const StageChannel = require('./StageChannel')
 const ForumChannel = require('./ForumChannel')
 const Member = require('./Member')
+const Role = require('./Role')
+const Permissions = require('../util/Permissions/Permissions')
+const Constants = require('../util/Constants')
+const AuditLogs = require('./AuditLogs')
+const Ban = require('./Ban')
 
 module.exports = class Guild {
     /**
@@ -573,6 +578,200 @@ module.exports = class Guild {
                 }
             }).catch(e => {
                 return new Error(e)
+            })
+        })
+    }
+
+    async fetchRoles() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.get(this.client._ENDPOINTS.ROLES(this.id)).then(res => {
+                let collect = new Store()
+                res.map(role => collect.set(role.id, new Role(this.client, this.client.guilds.get(this.id) || this, role)))
+                resolve(collect)
+                if (typeof this.client.options.rolesLifeTime === "number" && this.client.options.rolesLifeTime > 0) {
+                    collect.map(role => {
+                        role.cachedAt = Date.now()
+                        role.expireAt = Date.now() + this.client.options.rolesLifeTime
+                        this.roles.set(role.id, role)
+                    })
+                }
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async createRole(options = {}) {
+        return new Promise(async (resolve, reject) => {
+            if (typeof options !== "object") return reject(new TypeError("Create role options must be a object"))
+            if (typeof options.name !== "undefined") {
+                if (typeof options.name !== "string") return reject(new TypeError("Create role options name must be a string"))
+                if (options.name.length > 100) return reject(new TypeError("Create role options must be less than 100 caracters"))
+            }
+            if (typeof options.permissions !== "undefined") {
+                if (options.permissions instanceof Permissions) options.permissions = options.permissions.bitfield.toString()
+                else options.permissions = new Permissions(options.permissions).bitfield.toString()
+            }
+            if (typeof options.color !== "undefined") {
+                if (typeof options.color === "string") options.color = Utils.resolveColor(options.color)
+                if (typeof options.color !== "number") return reject(new TypeError("Create role options color must be a number"))
+            }
+            if (typeof options.hoist !== "undefined") {
+                if (typeof options.hoist !== "boolean") return reject(new TypeError("Create role options hoist must be a boolean"))
+            }
+            if (typeof options.unicode_emoji !== "undefined") {
+                if (options.unicode_emoji instanceof Emoji) {
+                    options.unicode_emoji = options.unicode_emoji.pack()
+                    options.unicode_emoji = options.unicode_emoji.id ? `${options.unicode_emoji.name}` : `<${options.unicode_emoji.animated ? "a" : ""}:${options.unicode_emoji.name}:${options.unicode_emoji.id}>`
+                }
+                if (typeof options.unicode_emoji !== "string") return reject(new TypeError("Create role options unicode_emoji must be a string"))
+            }
+            if (typeof options.mentionable !== "undefined") {
+                if (typeof options.mentionable !== "boolean") return reject(new TypeError("Create role options mentionable must be a boolean"))
+            }
+            if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            this.client.rest.post(this.client._ENDPOINTS.ROLES(this.id), options).then(res => {
+                let role = new Role(this.client, this.client.guilds.get(this.id) || this, res)
+                resolve(role)
+                if (typeof this.client.options.rolesLifeTime === "number" && this.client.options.rolesLifeTime > 0) {
+                    role.cachedAt = Date.now()
+                    role.expireAt = Date.now() + this.client.options.rolesLifeTime
+                    this.roles.set(role.id, role)
+                }
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    get premiumSubscriberRole() {
+        return this.roles.find(role => role.tags?.premiumSubscriberRole) ?? null
+    }
+
+    get everyoneRole() {
+        return this.roles.get(this.id) || null
+    }
+
+    get highestRole() {
+        let all = this.roles.toJSON()
+        return all.reduce((prev, role) => (role.comparePositions(prev) > 0 ? role : prev), this.roles.first())
+    }
+
+    async fetchLogs(options = {}) {
+        return new Promise(async (resolve, reject) => {
+            if (options.type && typeof options.type === "number") options.type = Constants.logsTypeFromIndex[options.type]
+            var query = {
+                type: options.type ? Constants.logsType[options.type.toUpperCase()] : null,
+                limit: options.limit || null,
+                user_id: options.user_id || null
+            }
+            let typeQuery = query.type ? `action_type=${query.type}` : null
+            let limitQuery = query.limit ? `&limit=${query.limit}` : null
+            let userIdQuery = query.user_id ? `&user_id=${query.user_id}` : null
+            this.client.rest.get(`${this.client._ENDPOINTS.SERVERS(this.id)}/audit-logs?${typeQuery ? typeQuery : ''}${limitQuery ? limitQuery : ''}${userIdQuery ? userIdQuery : ''}`).then(auditResult => {
+                let audit = new AuditLogs(this.client, auditResult)
+                return resolve(audit)
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async leave() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.delete(this.client._ENDPOINTS.SERVERS(this.id)).then(() => {
+                resolve()
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async kickMember(user, reason) {
+        return new Promise(async (resolve, reject) => {
+            if (user instanceof User) user = user.id
+            if (user instanceof Member) user = user.id
+            if (typeof user !== "string") return reject(new TypeError("The user must be a valid User or Member instance or a valid Id"))
+            if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            let member = this.members.get(user) || null
+            this.client.rest.delete(this.client._ENDPOINTS.MEMBERS(this.id, user), {
+                reason: reason
+            }).then(() => {
+                resolve(member)
+                this.members.delete(user)
+                if (typeof this.client.options.guildsLifeTime === "number" && this.client.options.guildsLifeTime > 0) {
+                    this.cachedAt = Date.now()
+                    this.expireAt = Date.now() + this.client.options.guildsLifeTime
+                    this.client.guilds.set(this.id, this)
+                }
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async banMember(user, delete_message_seconds, reason) {
+        return new Promise(async (resolve, reject) => {
+            if (user instanceof User) user = user.id
+            if (user instanceof Member) user = user.id
+            if (typeof user !== "string") return reject(new TypeError("The user must be a valid User or Member instance or a valid Id"))
+            if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            let member = this.members.get(user) || null
+            if (typeof delete_message_seconds !== "undefined" && typeof delete_message_seconds !== "number") return reject(new TypeError("delete_message_seconds must be a number"))
+            this.client.rest.put(this.client._ENDPOINTS.BANS(this.id, user), {
+                delete_message_seconds: delete_message_seconds,
+                reason: reason
+            }).then(() => {
+                resolve(member)
+                this.members.delete(user)
+                if (typeof this.client.options.guildsLifeTime === "number" && this.client.options.guildsLifeTime > 0) {
+                    this.cachedAt = Date.now()
+                    this.expireAt = Date.now() + this.client.options.guildsLifeTime
+                    this.client.guilds.set(this.id, this)
+                }
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async unbanMember(user, reason) {
+        return new Promise(async (resolve, reject) => {
+            if (user instanceof User) user = user.id
+            if (user instanceof Member) user = user.id
+            if (typeof user !== "string") return reject(new TypeError("The user must be a valid User or Member instance or a valid Id"))
+            if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            this.client.rest.delete(this.client._ENDPOINTS.BANS(this.id, user), {
+                reason: reason
+            }).then(() => {
+                resolve(true)
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async fetchBans() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.get(this.client._ENDPOINTS.BANS(this.id)).then(res => {
+                let collect = new Store()
+                res.map(b => collect.set(b.user.id, new Ban(this.client, b)))
+                return resolve(collect)
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async fetchBan(user) {
+        return new Promise(async (resolve, reject) => {
+            if (user instanceof User) user = user.id
+            if (user instanceof Member) user = user.id
+            if (typeof user !== "string") return reject(new TypeError("The user must be a valid User or Member instance or a valid Id"))
+            this.client.rest.get(this.client._ENDPOINTS.BANS(this.id, user)).then(res => {
+                return resolve(new Ban(this.client, res))
+            }).catch(e => {
+                return reject(new Error(e))
             })
         })
     }
