@@ -23,6 +23,27 @@ client.on('ready', async () => {
     console.log(member.user.tag)
     //guild.createRole({name: "test create lib 2", permissions: new Discord.Permissions(["ADMINISTRATOR"])})
     console.log(member.hasPermissions("ADMINISTRATOR"))
+    let command = new Discord.GuildCommand()
+    command.name = "test-lib-devland",
+    command.description = "juste pour tester"
+    guild.setCommands(command)
+})
+
+client.on('interaction', async interaction => {
+    if(interaction.isSlashCommand)
+        console.log(`c'est une slash commande`)
+
+    console.log(interaction.commandName)
+    let modal = new Discord.Modal()
+    modal.name = "test modal"
+    modal.customId = "modal_test"
+    modal.components.push({
+        label: "label premier text",
+        style: 1,
+        placeholder: "ecrire ici",
+        custom_id: "option1"
+    })
+    interaction.submitModal(modal)
 })
 
 client.on('roleCreate', role => {
@@ -44,7 +65,7 @@ client.on('guildAuditLogEntryCreate', log => {
 })
 
 client.on('message', async message => {
-
+    return;
     if(message.guild){
         console.log(message)
         console.log("message venant d'un serveur")

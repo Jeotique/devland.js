@@ -33,6 +33,8 @@ const Invite = require('./structures/models/Invite')
 const Webhook = require('./structures/models/Webhook')
 const Integration = require('./structures/models/Integration')
 const VoiceState = require('./structures/models/VoiceState')
+const Interaction = require('./structures/models/Interaction')
+const Modal = require('./structures/models/Modal')
 module.exports = {
     Client,
     Utils,
@@ -69,4 +71,6 @@ module.exports = {
     Webhook,
     Integration,
     VoiceState,
+    Interaction,
+    Modal,
 }

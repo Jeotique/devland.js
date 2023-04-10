@@ -4,9 +4,12 @@ const Message = require('./Message')
 const User = require('./User')
 const Member = require('./Member')
 const Permissions = require('../util/Permissions/Permissions')
-
+const Embed = require('./Embed')
+const Utils = require('../util')
+const ActionRow = require('./ActionRow')
+const Modal = require('./Modal')
 module.exports = class Interaction {
-    constructor(client, guild, data){
+    constructor(client, guild, data) {
         Object.defineProperty(this, 'client', { value: client })
         this.guild = guild
         this.guildId = data.guild_id
@@ -16,8 +19,8 @@ module.exports = class Interaction {
         this.data = data.data
         this.channel = data.channel
         this.channelId = data.channel_id
-        this.member = data.member ? guild.members.get(data.member.id) : new Member(client, guild, member)
-        this.user = data.user ? client.users.get(data.user.id) || new User(client, data.user) : this.member ? this.member.user : undefined
+        this.member = data.member
+        this.user = data.user ? data.user : this.member ? this.member.user : undefined
         this.userId = this.user ? this.user.id : undefined
         this.token = data.token
         this.version = data.version
@@ -25,5 +28,306 @@ module.exports = class Interaction {
         this.app_permissions = data.app_permissions ? new Permissions(data.app_permissions) : undefined
         this.locale = data.locale
         this.guild_locale = data.guild_locale
+        this.commandName = data?.data?.name
+        this.isSlashCommand = this.type === 2
+        this.isModal = this.type === 5
+        this.isMessageComponent === 3
+
+        this.followUpMessageId = null
+        this.deleted = false
+    }
+
+    async deferUpdate(options = {}) {
+        return new Promise(async (resolve, reject) => {
+            if (this.isSlashCommand) return reject(new TypeError("You can't use deferUpdate on a slash command"))
+            if (typeof options !== "object") options = {}
+            if (typeof options.ephemeral !== "boolean") options.ephemeral = false
+            if (options.ephemeral) options.flags = 1 << 6
+            else delete options.ephemeral
+            this.client.rest.post(this.client._ENDPOINTS.INTERACTIONS(this.id, this.token), {
+                type: 6,
+                data: options
+            }).then(() => {
+                resolve(this)
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async reply(options = {}) {
+        return new Promise(async (resolve, reject) => {
+            let data = {
+                content: undefined,
+                embeds: [],
+                tts: false,
+                nonce: undefined,
+                allowed_mentions: undefined,
+                components: this.components
+            }
+            if (typeof options === 'string') {
+                data['content'] = options
+                this.client.rest.post(this.client._ENDPOINTS.INTERACTIONS(this.id, this.token), {
+                    type: 4,
+                    data: data
+                }).then(() => {
+                    return resolve(this)
+                }).catch(e => {
+                    return reject(new Error(e))
+                })
+            } else if (options instanceof Embed) {
+                data['embeds'].push(options.pack())
+                this.client.rest.post(this.client._ENDPOINTS.INTERACTIONS(this.id, this.token), {
+                    type: 4,
+                    data: data
+                }).then(() => {
+                    return resolve(this)
+                }).catch(e => {
+                    return reject(new Error(e))
+                })
+            } else if (options instanceof ActionRow) {
+                data['components'].push(options.pack())
+                let toTestCustomId = []
+                let alrSeen = {}
+                data['components']?.map(ar => ar?.components.map(comp => toTestCustomId.push(comp)))
+                if (toTestCustomId.length > 0) toTestCustomId.map(test => {
+                    if (alrSeen[test.custom_id]) return reject(new TypeError("Duplicated custom Id"))
+                    else alrSeen[test.custom_id] = true
+                })
+                this.client.rest.post(this.client._ENDPOINTS.INTERACTIONS(this.id, this.token), {
+                    type: 4,
+                    data: data
+                }).then(() => {
+                    return resolve(this)
+                }).catch(e => {
+                    return reject(new Error(e))
+                })
+            } else if (typeof options === 'object') {
+                data['content'] = options['content']
+                if (typeof options['embeds'] === 'object') options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
+                data['embeds'] = options['embeds']
+                data['tts'] = options['tts']
+                data['nonce'] = options['nonce']
+                data['allowed_mentions'] = options['allowedMentions']
+                data['components'] = []
+                if (options['components'] && options['components']?.length > 0) options['components']?.map(comp => {
+                    if (comp instanceof ActionRow) data['components'].push(comp.pack())
+                    else return reject(new TypeError("Invalid component, must be a ActionRow instance"))
+                })
+                else data['components'] = this.components
+                let toTestCustomId = []
+                let alrSeen = {}
+                data['components']?.map(ar => ar?.components.map(comp => toTestCustomId.push(comp)))
+                if (toTestCustomId.length > 0) toTestCustomId.map(test => {
+                    if (alrSeen[test.custom_id]) return reject(new TypeError("Duplicated custom Id"))
+                    else alrSeen[test.custom_id] = true
+                })
+                data['flags'] = options['ephemeral'] ? 1 << 6 : undefined
+                this.client.rest.post(this.client._ENDPOINTS.INTERACTIONS(this.id, this.token), {
+                    type: 4,
+                    data: data
+                }).then(() => {
+                    return resolve(this)
+                }).catch(e => {
+                    return reject(new Error(e))
+                })
+            } else return reject(new TypeError("Send without any options is not authorized"))
+        })
+    }
+
+    async deferReply(options = {}) {
+        return new Promise(async (resolve, reject) => {
+            if (typeof options !== "object") options = {}
+            if (typeof options.ephemeral !== "boolean") options.ephemeral = false
+            if (options.ephemeral) options.flags = 1 << 6
+            else delete options.ephemeral
+            this.client.rest.post(this.client._ENDPOINTS.INTERACTIONS(this.id, this.token), {
+                type: 5,
+                data: options
+            }).then(() => {
+                resolve(this)
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async followUp(options = {}) {
+        return new Promise(async (resolve, reject) => {
+            let data = {
+                content: undefined,
+                embeds: [],
+                tts: false,
+                nonce: undefined,
+                allowed_mentions: undefined,
+                components: this.components,
+                flags: undefined,
+            }
+            if (typeof options === 'string') {
+                data['content'] = options
+                this.client.rest.post(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token), data).then((a) => {
+                    this.followUpMessageId = a.id
+                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
+                }).catch(e => {
+                    return reject(new Error(e))
+                })
+            } else if (options instanceof Embed) {
+                data['embeds'].push(options.pack())
+                this.client.rest.post(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token), data).then((a) => {
+                    this.followUpMessageId = a.id
+                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
+                }).catch(e => {
+                    return reject(new Error(e))
+                })
+            } else if (options instanceof ActionRow) {
+                data['components'].push(options.pack())
+                let toTestCustomId = []
+                let alrSeen = {}
+                data['components']?.map(ar => ar?.components.map(comp => toTestCustomId.push(comp)))
+                if (toTestCustomId.length > 0) toTestCustomId.map(test => {
+                    if (alrSeen[test.custom_id]) return reject(new TypeError("Duplicated custom Id"))
+                    else alrSeen[test.custom_id] = true
+                })
+                this.client.rest.post(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token), data).then((a) => {
+                    this.followUpMessageId = a.id
+                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
+                }).catch(e => {
+                    return reject(new Error(e))
+                })
+            } else if (typeof options === 'object') {
+                data['content'] = options['content']
+                if (typeof options['embeds'] === 'object') options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
+                data['embeds'] = options['embeds']
+                data['tts'] = options['tts']
+                data['nonce'] = options['nonce']
+                data['allowed_mentions'] = options['allowedMentions']
+                data['components'] = []
+                if (options['components'] && options['components']?.length > 0) options['components']?.map(comp => {
+                    if (comp instanceof ActionRow) data['components'].push(comp.pack())
+                    else return reject(new TypeError("Invalid component, must be a ActionRow instance"))
+                })
+                else data['components'] = this.components
+                let toTestCustomId = []
+                let alrSeen = {}
+                data['components']?.map(ar => ar?.components.map(comp => toTestCustomId.push(comp)))
+                if (toTestCustomId.length > 0) toTestCustomId.map(test => {
+                    if (alrSeen[test.custom_id]) return reject(new TypeError("Duplicated custom Id"))
+                    else alrSeen[test.custom_id] = true
+                })
+                data['flags'] = options['ephemeral'] ? 1 << 6 : undefined
+                this.client.rest.post(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token), data).then((a) => {
+                    this.followUpMessageId = a.id
+                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
+                }).catch(e => {
+                    return reject(new Error(e))
+                })
+            } else return reject(new TypeError("Send without any options is not authorized"))
+        })
+    }
+
+    async editFollowUp(options = {}) {
+        return new Promise(async (resolve, reject) => {
+            let data = {
+                content: undefined,
+                embeds: [],
+                tts: false,
+                nonce: undefined,
+                allowed_mentions: undefined,
+                components: this.components,
+                flags: undefined,
+            }
+            if (typeof options === 'string') {
+                data['content'] = options
+                this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + this.followUpMessageId, data).then((a) => {
+                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
+                }).catch(e => {
+                    return reject(new Error(e))
+                })
+            } else if (options instanceof Embed) {
+                data['embeds'].push(options.pack())
+                this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + this.followUpMessageId, data).then((a) => {
+                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
+                }).catch(e => {
+                    return reject(new Error(e))
+                })
+            } else if (options instanceof ActionRow) {
+                data['components'].push(options.pack())
+                let toTestCustomId = []
+                let alrSeen = {}
+                data['components']?.map(ar => ar?.components.map(comp => toTestCustomId.push(comp)))
+                if (toTestCustomId.length > 0) toTestCustomId.map(test => {
+                    if (alrSeen[test.custom_id]) return reject(new TypeError("Duplicated custom Id"))
+                    else alrSeen[test.custom_id] = true
+                })
+                this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + this.followUpMessageId, data).then((a) => {
+                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
+                }).catch(e => {
+                    return reject(new Error(e))
+                })
+            } else if (typeof options === 'object') {
+                data['content'] = options['content']
+                if (typeof options['embeds'] === 'object') options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
+                data['embeds'] = options['embeds']
+                data['tts'] = options['tts']
+                data['nonce'] = options['nonce']
+                data['allowed_mentions'] = options['allowedMentions']
+                data['components'] = []
+                if (options['components'] && options['components']?.length > 0) options['components']?.map(comp => {
+                    if (comp instanceof ActionRow) data['components'].push(comp.pack())
+                    else return reject(new TypeError("Invalid component, must be a ActionRow instance"))
+                })
+                else data['components'] = this.components
+                let toTestCustomId = []
+                let alrSeen = {}
+                data['components']?.map(ar => ar?.components.map(comp => toTestCustomId.push(comp)))
+                if (toTestCustomId.length > 0) toTestCustomId.map(test => {
+                    if (alrSeen[test.custom_id]) return reject(new TypeError("Duplicated custom Id"))
+                    else alrSeen[test.custom_id] = true
+                })
+                data['flags'] = options['ephemeral'] ? 1 << 6 : undefined
+                this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + this.followUpMessageId, data).then((a) => {
+                    return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
+                }).catch(e => {
+                    return reject(new Error(e))
+                })
+            } else return reject(new TypeError("Send without any options is not authorized"))
+        })
+    }
+
+    /**
+     * Delete the message
+     * @param {number} delay Delay in ms before deleting the message  
+     * @returns {Promise<Interaction>}
+     */
+    async deleteFollowUp(delay) {
+        return new Promise(async (resolve, reject) => {
+            if (typeof delay !== 'number') delay = 0
+            setTimeout(() => {
+                if (this.deleted) return resolve(this)
+                this.client.rest.delete(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + this.followUpMessageId).then(() => {
+                    this.deleted = true
+                    return resolve(this)
+                }).catch(e => {
+                    return reject(new Error(e))
+                })
+            }, delay)
+        })
+    }
+
+    async submitModal(modal){
+        return new Promise(async(resolve, reject) => {
+            if(typeof modal === "undefined") return reject(new TypeError("No modal provided"))
+            if(typeof modal === "object") modal = new Modal(modal)
+            if(modal instanceof Modal) modal = modal.pack()
+            console.log(modal)
+            this.client.rest.post(this.client._ENDPOINTS.INTERACTIONS(this.id, this.token), {
+                type: 9,
+                data: modal
+            }).then(() => {
+                resolve(this)
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
     }
 }

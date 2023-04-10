@@ -48,5 +48,6 @@ module.exports = {
     'INTEGRATION_CREATE': 'integrationCreate',
     'INTEGRATION_UPDATE': 'integrationUpdate',
     'INTEGRATION_DELETE': 'integrationDelete',
-    'WEBHOOKS_UPDATE': 'webhooksUpdate'
+    'WEBHOOKS_UPDATE': 'webhooksUpdate',
+    'INTERACTION_CREATE': 'interactionCreate'
 }

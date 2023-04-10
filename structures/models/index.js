@@ -30,6 +30,8 @@ const Invite = require('./Invite')
 const Webhook = require('./Webhook')
 const Integration = require('./Integration')
 const VoiceState = require('./VoiceState')
+const Interaction = require('./Interaction')
+const Modal = require('./Modal')
 module.exports = {
     ClientUser,
     Attachment,
@@ -63,4 +65,6 @@ module.exports = {
     Webhook,
     Integration,
     VoiceState,
+    Interaction,
+    Modal,
 }

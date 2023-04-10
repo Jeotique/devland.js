@@ -508,8 +508,11 @@ declare module 'devland.js' {
     }
     type MessageOptions = {
         content: string,
-        embeds: Embed[];
-        components: ActionRow[];
+        embeds: Embed[],
+        components: ActionRow[],
+        tts: boolean,
+        nonce: number|string,
+        allowed_mentions: string[],
     }
     type fetchMessagesOptions = {
         limit?: number,
@@ -827,6 +830,12 @@ declare module 'devland.js' {
         limit: number,
         after?: User | string,
     }
+    type simpleInteraction = {
+        id: string,
+        type: interactionType,
+        name?: string,
+        user?: User,
+    }
     export class Message {
         private constructor(client: Client, guild: Guild, channel: TextChannel, data: object)
         private client: Client;
@@ -855,6 +864,7 @@ declare module 'devland.js' {
         readonly member?: Member;
         readonly authorId: string | webhookId;
         readonly webhookId?: webhookId;
+        readonly interaction?: simpleInteraction;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
         edit(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
@@ -1539,6 +1549,15 @@ declare module 'devland.js' {
         messages?: Map<string, Message>,
         attachments?: Map<string, Attachment>,
     }
+    type MessageInteractionOptions = {
+        content: string,
+        embeds: Embed[],
+        components: ActionRow[],
+        tts: boolean,
+        nonce: number|string,
+        allowed_mentions: string[],
+        ephemeral: boolean,
+    }
     export class Interaction {
         constructor(client: Client, data: any);
         private client: Client;
@@ -1559,5 +1578,42 @@ declare module 'devland.js' {
         readonly app_permissions?: Permissions;
         readonly locale?: localizationsOptions;
         readonly guild_locale?: localizationsOptions;
+        readonly commandName?: string;
+        readonly isSlashCommand: boolean;
+        deferUpdate(options?: {ephemeral: boolean}): Promise<Interaction>;
+        reply(options: MessageInteractionOptions | string | Embed | ActionRow): Promise<Interaction>;
+        deferReply(options?: {ephemeral: boolean}): Promise<Interaction>;
+        followUp(options: MessageInteractionOptions | string | Embed | ActionRow): Promise<Message>;
+        editFollowUp(options: MessageInteractionOptions | string | Embed | ActionRow): Promise<Message>;
+        deleteFollowUp(delay?: number): Promise<Interaction>;
+    }
+    type modalOptions = {
+        name: string,
+        custom_id?: string,
+        customId?: string,
+        components?: textInput[],
+    }
+    export enum textInputStyle {
+        Short = 1,
+        Paragraph = 2
+    }
+    type textInput = {
+        type: number,
+        custom_id: string,
+        style: textInputStyle,
+        label: string,
+        min_length?: number,
+        max_length?: number,
+        required?: boolean,
+        value?: string,
+        placeholder?: string,
+    }
+    export class Modal {
+        constructor(modal_data?: modalOptions);
+        name: string;
+        custom_id: string;
+        customId: string;
+        components: textInput[];
+        private pack(): object;
     }
 }

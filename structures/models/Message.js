@@ -43,7 +43,7 @@ module.exports = class Message {
          * @type {Embed[]}
          */
         this.embeds = []
-        this.mentions = [...data.mentions, ...data.mention_roles]
+        this.mentions = data.mentions ||data.mention_roles ? [...data.mentions, ...data.mention_roles] : []
         this.pinned = data.pinned
         this.mentionEveryone = data.mention_everyone
         this.tts = data.tts
@@ -59,8 +59,12 @@ module.exports = class Message {
         this.author = this.webhookId ? null : new User(this.client, data.author)
         this.authorId = this.webhookId ? this.webhookId : data.author.id
         this.member = this.webhookId ? null : this.guildId ? this.guild.members.get(this.authorId) : null
+        this.interaction = data.interaction
         this.data_is_available = true
 
+        if(this.interaction && this.interaction.user){
+            this.interaction.user = this.client.users.get(this.interaction.user.id) || new User(this.client, this.interaction.user)
+        }
         data.attachments.map(attach => this.attachments.set(attach.id, new Attachment(this.client, this, attach)))
         data.embeds.map(embed => this.embeds.push(new Embed(embed)))
         data.components.map(component => {
