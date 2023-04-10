@@ -114,6 +114,7 @@ module.exports = class Client extends EventEmitter {
             STAGE: () => { return `${DiscordAPI}/stage-instances`; },
             PRUNE: (serverID) => { return `${this._ENDPOINTS.SERVERS(serverID)}/prune`; },
             SERVER_INVITES: (serverID) => { return `${this._ENDPOINTS.SERVERS(serverID)}/invites`; },
+            INTEGRATIONS: (serverID, integrationID) => { return `${this._ENDPOINTS.SERVERS(serverID)}/integrations${integrationID?`/${integrationID}`:``}`; },
         }
 
         this.token = options?.token

@@ -25,7 +25,7 @@ module.exports = class Member {
         this.avatar = data.avatar
         this.roles = data.roles
         this.data_is_available = true
-        this.user = this.client.users.get(data.user.id) || new User(client, data.user)
+        this.user = data.user ? this.client.users.get(data.user.id) || new User(client, data.user) : null
         this.permissions = (this.id === this.guild.ownerId) ? new Permissions("ADMINISTRATOR") : new Permissions(this.roles.map(role_id => {
             return this.guild.roles.get(role_id)?.permissions
         }))

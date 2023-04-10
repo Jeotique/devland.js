@@ -59,6 +59,7 @@ module.exports = class ClientUser {
         let packed = this._parse(presence)
         this._patch(packed)
         this.client.ws.socket.send(JSON.stringify({op: 3, d: packed}))
+        this.client.options.presence = packed
     }
 
     /**

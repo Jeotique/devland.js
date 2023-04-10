@@ -1,5 +1,6 @@
 const Client = require('../client/client')
 const Guild = require('./Guild')
+const Member = require('./Member')
 const User = require('./User')
 
 module.exports = class Emoji {
@@ -18,7 +19,7 @@ module.exports = class Emoji {
          */
         Object.defineProperty(this, 'client', { value: client })
         this.guild = guild
-        this.guildId = guild.id
+        this.guildId = guild?.id
         this.name = data.name
         this.id = data.id
         this.roles = data.roles
@@ -26,7 +27,7 @@ module.exports = class Emoji {
         this.require_colons = data.require_colons
         this.managed = data.managed
         this.available = data.available
-        this.user = new User(client, data.user)
+        this.user = data.user ? new User(client, data.user) : null
     }
 
     pack(){

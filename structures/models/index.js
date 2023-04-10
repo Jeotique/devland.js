@@ -28,6 +28,8 @@ const AuditLogs = require('./AuditLogs')
 const Log = require('./Log')
 const Invite = require('./Invite')
 const Webhook = require('./Webhook')
+const Integration = require('./Integration')
+const VoiceState = require('./VoiceState')
 module.exports = {
     ClientUser,
     Attachment,
@@ -59,4 +61,6 @@ module.exports = {
     Log,
     Invite,
     Webhook,
+    Integration,
+    VoiceState,
 }

@@ -1,5 +1,5 @@
 const Client = require('../../client/client')
-const { Guild, TextChannel, Message, DmChannel, User, Webhook } = require('../../models')
+const { Guild, TextChannel, Message, DmChannel, User, Webhook, VoiceChannel, AnnouncementChannel, Thread, StageChannel, ForumChannel } = require('../../models')
 module.exports = {
     name: 'webhookDelete',
     /**

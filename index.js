@@ -31,6 +31,8 @@ const AuditLogs = require('./structures/models/AuditLogs')
 const Log = require('./structures/models/Log')
 const Invite = require('./structures/models/Invite')
 const Webhook = require('./structures/models/Webhook')
+const Integration = require('./structures/models/Integration')
+const VoiceState = require('./structures/models/VoiceState')
 module.exports = {
     Client,
     Utils,
@@ -65,4 +67,6 @@ module.exports = {
     Log,
     Invite,
     Webhook,
+    Integration,
+    VoiceState,
 }

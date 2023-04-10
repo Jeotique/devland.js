@@ -224,12 +224,29 @@ declare module 'devland.js' {
         webhookCreate: [channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel];
         webhookUpdate: [channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel];
         webhookDelete: [channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel];
-        channelPinsUpdate: [channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel];
+        channelPinsUpdate: [channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel];
         threadMemberUpdate: [member: Member];
         threadMembersUpdate: [data: threadMembersUpdateData];
         guildAuditLogEntryCreate: [log: Log];
         guildEmojisUpdate: [guild: Guild, emojis: Store<String, Emoji>];
         guildIntegrationsUpdate: [guild: Guild];
+        integrationCreate: [integration: Integration];
+        integrationUpdate: [integration: Integration];
+        integrationDelete: [guild: Guild, application_id?: string];
+        messageBulkDelete: [guild?: Guild, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, messageIds: string[]];
+        messageReactionAdd: [guild?: Guild, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, message?: message, user?: User, member?: Member, emoji: Emoji];
+        messageReactionRemove: [guild?: Guild, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, message?: message, user?: User, emoji: Emoji];
+        messageReactionAllRemove: [guild?: Guild, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, message?: message];
+        messageReactionRemoveEmoji: [guild?: Guild, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, message?: message, emoji: Emoji];
+        presenceUpdate: [presence: object];
+        webhooksUpdate: [channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel];
+        userTypingStart: [guild?: Guild, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, user: User, member?: Member, timestamp: number];
+        voiceStateUpdate: [voice_state: VoiceState];
+        voiceServerUpdate: [voice_server: {
+            guild: Guild,
+            token: string,
+            endpoint: string,
+        }];
     }
     class RESTHandler {
         private constructor(client: Client);
@@ -261,6 +278,8 @@ declare module 'devland.js' {
             readonly avatar: string;
             readonly tag: string;
             setPresence(presence: presenceOptions);
+            private _patch(data: any);
+            private _parse(data: object);
         }
     }
     type guildFeatures = "ANIMATED_BANNER" | "ANIMATED_ICON" | "APPLICATION_COMMAND_PERMISSIONS_V2" | "AUTO_MODERATOR" | "BANNER" | "COMMUNITY" | "CREATOR_MODETIZABLE_PROVISIONAL" | "CREATOR_STORE_PAGE" | "DEVELOPER_SUPPORT_SERVER" | "DISCOVERABLE" | "FEATURABLE" | "INVITES_DISABLED" | "INVITE_SPLASH" | "MEMBER_VERIFICATION_GATE_ENABLED" | "MORE_STICKERS" | "NEWS" | "PARTNERED" | "PREVIEW_ENABLED" | "ROLE_ICONS" | "ROLE_SUBSCRIPTIONS_AVAILABLE_FOR_PURCHASE" | "ROLE_SUBSCRIPTIONS_ENABLED" | "TICKETED_EVENTS_ENABLED" | "VANITY_URL" | "VERIFIED" | "VIP_REGIONS" | "WELCOME_SCREEN_ENABLED"
@@ -433,6 +452,7 @@ declare module 'devland.js' {
         prune(options: pruneOptions): Promise<Guild>;
         fetchInvite(): Promise<Store<String, Invite>>;
         fetchWebhooks(): Promise<Store<String, Webhook>>;
+        fetchIntegrations(): Promise<Store<String, Integration>>;
     }
     type fetchMembersOptions = {
         limit: number,
@@ -452,7 +472,7 @@ declare module 'devland.js' {
         readonly flags: number;
         readonly communication_disabled_until: number;
         readonly avatar: string;
-        readonly user: User;
+        readonly user: User|null;
         readonly roles: string[];
         readonly data_is_available: boolean;
         edit(data: editMemberOptions): Promise<Member>;
@@ -1292,8 +1312,8 @@ declare module 'devland.js' {
     export class Emoji {
         constructor(client: Client, guild: Guild, data: any);
         private client: Client;
-        readonly guild: Guild;
-        readonly guildId: string;
+        readonly guild?: Guild;
+        readonly guildId?: string;
         readonly name: string;
         readonly id: string;
         readonly roles: [];
@@ -1301,7 +1321,7 @@ declare module 'devland.js' {
         readonly require_colons: boolean;
         readonly managed: boolean;
         readonly available: boolean;
-        readonly user: User;
+        readonly user?: User;
         private pack();
         edit(options: editEmojiOptions): Promise<Emoji>;
         delete(reason?: string): Promise<void>;
@@ -1433,5 +1453,111 @@ declare module 'devland.js' {
         edit(options: editWebhookOptions): Promise<Webhook>;
         delete(reason?: string): Promise<void>;
         send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
+    }
+    export enum integrationExpireBehavior {
+        RemoveRole = 0,
+        Kick = 1,
+    }
+    type OAuth2Scopes = "activities.read"|"activities.write"|"applications.builds.read"|"applications.builds.upload"|"applications.commands"|"applications.commands.update"|"applications.commands.permissions.update"|"applications.entitlements"|"applications.store.update"|"bot"|"connections"|"dm_channels.read"|"email"|"gdm.join"|"guilds"|"guilds.join"|"guilds.members.read"|"identify"|"messages.read"|"relationships.read"|"role_connections.write"|"rpc"|"rpc.activities.write"|"rpc.notifications.read"|"rpc.voice.read"|"rpc.voice.write"|"voice"|"webhook.incoming";
+    export class Integration {
+        constructor(client: Client, guild: Guild, data: any);
+        private client: Client;
+        readonly guild: Guild;
+        readonly guildId: string;
+        readonly id: string;
+        readonly name: string;
+        readonly type: "twitch"|"youtube"|"discord"|"guild_subscription";
+        readonly enabled: boolean;
+        readonly syncing?: boolean;
+        readonly role_id?: string;
+        readonly enable_emoticons?: boolean;
+        readonly expire_behavior?: integrationExpireBehavior;
+        readonly expire_grace_period?: number;
+        readonly user: User|null;
+        readonly account: {id: string, name: string};
+        readonly synced_at?: number;
+        readonly subscriber_count?: number;
+        readonly revoked?: boolean;
+        readonly application?: {
+            id: string,
+            name: string,
+            icon: string,
+            description: string,
+            bot?: User;
+        };
+        scopes?: OAuth2Scopes[];
+        delete(reason?: string): Promise<void>;
+    }
+    export class VoiceState {
+        constructor(client: Client, data: any);
+        private client: Client;
+        readonly guild?: Guild;
+        readonly guildId?: string;
+        readonly channel: VoiceChannel | StageChannel;
+        readonly channelId: string;
+        readonly user: User;
+        readonly userId: string; 
+        readonly member?: Member;
+        readonly session_id: string;
+        readonly deaf: boolean;
+        readonly mute: boolean;
+        readonly self_deaf: boolean;
+        readonly self_mute: boolean;
+        readonly self_stream?: boolean;
+        readonly self_video: boolean;
+        readonly suppress: boolean;
+        readonly request_to_speak_timestamp: number;
+    }
+    export enum interactionType {
+        PING = 1,
+        APPLICATION_COMMAND = 2,
+        MESSAGE_COMPONENT = 3,
+        APPLICATION_COMMAND_AUTOCOMPLETE = 4,
+        MODAL_SUBMIT = 5,
+    }
+    type interactionData = {
+        id: string,
+        name: string,
+        type: commandType,
+        resolved?: interactionResolvedData,
+        options?: ApplicationCommandInteractionData[],
+        guild_id?: string,
+        target_id?: string,
+    }
+    type ApplicationCommandInteractionData = {
+        name: string,
+        type: commandOptionsType,
+        value?: string|number|boolean,
+        options?: ApplicationCommandInteractionData[],
+        focused?: boolean;
+    }
+    type interactionResolvedData = {
+        users?: Map<string, User>,
+        members?: Map<string, Member>,
+        roles?: Map<string, Role>,
+        channels?: Map<string, TextChannel | AnnouncementChannel | VoiceChannel | Thread | ForumChannel | DmChannel>,
+        messages?: Map<string, Message>,
+        attachments?: Map<string, Attachment>,
+    }
+    export class Interaction {
+        constructor(client: Client, data: any);
+        private client: Client;
+        readonly guild?: Guild;
+        readonly guildId?: string;
+        readonly id: string;
+        readonly application_id: string;
+        readonly type: interactionType;
+        readonly data?: interactionData;
+        readonly channel?: TextChannel | AnnouncementChannel | VoiceChannel | Thread | ForumChannel | DmChannel;
+        readonly channelId?: string;
+        readonly member?: Member;
+        readonly user?: User;
+        readonly userId?: string;
+        readonly token: string;
+        readonly version: string;
+        readonly message?: Message;
+        readonly app_permissions?: Permissions;
+        readonly locale?: localizationsOptions;
+        readonly guild_locale?: localizationsOptions;
     }
 }

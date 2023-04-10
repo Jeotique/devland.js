@@ -7,6 +7,7 @@ module.exports = {
     'MESSAGE_REACTION_ADD': 'messageReactionAdd',
     'MESSAGE_REACTION_REMOVE': 'messageReactionRemove',
     'MESSAGE_REACTION_REMOVE_ALL': 'messageReactionAllRemove',
+    'MESSAGE_REACTION_REMOVE_EMOJI': 'messageReactionRemoveEmoji',
     'CHANNEL_CREATE': 'channelCreate',
     'CHANNEL_UPDATE': 'channelUpdate',
     'CHANNEL_DELETE': 'channelDelete',
@@ -44,4 +45,8 @@ module.exports = {
     'STAGE_INSTANCE_UPDATE': 'stageInstanceUpdate',
     'STAGE_INSTANCE_DELETE': 'stageInstanceDelete', 
     'GUILD_AUDIT_LOG_ENTRY_CREATE': 'guildAuditLogEntryCreate',
+    'INTEGRATION_CREATE': 'integrationCreate',
+    'INTEGRATION_UPDATE': 'integrationUpdate',
+    'INTEGRATION_DELETE': 'integrationDelete',
+    'WEBHOOKS_UPDATE': 'webhooksUpdate'
 }

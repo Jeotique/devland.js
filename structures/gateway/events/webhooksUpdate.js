@@ -1,7 +1,7 @@
 const Client = require('../../client/client')
 const { Guild, TextChannel, Message, DmChannel, User, Webhook, VoiceChannel, AnnouncementChannel, Thread, StageChannel, ForumChannel } = require('../../models')
 module.exports = {
-    name: 'webhookCreate',
+    name: 'webhooksUpdate',
     /**
      * 
      * @param {Client} client 
@@ -19,6 +19,6 @@ module.exports = {
         else if (channel.type === 10 || channel.type === 11 || channel.type === 12) channel = new Thread(client, guild, channel)
         else if (channel.type === 13) channel = new StageChannel(client, guild, channel)
         else if (channel.type === 15) channel = new ForumChannel(client, guild, channel)
-        client.emit('webhookCreate', channel)
+        client.emit('webhooksUpdate', channel)
     }
 }

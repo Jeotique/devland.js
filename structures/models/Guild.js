@@ -17,6 +17,7 @@ const Constants = require('../util/Constants')
 const AuditLogs = require('./AuditLogs')
 const Ban = require('./Ban')
 const Invite = require('./Invite')
+const Integration = require('./Integration')
 
 module.exports = class Guild {
     /**
@@ -835,6 +836,18 @@ module.exports = class Guild {
                 res.map(web => collect.set(web.id, new Webhook(this.client, this.client.guilds.get(this.id) || this, web)))
                 resolve(collect)
             }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async fetchIntegrations(){
+        return new Promise(async(resolve, reject) => {
+            this.client.rest.get(this.client._ENDPOINTS.INTEGRATIONS(this.id)).then(res => {
+                let collect = new Store()
+                res.map(i => collect.set(i.id, new Integration(this.client, this.client.guilds.get(this.id)||this, i)))
+                resolve(collect)
+            }).catch(e=>{
                 return reject(new Error(e))
             })
         })
