@@ -35,6 +35,7 @@ const Integration = require('./structures/models/Integration')
 const VoiceState = require('./structures/models/VoiceState')
 const Interaction = require('./structures/models/Interaction')
 const Modal = require('./structures/models/Modal')
+const Collector = require('./structures/models/Collector')
 module.exports = {
     Client,
     Utils,
@@ -73,4 +74,5 @@ module.exports = {
     VoiceState,
     Interaction,
     Modal,
+    Collector,
 }

@@ -1,3 +1,6 @@
+// Source : discord.js
+
+
 export interface StoreConstructor {
     new (): Store<unknown, unknown>;
     new <K, V>(entries?: ReadonlyArray<readonly [K, V]> | null): Store<K, V>;

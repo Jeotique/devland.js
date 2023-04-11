@@ -228,6 +228,10 @@ module.exports = class Client extends EventEmitter {
          * @type {Store<String, DmChannel>}
          */
         this.dmChannels = new Store()
+        /**
+         * @private
+         */
+        this.collectorCache = {}
         if (this.options && this.options.connect == false) {
             return this;
         } else {

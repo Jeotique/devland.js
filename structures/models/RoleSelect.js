@@ -1,5 +1,5 @@
 const { parseEmoji } = require("../util")
-
+const Emoji = require('./Emoji')
 module.exports = class RoleSelect {
     /**
      * 
@@ -27,7 +27,7 @@ module.exports = class RoleSelect {
         return {
             type: 6,
             placeholder: this.placeholder,
-            max_values: this.max_values || 1,
+            max_values: this.max_values || this.min_values ? this.min_values : 1,
             min_values: this.min_values || 0,
             custom_id: this.custom_id || this.customId,
             disabled: this.disabled

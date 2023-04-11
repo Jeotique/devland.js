@@ -24,7 +24,6 @@ module.exports = {
             }
             if (typeof client.options.usersLifeTime === "number" && client.options.usersLifeTime > 0) {
                 data.members.map(member => {
-                    console.log(member)
                     let user = new Models.User(client, member.user)
                     user.cachedAt = Date.now()
                     user.expireAt = Date.now() + client.options.usersLifeTime

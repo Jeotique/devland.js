@@ -32,6 +32,7 @@ const Integration = require('./Integration')
 const VoiceState = require('./VoiceState')
 const Interaction = require('./Interaction')
 const Modal = require('./Modal')
+const Collector = require('./Collector')
 module.exports = {
     ClientUser,
     Attachment,
@@ -67,4 +68,5 @@ module.exports = {
     VoiceState,
     Interaction,
     Modal,
+    Collector,
 }

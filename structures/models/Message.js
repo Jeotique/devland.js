@@ -13,6 +13,9 @@ const RoleSelect = require('./RoleSelect')
 const UserSelect = require('./UserSelect')
 const MentionableSelect = require('./MentionableSelect')
 const ChannelSelect = require('./ChannelSelect')
+const Collector = require('./Collector')
+const Member = require('./Member')
+const Role = require('./Role')
 module.exports = class Message {
     /**
      * 
@@ -43,7 +46,9 @@ module.exports = class Message {
          * @type {Embed[]}
          */
         this.embeds = []
-        this.mentions = data.mentions ||data.mention_roles ? [...data.mentions, ...data.mention_roles] : []
+        this.memberMentions = new Store()
+        this.roleMentions = new Store()
+        this.channelMentions = new Store()
         this.pinned = data.pinned
         this.mentionEveryone = data.mention_everyone
         this.tts = data.tts
@@ -61,10 +66,31 @@ module.exports = class Message {
         this.member = this.webhookId ? null : this.guildId ? this.guild.members.get(this.authorId) : null
         this.interaction = data.interaction
         this.data_is_available = true
-
         if(this.interaction && this.interaction.user){
             this.interaction.user = this.client.users.get(this.interaction.user.id) || new User(this.client, this.interaction.user)
         }
+        if(data.mentions) data.mentions.map(m => {
+            m.user = m
+            this.memberMentions.set(m.id, new Member(this.client, this.client.guilds.get(this.guildId)||this.guild, m.member))
+        })
+        if(data.mention_roles) data.mention_roles.map(async r_id => {
+            if(this.guild.roles.get(r_id)) this.roleMentions.set(r_id, this.guild.roles.get(r_id))
+            else {
+                let res = await this.client.rest.get(this.client._ENDPOINTS.ROLES(this.guildId)).catch(e=>{})
+                if(!res) return
+                let role = res.find(r => r.id === r_id)
+                if(!role) return
+                this.roleMentions.set(r_id, new Role(this.client, this.client.guilds.get(this.guildId)||this.guild, role))
+            }
+        })
+        if(data.mention_channels) data.mention_channels.map(async channelraw => {
+            if(this.client.textChannels.get(channelraw.id)) this.channelMentions.set(channelraw.id, this.textChannels.get(channelraw.id))
+            else {
+                let res = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(channelraw.id)).catch(e=>{})
+                if(!res) return
+                this.channelMentions.set(channelraw.id, new TextChannel(this.client, this.client.guilds.get(this.guildId)||this.guild, res))
+            }
+        })
         data.attachments.map(attach => this.attachments.set(attach.id, new Attachment(this.client, this, attach)))
         data.embeds.map(embed => this.embeds.push(new Embed(embed)))
         data.components.map(component => {
@@ -406,5 +432,29 @@ module.exports = class Message {
                 })
             }
         })
+    }
+
+    createComponentsCollector(options = {}){
+        if(typeof options !== "object") throw new TypeError("You must provide options for the collector")
+        if(typeof options.count !== "undefined"){
+            if(typeof options.count !== "number") throw new TypeError("The count must be a number")
+        }
+        options.type = 'component'
+        if(typeof options.time !== "undefined"){
+            if(typeof options.time !== "number") throw new TypeError("The time must be a number")
+        }
+        if(typeof options.componentType !== "undefined"){
+            if(typeof options.componentType !== "number") throw new TypeError("The componentType must be a number")
+            if(options.componentType < 1 || options.componentType > 8) throw new TypeError("Invalid componentType for the collector")
+        }
+        if(typeof options.filter !== "undefined"){
+            if(typeof options.filter !== "function") throw new TypeError("The filter must be a filter function for the collector, example : 'filter: (collected) => collected.author.id === message.author.id'")
+        }
+        let identifier = Date.now()
+        this.client.collectorCache[identifier] = new Collector(this.client, this.client.guilds.get(this.guildId)||this.guild, this, this.channel, options)
+        this.client.collectorCache[identifier]?.on('end', () => {
+            delete this.client.collectorCache[identifier]
+        })
+        return this.client.collectorCache[identifier]  
     }
 }

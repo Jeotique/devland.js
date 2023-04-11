@@ -1,5 +1,5 @@
 const { parseEmoji } = require("../util")
-
+const Emoji = require('./Emoji')
 module.exports = class Button {
     /**
      * 

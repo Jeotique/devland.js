@@ -6,6 +6,7 @@ module.exports = class Modal {
      * @param {object} modalData 
      */
     constructor(modalData = {}) {
+        this.isModal = true
         this.name = modalData.name
         this.custom_id = modalData.custom_id || modalData.customId
         this.customId = modalData.customId || modalData.custom_id
@@ -44,10 +45,17 @@ module.exports = class Modal {
                 if (comp.placeholder.length > 100) throw new TypeError("Component place holder invalid length (max 100)")
             }
         })
+        let allComp = []
+        this.components.map(comp => {
+            allComp.push({
+                type: 1,
+                components: [comp]
+            })
+        })
         return {
             custom_id: this.custom_id || this.customId,
             title: this.name,
-            components: this.components
+            components: allComp
         }
     }
 }

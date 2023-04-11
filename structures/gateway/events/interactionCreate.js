@@ -10,7 +10,6 @@ module.exports = {
      */
     run: async (client, d) => {
         const data = d.d
-        console.log(data)
         let guild = client.guilds.get(data.guild_id) || await client.rest.get(client._ENDPOINTS.SERVERS(data.guild_id)).catch(e => { })
         if (guild && !guild instanceof Guild) guild = new Guild(client, guild)
         let channel = await client.rest.get(client._ENDPOINTS.CHANNEL(data.channel_id)).catch(e => { })
@@ -26,8 +25,10 @@ module.exports = {
         let user = data.user ? client.users.get(data.user?.id) || await client.rest.get(client._ENDPOINTS.USER(data.user?.id)) : null;
         if(user && !user instanceof User) user = new User(client, user)
         let member;
-        if(data.member) member = guild.members.get(data.member.id) || await client.rest.get(client._ENDPOINTS.MEMBERS(guild.id, data.member.id))
+        if(data.member) member = guild.members.get(data.member.user.id) || await client.rest.get(client._ENDPOINTS.MEMBERS(guild.id, data.member.user.id))
         if(member && !member instanceof Member) member = new Member(client, guild, member)
+        data.user = user
+        data.member = member
         let interaction = new Interaction(client, guild, data)
         client.emit('interaction', interaction)
     }

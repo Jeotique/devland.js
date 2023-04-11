@@ -31,6 +31,12 @@ module.exports = class Member {
         }))
     }
 
+    async send(options) {
+        return new Promise(async (resolve, reject) => {
+            this.user.send(options).then(res => resolve(res)).catch(e => reject(new Error(e)))
+        })
+    }
+
     hasPermissions(permission) {
         if (this.id === this.guild.ownerId) return true
         else return this.permissions.has(permission, true)
@@ -153,6 +159,31 @@ module.exports = class Member {
             }).catch(e => {
                 return reject(new Error(e))
             })
+        })
+    }
+
+    async fetchRoles() {
+        return new Promise(async (resolve, reject) => {
+            let collect = new Store()
+            if (this.guild.roles.size > 0) {
+                this.roles.map(async (r_id, n) => {
+                    if (this.guild.roles.get(r_id)) collect.set(r_id, this.guild.roles.get(r_id))
+                    else {
+                        let res = await this.client.rest.get(this.client._ENDPOINTS.MEMBER_ROLES(this.guildId, this.id, r_id)).catch(e => { })
+                        if (res) {
+                            collect.set(r_id, new Role(this.client, this.client.guilds.get(this.guildId) || this.guild, res))
+                        }
+                    }
+
+                    if (n + 1 === this.roles.length) return resolve(collect)
+                })
+            } else {
+                let res = await this.client.rest.get(this.client._ENDPOINTS.ROLES(this.guildId)).catch(e => { return reject(new Error(e)) })
+                res.filter(r => this.roles.includes(r.id)).map(role => {
+                    collect.set(role.id, new Role(this.client, this.client.guilds.get(this.guildId) || this.guild, role))
+                })
+                return resolve(collect)
+            }
         })
     }
 

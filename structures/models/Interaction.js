@@ -8,6 +8,14 @@ const Embed = require('./Embed')
 const Utils = require('../util')
 const ActionRow = require('./ActionRow')
 const Modal = require('./Modal')
+const Role = require('./Role')
+const TextChannel = require('./TextChannel')
+const VoiceChannel = require('./VoiceChannel')
+const CategoryChannel = require('./CategoryChannel')
+const AnnouncementChannel = require('./AnnouncementChannel')
+const Thread = require('./Thread')
+const StageChannel = require('./StageChannel')
+const ForumChannel = require('./ForumChannel')
 module.exports = class Interaction {
     constructor(client, guild, data) {
         Object.defineProperty(this, 'client', { value: client })
@@ -29,10 +37,19 @@ module.exports = class Interaction {
         this.locale = data.locale
         this.guild_locale = data.guild_locale
         this.commandName = data?.data?.name
+        this.customId = data?.data?.custom_id
+        this.values = data?.data?.values
         this.isSlashCommand = this.type === 2
         this.isModal = this.type === 5
-        this.isMessageComponent === 3
-
+        this.isMessageComponent = this.type === 3
+        this.isButton = this.isMessageComponent && this.data.component_type === 2
+        this.isActionRow = this.isMessageComponent && this.data.component_type === 1
+        this.isStringSelect = this.isMessageComponent && this.data.component_type === 3
+        this.isTextInput = this.isMessageComponent && this.data.component_type === 4
+        this.isUserSelect = this.isMessageComponent && this.data.component_type === 5
+        this.isRoleSelect = this.isMessageComponent && this.data.component_type === 6
+        this.isMentionableSelect = this.isMessageComponent && this.data.component_type === 7
+        this.isChannelSelect = this.isMessageComponent && this.data.component_type === 8
         this.followUpMessageId = null
         this.deleted = false
     }
@@ -314,12 +331,11 @@ module.exports = class Interaction {
         })
     }
 
-    async submitModal(modal){
-        return new Promise(async(resolve, reject) => {
-            if(typeof modal === "undefined") return reject(new TypeError("No modal provided"))
-            if(typeof modal === "object") modal = new Modal(modal)
-            if(modal instanceof Modal) modal = modal.pack()
-            console.log(modal)
+    async submitModal(modal) {
+        return new Promise(async (resolve, reject) => {
+            if (typeof modal === "undefined") return reject(new TypeError("No modal provided"))
+            if (typeof modal === "object") modal = new Modal(modal)
+            if (modal instanceof Modal) modal = modal.pack()
             this.client.rest.post(this.client._ENDPOINTS.INTERACTIONS(this.id, this.token), {
                 type: 9,
                 data: modal
@@ -329,5 +345,84 @@ module.exports = class Interaction {
                 return reject(new Error(e))
             })
         })
+    }
+
+    getModalValue(input_id) {
+        if (!this.isModal) throw new TypeError("This function can be used on a modal only")
+        if (typeof input_id !== "string") throw new TypeError("You didn't provide any input Id")
+        let goodComponent = this.data.components.find(comp => comp.components.find(c => c.custom_id === input_id))
+        if (!goodComponent) return null
+        let value = goodComponent.components.find(comp => comp.custom_id === input_id)
+        if (!value) return null
+        else return value.value
+    }
+
+    getSelectedUsers() {
+        if (!this.isUserSelect) throw new TypeError("This function can be used on a user select only")
+        return [Object.keys(this.data.resolved.users).map(u => new User(this.client, this.data.resolved.users[u]))]
+    }
+
+    getSelectedRoles() {
+        if (!this.isRoleSelect) throw new TypeError("This function can be used on a role select only")
+        return [Object.keys(this.data.resolved.roles).map(r => new Role(this.client, this.client.guilds.get(this.guildId) || this.guild, this.data.resolved.roles[r]))]
+    }
+
+    getSelectedMentionables() {
+        if (!this.isMentionableSelect) throw new TypeError("This function can be used on a mentionable select only")
+        return [Object.keys(this.data.resolved.users).map(u => new User(this.client, this.data.resolved.users[u]))]
+    }
+
+    getSelectedChannels() {
+        if (!this.isChannelSelect) throw new TypeError("This function can be used on a channel select only")
+        return Object.keys(this.data.resolved.channels).map(c => {
+            let channel = this.data.resolved.channels[c]
+            if (channel.type === 0) channel = new TextChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, channel)
+            else if (channel.type === 2) channel = new VoiceChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, channel)
+            else if (channel.type === 4) channel = new CategoryChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, channel)
+            else if (channel.type === 5) channel = new AnnouncementChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, channel)
+            else if (channel.type === 10 || channel.type === 11 || channel.type === 12) channel = new Thread(this.client, this.client.guilds.get(this.guildId) || this.guild, channel)
+            else if (channel.type === 13) channel = new StageChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, channel)
+            else if (channel.type === 15) channel = new ForumChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, channel)
+            return channel
+        })
+    }
+
+    getCommandValue(name) {
+        if (!this.isSlashCommand) throw new TypeError("This function can be used on a slash command only")
+        if (typeof name !== "string") throw new TypeError("You didn't provide any option name")
+        let value = this.data.options.find(op => op.name === name)
+        if (!value) return null
+        switch (value.type) {
+            case 3:
+                return value.value
+                break;
+            case 4:
+                return value.value
+                break;
+            case 5:
+                return value.value
+                break;
+            case 6:
+                return this.client.users.get(value.value)
+                break;
+            case 7:
+                return this.client.textChannels.get(value.value) || this.client.voiceChannels.get(value.value) || this.client.announcementChannels.get(value.value) || this.client.categoryChannels.get(value.value) || this.client.threadChannels.get(value.value) || this.client.stageChannels.get(value.value) || this.client.forumChannels.get(value.value)
+                break;
+            case 8:
+                return this.guild.roles.get(value.value)
+                break;
+            case 9:
+                return this.client.users.get(value.value)
+                break;
+            case 10:
+                return value.value
+                break;
+            case 11:
+                return value.value
+                break;
+            default:
+                return value.value
+                break;
+        }
     }
 }

@@ -28,6 +28,10 @@ module.exports = class User {
         this.avatar = data.avatar
         this.createdTimestamp = Utils.getTimestampFrom(this.id)
         this.createdAt = new Date(this.createdTimestamp)
+
+        if(this.avatar){
+            this.avatar = `https://cdn.discordapp.com/avatars/${this.id}/${this.avatar}${this.avatar.startsWith('a_') ? '.gif' : '.png'}?size=512`
+        }
     }
 
     /**
@@ -187,6 +191,15 @@ module.exports = class User {
                     })
                 }
             } else return reject(new TypeError("Send without any options is not authorized"))
+        })
+    }
+
+    async fetchBanner(size){
+        return new Promise(async(resolve, reject) => {
+            if(typeof size !== "number") size = 1024
+            let user = await this.client.rest.get(this.client._ENDPOINTS.USER(this.id)).catch(e=>{return reject(new Error(e))})
+            if(!user.banner) return resolve(null)
+            else return resolve(`https://cdn.discordapp.com/banners/${this.id}/${user.banner}${banner.startsWith('a_')?'.gif':'.png'}?size=${size}`)
         })
     }
 }

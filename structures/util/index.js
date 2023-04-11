@@ -54,7 +54,9 @@ module.exports.createDefaultOptions = () => {
 const EPOCH = 1_420_070_400_000;
 let INCREMENT = BigInt(0);
 module.exports.getTimestampFrom = (snowflake) => {
+  try{
   return Number(BigInt(snowflake) >> 22n) + EPOCH
+  }catch(e){return 0}
 }
 
 const clean = (text) => {

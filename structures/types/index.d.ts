@@ -36,7 +36,7 @@ declare module 'devland.js' {
         $device: string;
     }
     type presenceOptions = {
-        status: "dnd"|"online"|"invisible"|"idle"|"offline";
+        status: "dnd" | "online" | "invisible" | "idle" | "offline";
         afk: boolean;
         activities: simpleActivity[];
         since: number;
@@ -93,6 +93,7 @@ declare module 'devland.js' {
         readonly stageChannels: Store<string, StageChannel>;
         readonly forumChannels: Store<string, ForumChannel>;
         private readonly dmChannels: Store<string, DmChannel>;
+        private readonly collectorCache: Store<number, Collector>;
         readonly version: string;
         connect(token?: string): Client;
         toJSON(): JSON;
@@ -247,6 +248,7 @@ declare module 'devland.js' {
             token: string,
             endpoint: string,
         }];
+        interaction: [interaction: Interaction];
     }
     class RESTHandler {
         private constructor(client: Client);
@@ -278,6 +280,8 @@ declare module 'devland.js' {
             readonly avatar: string;
             readonly tag: string;
             setPresence(presence: presenceOptions);
+            setName(name: string): Promise<ClientUser>;
+            setAvatar(avatar: any): Promise<ClientUser>;
             private _patch(data: any);
             private _parse(data: object);
         }
@@ -384,7 +388,7 @@ declare module 'devland.js' {
         compute_prune_count?: boolean,
         include_roles?: Role[] | string[],
         reason?: string,
-    } 
+    }
     export class Guild {
         private constructor(client: Client, data: object);
         private client: Client;
@@ -472,15 +476,17 @@ declare module 'devland.js' {
         readonly flags: number;
         readonly communication_disabled_until: number;
         readonly avatar: string;
-        readonly user: User|null;
+        readonly user: User | null;
         readonly roles: string[];
         readonly data_is_available: boolean;
+        send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
         edit(data: editMemberOptions): Promise<Member>;
         addRoles(roles: Role | Role[] | string | string[], reason?: string): Promise<Member>;
         removeRoles(roles: Role | Role[] | string | string[], reason?: string): Promise<Member>;
         hasPermissions(permission: string | PermissionResolvable): boolean;
         kick(reason?: string): Promise<Member?>;
         ban(delete_message_seconds?: number, reason?: string): Promise<Member?>;
+        fetchRoles(): Promise<Store<String, Role>>;
     }
     type editMemberOptions = {
         nick?: string | null,
@@ -511,7 +517,7 @@ declare module 'devland.js' {
         embeds: Embed[],
         components: ActionRow[],
         tts: boolean,
-        nonce: number|string,
+        nonce: number | string,
         allowed_mentions: string[],
     }
     type fetchMessagesOptions = {
@@ -588,6 +594,8 @@ declare module 'devland.js' {
         getPinnedMessages(): Promise<Store<String, Message>>;
         createWebhook(options: createWebhookOptions): Promise<Webhook>;
         fetchWebhooks(): Promise<Store<String, Webhook>>;
+        createCollector(options?: collectorOptions): Collector;
+        awaitMessages(options?: collectorOptions): Promise<Store<String, Message>>;
     }
     export class DmChannel {
         private constructor(client: Client, guild: Guild, data: object)
@@ -608,6 +616,8 @@ declare module 'devland.js' {
         fetchMessages(options?: fetchMessagesOptions | string): Promise<Store<String, Message>>;
         bulkDelete(data: number | Message[] | string[]): Promise<void>;
         getPinnedMessages(): Promise<Store<String, Message>>;
+        createCollector(options?: collectorOptions): Collector;
+        awaitMessages(options?: collectorOptions): Promise<Store<String, Message>>;
     }
     export class ForumChannel {
         private constructor(client: Client, guild: Guild, data: object)
@@ -641,6 +651,8 @@ declare module 'devland.js' {
         clone(reason?: string, time?: number): Promise<ForumChannel>;
         setPosition(position: number): Promise<ForumChannel>;
         bulkDelete(data: number | Message[] | string[]): Promise<void>;
+        createCollector(options?: collectorOptions): Collector;
+        awaitMessages(options?: collectorOptions): Promise<Store<String, Message>>;
     }
     export type voiceBitrate = 8000 | 128000 | 256000 | 384000;
     export class VoiceChannel {
@@ -675,6 +687,8 @@ declare module 'devland.js' {
         bulkDelete(data: number | Message[] | string[]): Promise<void>;
         join();
         leave();
+        createCollector(options?: collectorOptions): Collector;
+        awaitMessages(options?: collectorOptions): Promise<Store<String, Message>>;
     }
     type stageStartOptions = {
         topic: string,
@@ -788,6 +802,8 @@ declare module 'devland.js' {
         crosspost(message: Message | string): Promise<Message>;
         createWebhook(options: createWebhookOptions): Promise<Webhook>;
         fetchWebhooks(): Promise<Store<String, Webhook>>;
+        createCollector(options?: collectorOptions): Collector;
+        awaitMessages(options?: collectorOptions): Promise<Store<String, Message>>;
     }
     type ThreadMetadata = {
         archived: boolean,
@@ -824,6 +840,8 @@ declare module 'devland.js' {
         leave(): Promise<void>;
         add(member: User | Member | string): Promise<void>;
         remove(member: User | Member | string): Promise<void>;
+        createCollector(options?: collectorOptions): Collector;
+        awaitMessages(options?: collectorOptions): Promise<Store<String, Message>>;
     }
     type webhookId = string;
     type getUsersFromReactionOptions = {
@@ -847,7 +865,9 @@ declare module 'devland.js' {
         readonly channelId: string;
         readonly attachments: Store<String, Attachment>;
         readonly embeds: Embed[];
-        readonly mentions: object;
+        readonly memberMentions: Store<String, Member>;
+        readonly roleMentions: Store<String, Role>;
+        readonly channelMentions: Store<String, TextChannel>;
         readonly pinned: boolean;
         readonly mentionEveryone: boolean;
         readonly tts: boolean;
@@ -877,6 +897,7 @@ declare module 'devland.js' {
         unreact(emoji: APIEmoji | string, user?: User | string): Promise<void>;
         getUsersFromReaction(emoji: APIEmoji | string, options?: getUsersFromReactionOptions): Promise<Store<String, User>>;
         deleteAllReactions(emoji?: APIEmoji | string): Promise<void>;
+        createComponentsCollector(options?: collectorOptions): Collector;
     }
 
     export class Attachment {
@@ -955,6 +976,8 @@ declare module 'devland.js' {
         readonly data_is_available: boolean;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
+        send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
+        fetchBanner(size?: number): Promise<string>;
     }
 
     export enum ComponentsType {
@@ -1468,7 +1491,7 @@ declare module 'devland.js' {
         RemoveRole = 0,
         Kick = 1,
     }
-    type OAuth2Scopes = "activities.read"|"activities.write"|"applications.builds.read"|"applications.builds.upload"|"applications.commands"|"applications.commands.update"|"applications.commands.permissions.update"|"applications.entitlements"|"applications.store.update"|"bot"|"connections"|"dm_channels.read"|"email"|"gdm.join"|"guilds"|"guilds.join"|"guilds.members.read"|"identify"|"messages.read"|"relationships.read"|"role_connections.write"|"rpc"|"rpc.activities.write"|"rpc.notifications.read"|"rpc.voice.read"|"rpc.voice.write"|"voice"|"webhook.incoming";
+    type OAuth2Scopes = "activities.read" | "activities.write" | "applications.builds.read" | "applications.builds.upload" | "applications.commands" | "applications.commands.update" | "applications.commands.permissions.update" | "applications.entitlements" | "applications.store.update" | "bot" | "connections" | "dm_channels.read" | "email" | "gdm.join" | "guilds" | "guilds.join" | "guilds.members.read" | "identify" | "messages.read" | "relationships.read" | "role_connections.write" | "rpc" | "rpc.activities.write" | "rpc.notifications.read" | "rpc.voice.read" | "rpc.voice.write" | "voice" | "webhook.incoming";
     export class Integration {
         constructor(client: Client, guild: Guild, data: any);
         private client: Client;
@@ -1476,15 +1499,15 @@ declare module 'devland.js' {
         readonly guildId: string;
         readonly id: string;
         readonly name: string;
-        readonly type: "twitch"|"youtube"|"discord"|"guild_subscription";
+        readonly type: "twitch" | "youtube" | "discord" | "guild_subscription";
         readonly enabled: boolean;
         readonly syncing?: boolean;
         readonly role_id?: string;
         readonly enable_emoticons?: boolean;
         readonly expire_behavior?: integrationExpireBehavior;
         readonly expire_grace_period?: number;
-        readonly user: User|null;
-        readonly account: {id: string, name: string};
+        readonly user: User | null;
+        readonly account: { id: string, name: string };
         readonly synced_at?: number;
         readonly subscriber_count?: number;
         readonly revoked?: boolean;
@@ -1506,7 +1529,7 @@ declare module 'devland.js' {
         readonly channel: VoiceChannel | StageChannel;
         readonly channelId: string;
         readonly user: User;
-        readonly userId: string; 
+        readonly userId: string;
         readonly member?: Member;
         readonly session_id: string;
         readonly deaf: boolean;
@@ -1537,7 +1560,7 @@ declare module 'devland.js' {
     type ApplicationCommandInteractionData = {
         name: string,
         type: commandOptionsType,
-        value?: string|number|boolean,
+        value?: string | number | boolean,
         options?: ApplicationCommandInteractionData[],
         focused?: boolean;
     }
@@ -1554,7 +1577,7 @@ declare module 'devland.js' {
         embeds: Embed[],
         components: ActionRow[],
         tts: boolean,
-        nonce: number|string,
+        nonce: number | string,
         allowed_mentions: string[],
         ephemeral: boolean,
     }
@@ -1566,7 +1589,7 @@ declare module 'devland.js' {
         readonly id: string;
         readonly application_id: string;
         readonly type: interactionType;
-        readonly data?: interactionData;
+        private readonly data?: interactionData;
         readonly channel?: TextChannel | AnnouncementChannel | VoiceChannel | Thread | ForumChannel | DmChannel;
         readonly channelId?: string;
         readonly member?: Member;
@@ -1579,13 +1602,32 @@ declare module 'devland.js' {
         readonly locale?: localizationsOptions;
         readonly guild_locale?: localizationsOptions;
         readonly commandName?: string;
+        readonly customId?: string;
+        readonly values?: string[];
+        readonly isModal: boolean;
+        readonly isMessageComponent: boolean;
         readonly isSlashCommand: boolean;
-        deferUpdate(options?: {ephemeral: boolean}): Promise<Interaction>;
+        readonly isButton: boolean;
+        readonly isActionRow: boolean;
+        readonly isStringSelect: boolean;
+        readonly isTextInput: boolean;
+        readonly isUserSelect: boolean;
+        readonly isRoleSelect: boolean;
+        readonly isMentionableSelect: boolean;
+        readonly isChannelSelect: boolean;
+        deferUpdate(options?: { ephemeral: boolean }): Promise<Interaction>;
         reply(options: MessageInteractionOptions | string | Embed | ActionRow): Promise<Interaction>;
-        deferReply(options?: {ephemeral: boolean}): Promise<Interaction>;
+        deferReply(options?: { ephemeral: boolean }): Promise<Interaction>;
         followUp(options: MessageInteractionOptions | string | Embed | ActionRow): Promise<Message>;
         editFollowUp(options: MessageInteractionOptions | string | Embed | ActionRow): Promise<Message>;
         deleteFollowUp(delay?: number): Promise<Interaction>;
+        submitModal(modal: Modal | modalOptions): Promise<Interaction>;
+        getModalValue(input_id: string): string | null;
+        getSelectedUsers(): User[];
+        getSelectedRoles(): Role[];
+        getSelectedMentionables(): User[];
+        getSelectedChannels(): TextChannel[] | VoiceChannel[] | CategoryChannel[] | AnnouncementChannel[] | Thread[] | StageChannel[] | ForumChannel[];
+        getCommandValue(name: string): string | number | boolean | User | Role | TextChannel | VoiceChannel | CategoryChannel | AnnouncementChannel | Thread | StageChannel | ForumChannel;
     }
     type modalOptions = {
         name: string,
@@ -1615,5 +1657,47 @@ declare module 'devland.js' {
         customId: string;
         components: textInput[];
         private pack(): object;
+    }
+    type collectorOptions = {
+        type: "message"|"component",
+        count: number,
+        time: number,
+        componentType: ComponentsType,
+        filter: Function
+    }
+    export class Collector {
+        constructor(client: Client, guild: Guild, message: Message, channel: any, data: collectorOptions);
+        private readonly client: Client;
+        private readonly guild: Guild;
+        private readonly message: Message;
+        private readonly channel: any;
+        private readonly defaultData: object;
+        readonly data: collectorOptions;
+        private readonly cache: Store<string, any>;
+        private readonly ended: boolean;
+        public on<K extends keyof CollectorEvents>(event: K, listener: (...args: CollectorEvents[K]) => Awaitable<void>): this;
+        public on<S extends string | symbol>(
+            event: Exclude<S, keyof CollectorEvents>,
+            listener: (...args: any[]) => Awaitable<void>,
+        ): this;
+        public once<K extends keyof CollectorEvents>(event: K, listener: (...args: CollectorEvents[K]) => Awaitable<void>): this;
+        public once<S extends string | symbol>(
+            event: Exclude<S, keyof CollectorEvents>,
+            listener: (...args: any[]) => Awaitable<void>,
+        ): this;
+        public emit<K extends keyof CollectorEvents>(event: K, ...args: CollectorEvents[K]): boolean;
+        public emit<S extends string | symbol>(event: Exclude<S, keyof CollectorEvents>, ...args: unknown[]): boolean;
+        public off<K extends keyof CollectorEvents>(event: K, listener: (...args: CollectorEvents[K]) => Awaitable<void>): this;
+        public off<S extends string | symbol>(
+            event: Exclude<S, keyof CollectorEvents>,
+            listener: (...args: any[]) => Awaitable<void>,
+        ): this;
+        public removeAllListeners<K extends keyof CollectorEvents>(event?: K): this;
+        public removeAllListeners<S extends string | symbol>(event?: Exclude<S, keyof CollectorEvents>): this;
+    }
+    interface CollectorEvents {
+        collected: [collect: Message|Interaction];
+        end: [];
+        totalCollected: [collect: Store<string, Message|Interaction>];
     }
 }

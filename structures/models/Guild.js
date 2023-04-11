@@ -64,6 +64,10 @@ module.exports = class Guild {
         this.roles = new Store()
         this.invites = new Store()
         this.data_is_available = true
+
+        if(this.icon) {
+            this.icon = `https://cdn.discordapp.com/icons/${this.id}/${this.icon}${this.icon.startsWith('a_') ? '.gif' : '.png'}?size=512`
+        }
     }
     /**
      * @typedef {Object} guildVanityData

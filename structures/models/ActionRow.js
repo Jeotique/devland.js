@@ -1,6 +1,7 @@
 const Button = require("./Button")
 const ChannelSelect = require("./ChannelSelect")
 const MentionableSelect = require("./MentionableSelect")
+const Modal = require("./Modal")
 const RoleSelect = require("./RoleSelect")
 const StringSelect = require("./StringSelect")
 const UserSelect = require("./UserSelect")
@@ -18,7 +19,8 @@ module.exports = class ActionRow {
         if(components.length < 1) throw new TypeError("No components")
         components.map(comp => {
             if(!comp.pack) {
-                switch(comp.type) {
+                if(comp.isModal) comp = new Modal(comp)
+                else switch(comp.type) {
                     case 2: comp = new Button(comp); break;
                     case 3: comp = new StringSelect(comp); break;
                     case 6: comp = new RoleSelect(comp); break;

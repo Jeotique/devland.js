@@ -1,5 +1,5 @@
 const { parseEmoji } = require("../util")
-
+const Emoji = require('./Emoji')
 module.exports = class ChannelSelect {
     /**
      * 
@@ -28,13 +28,13 @@ module.exports = class ChannelSelect {
         if(this.min_values && this.min_values > 25) throw new TypeError("min_values the maximum is 25")
         if(this.channelTypes.length < 1) this.channelTypes = undefined
         else if(this.channelTypes.find(type => type < 0 || type > 15)) throw new TypeError("invalid channel type provided")
-        if(this.channelTypes.length > 0) this.channel_types = this.channelTypes
+        if(this.channelTypes && this.channelTypes.length > 0) this.channel_types = this.channelTypes
         else if(this.channel_types.length < 1) this.channel_types = undefined
-        if(this.channel_types.find(type => type > 0 || type > 15)) throw new TypeError("invalid channel type provided") 
+        if(this.channel_types && this.channel_types.find(type => type > 0 || type > 15)) throw new TypeError("invalid channel type provided") 
         return {
             type: 8,
             placeholder: this.placeholder,
-            max_values: this.max_values || 1,
+            max_values: this.max_values || this.min_values ? this.min_values : 1,
             min_values: this.min_values || 0,
             custom_id: this.custom_id || this.customId,
             disabled: this.disabled,

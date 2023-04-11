@@ -41,7 +41,7 @@ module.exports = class StageChannel {
         this.createdAt = new Date(this.createdTimestamp)
         this.permission_overwrites = []
         this.data_is_available = true
-        data.permission_overwrites.map(perm => {
+        data.permission_overwrites?.map(perm => {
             this.permission_overwrites.push({
                 id: perm.id,
                 type: perm.type,
