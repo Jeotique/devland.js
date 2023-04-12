@@ -55,6 +55,8 @@ module.exports = class Interaction {
         this.isMessageContext = this.isCommand && this.data.type === 3
         this.followUpMessageId = null
         this.deleted = false
+        this.createdTimestamp = Utils.getTimestampFrom(this.id)
+        this.createdAt = new Date(this.createdTimestamp)
     }
 
     async deferUpdate(options = {}) {
