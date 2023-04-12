@@ -1,3 +1,4 @@
+const Utils = require('../util/index')
 module.exports = class Embed {
     /**
      * @typedef {object} fieldOptions
@@ -55,6 +56,7 @@ module.exports = class Embed {
 
     pack() {
         let packed = {}
+        if(typeof this.color !== "undefined") this.color = Utils.resolveColor(this.color)
         if(typeof this.image === 'string') this.image = {url: this.image}
         if(typeof this.thumbnail === 'string') this.thumbnail = {url: this.thumbnail}
         for(const [key, value] of Object.entries(this)) packed[key] = value

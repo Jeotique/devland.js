@@ -8,7 +8,7 @@ module.exports = async (client) => {
             op: 1,
             d: 0
         }));
-
+        client.ws.gateway.heartbeat.last = Date.now()
         client.ws.gateway.heartbeat.recieved = false;
     }, client.ws.gateway.heartbeat.interval);
 }

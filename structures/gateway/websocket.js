@@ -48,6 +48,7 @@ module.exports = async (client) => {
                 }));
                 break;
             case 11:
+                client.ws.ping = (Date.now()-client.ws.gateway.heartbeat.last)
                 client.ws.gateway.heartbeat.last = Date.now();
                 client.ws.gateway.heartbeat.recieved = true;
                 break;

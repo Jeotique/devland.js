@@ -1,5 +1,5 @@
 const Client = require('./structures/client/client')
-const Utils = require('./structures/util')
+const {Colors, parseEmoji, resolveColor} = require('./structures/util')
 const Attachment = require('./structures/models/Attachment')
 const Guild = require('./structures/models/Guild')
 const Message = require('./structures/models/Message')
@@ -39,7 +39,9 @@ const Collector = require('./structures/models/Collector')
 const { __exportStar } = require('tslib');
 module.exports = {
     Client,
-    Utils,
+    parseEmoji,
+    resolveColor,
+    Colors,
     Attachment,
     Guild,
     Message,

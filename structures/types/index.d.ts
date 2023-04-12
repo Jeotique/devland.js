@@ -47,20 +47,21 @@ declare module 'devland.js' {
         Competing = 5
     }
     type wsClientData = {
-        socket: ws;
-        connected: boolean;
-        gateway: gatewayClientData;
+        socket: ws,
+        connected: boolean,
+        gateway: gatewayClientData,
+        ping: number|null,
     }
     type gatewayClientData = {
-        url: string;
-        obtainedAt: number;
-        heartbeat: heartbeatClientData;
+        url: string,
+        obtainedAt: number,
+        heartbeat: heartbeatClientData,
     }
     type heartbeatClientData = {
-        interval: number;
-        last: number;
-        recieved: boolean;
-        seq: any;
+        interval: number,
+        last: number,
+        recieved: boolean,
+        seq: any,
     }
     export type Awaitable<T> = T | PromiseLike<T>;
     export class Client extends EventEmitter {
@@ -1150,6 +1151,7 @@ declare module 'devland.js' {
         private pack();
     }
     export function parseEmoji(text: string): APIEmoji;
+    export function resolveEmoji(color: string|number): number;
     export type PermissionString =
         | 'CREATE_INSTANT_INVITE'
         | 'KICK_MEMBERS'
