@@ -228,7 +228,7 @@ declare module 'devland.js' {
         integrationCreate: [integration: Integration];
         integrationUpdate: [integration: Integration];
         integrationDelete: [guild: Guild, application_id?: string];
-        messageBulkDelete: [guild?: Guild, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, messages: Store<String, Message>, messageIds: string[]];
+        messageBulkDelete: [guild: Guild|undefined, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, messages: Store<String, Message>, messageIds: string[]];
         messageReactionAdd: [data: {
             guild?: Guild,
             channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel,
@@ -244,11 +244,11 @@ declare module 'devland.js' {
             user?: User,
             emoji: Emoji
         }];
-        messageReactionAllRemove: [guild?: Guild, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, message?: message];
-        messageReactionRemoveEmoji: [guild?: Guild, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, message?: message, emoji: Emoji];
+        messageReactionAllRemove: [guild: Guild|undefined, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, message: Message|undefined];
+        messageReactionRemoveEmoji: [guild: Guild|undefined, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, message: Message|undefined, emoji: Emoji];
         presenceUpdate: [presence: object];
         webhooksUpdate: [channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel];
-        userTypingStart: [guild?: Guild, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, user: User, member?: Member, timestamp: number];
+        userTypingStart: [guild: Guild|undefined, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, user: User, member: Member|undefined, timestamp: number];
         voiceStateUpdate: [voice_state: VoiceState];
         voiceServerUpdate: [voice_server: {
             guild: Guild,
@@ -378,7 +378,7 @@ declare module 'devland.js' {
     }
     type createRoleOptions = {
         name?: string,
-        permissions?: Permissions | PermissionResolvable | string[] | number | BitField,
+        permissions?: Permissions | PermissionResolvable | string[] | number | BitField<string, number>,
         color?: string | number,
         hoist?: boolean,
         unicode_emoji?: Emoji | string,
@@ -455,8 +455,8 @@ declare module 'devland.js' {
         createRole(options?: createRoleOptions): Promise<Role>;
         fetchLogs(options: fetchLogsOptions): Promise<AuditLogs>;
         leave(): Promise<void>;
-        kickMember(user: string | User | Member, reason?: string): Promise<Member?>;
-        banMember(user: string | User | Member, delete_message_seconds?: number, reason?: string): Promise<Member?>;
+        kickMember(user: string | User | Member, reason?: string): Promise<Member|undefined>;
+        banMember(user: string | User | Member, delete_message_seconds?: number, reason?: string): Promise<Member|undefined>;
         unbanMember(user: string | User | Member, reason?: string): Promise<boolean>;
         fetchBans(): Promise<Store<String, Ban>>;
         fetchBan(user: string | User | Member): Promise<Ban>;
@@ -491,8 +491,8 @@ declare module 'devland.js' {
         addRoles(roles: Role | Role[] | string | string[], reason?: string): Promise<Member>;
         removeRoles(roles: Role | Role[] | string | string[], reason?: string): Promise<Member>;
         hasPermissions(permission: string | PermissionResolvable): boolean;
-        kick(reason?: string): Promise<Member?>;
-        ban(delete_message_seconds?: number, reason?: string): Promise<Member?>;
+        kick(reason?: string): Promise<Member|undefined>;
+        ban(delete_message_seconds?: number, reason?: string): Promise<Member|undefined>;
         fetchRoles(): Promise<Store<String, Role>>;
     }
     type editMemberOptions = {
@@ -1372,7 +1372,7 @@ declare module 'devland.js' {
     }
     type editRoleOptions = {
         name?: string,
-        permissions?: Permissions | PermissionResolvable | string[] | number | BitField,
+        permissions?: Permissions | PermissionResolvable | string[] | number | BitField<string, number>,
         color?: string | number,
         hoist?: boolean,
         unicode_emoji?: Emoji | string,
@@ -1438,7 +1438,7 @@ declare module 'devland.js' {
         constructor(client: Client, guild: Guild, data: any, channel?: any);
         private client: Client;
         readonly code: string;
-        readonly expireAt: string | number;
+        readonly expire_At: string | number;
         readonly guild: Guild;
         readonly guildId: string;
         readonly channel?: TextChannel | VoiceChannel | AnnouncementChannel | Thread | StageChannel | ForumChannel | null;
