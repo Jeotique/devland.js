@@ -1,6 +1,6 @@
 const Permissions = require("../util/Permissions/Permissions")
 
-module.exports = class SlashCommand {
+module.exports = class GuildCommand {
     constructor(options = {}) {
         this.name = options?.name
         this.name_localizations = options?.name_localizations
