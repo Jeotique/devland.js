@@ -32,23 +32,14 @@ module.exports = class Client extends EventEmitter {
      * @property {presenceOptions} presence
      * @property {string} token
      * @property {number} messagesLifeTime
-     * @property {boolean} messagesLifeTimeResetAfterEvents
      * @property {number} guildsLifeTime
-     * @property {boolean} guildsLifeTimeResetAfterEvents
      * @property {number} channelsLifeTime
-     * @property {boolean} channelsLifeTimeResetAfterEvents
      * @property {number} usersLifeTime
-     * @property {boolean} usersLifeTimeResetAfterEvents
      * @property {number} channelsLifeTime
-     * @property {boolean} channelsLifeTimeResetAfterEvents
      * @property {number} threadsLifeTime
-     * @property {boolean} threadsLifeTimeResetAfterEvents
      * @property {number} membersLifeTime
-     * @property {boolean} membersLifeTimeResetAfterEvents
      * @property {number} rolesLifeTime
-     * @property {boolean} rolesLifeTimeResetAfterEvents
      * @property {number} invitesLifeTime
-     * @property {boolean} invitesLifeTimeResetAfterEvents
      */
     /**
      * The client options
@@ -232,6 +223,10 @@ module.exports = class Client extends EventEmitter {
          * @private
          */
         this.collectorCache = {}
+        /**
+         * @private
+         */
+        this.deletedmessages = new Store()
         if (this.options && this.options.connect == false) {
             return this;
         } else {

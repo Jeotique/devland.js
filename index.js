@@ -36,6 +36,7 @@ const VoiceState = require('./structures/models/VoiceState')
 const Interaction = require('./structures/models/Interaction')
 const Modal = require('./structures/models/Modal')
 const Collector = require('./structures/models/Collector')
+const { __exportStar } = require('tslib');
 module.exports = {
     Client,
     Utils,

@@ -3,10 +3,11 @@
     "got": "^7.1.0",
     "multistream": "^2.1.1",
     "phin": "^3.6.1",
+    "tslib": "^2.4.1",
     "ws": "^8.5.0"
   },
   "name": "devland.js",
-  "version": "1.0.4",
+  "version": "1.1.2",
   "description": "A powerful API wrapper for the Discord API designed for modern bots",
   "main": "index.js",
   "types": "./structures/types/index.d.ts",
@@ -38,7 +39,7 @@
     "oceanic.js"
   ],
   "author": "Jeotique",
-  "license": "MIT",
+  "license": "Apache License 2.0",
   "bugs": {
     "url": "https://github.com/Jeotique/devland.js/issues"
   },

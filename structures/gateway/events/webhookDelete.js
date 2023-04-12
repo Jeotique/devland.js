@@ -10,7 +10,7 @@ module.exports = {
     run: async (client, d) => {
         const data = d.d
         let guild = client.guilds.get(data.guild_id) || await client.rest.get(client._ENDPOINTS.SERVERS(data.guild_id)).catch(e => { })
-        if (!guild instanceof Guild) guild = new Guild(client, guild)
+        if (!(guild instanceof Guild)) guild = new Guild(client, guild)
         let channel = await client.rest.get(client._ENDPOINTS.CHANNEL(data.channel_id)).catch(e => { })
         if (!channel) return
         if (channel.type === 0) channel = new TextChannel(client, guild, channel)

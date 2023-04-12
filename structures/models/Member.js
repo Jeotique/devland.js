@@ -25,10 +25,11 @@ module.exports = class Member {
         this.avatar = data.avatar
         this.roles = data.roles
         this.data_is_available = true
+        const User = require('./User')
         this.user = data.user ? this.client.users.get(data.user.id) || new User(client, data.user) : null
-        this.permissions = (this.id === this.guild.ownerId) ? new Permissions("ADMINISTRATOR") : new Permissions(this.roles.map(role_id => {
-            return this.guild.roles.get(role_id)?.permissions
-        }))
+        this.permissions = (this.id === this.guild.ownerId) ? new Permissions("ADMINISTRATOR") : this.roles.length > 0 && this.guild.roles.size > 0 ? new Permissions(this.roles.map(role_id => {
+            return this.guild.roles.get(role_id)?.permissions.toArray()
+        })) : new Permissions()
     }
 
     async send(options) {
@@ -74,7 +75,7 @@ module.exports = class Member {
                 if (data.channel_id !== null && typeof data.channel_id !== "string") return reject(new TypeError("The channel id must be set to null or a valid Id / VoiceChannel instance / StageChannel instance must be provided"))
             }
             if (typeof data.communication_disabled_until !== "undefined") {
-                if (typeof data.communication_disabled_until !== "number") return reject(new TypeError("The communication disabled until state must be a number"))
+                if (data.communication_disabled_until !== null && typeof data.communication_disabled_until !== "number") return reject(new TypeError("The communication disabled until state must be a number"))
             }
             if (typeof data.flags !== "undefined") {
                 if (typeof data.flags !== "number") return reject(new TypeError("The flags state must be a number"))

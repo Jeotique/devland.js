@@ -29,7 +29,7 @@ module.exports = {
                 client.messages.set(message.id, message)
             }
         } else {
-            if(!guild instanceof Guild) guild = new Guild(client, guild)
+            if(!(guild instanceof Guild)) guild = new Guild(client, guild)
             let channel = await client.rest.get(client._ENDPOINTS.CHANNEL(data.channel_id)).catch(e => { })
             if (!channel) return
             let message = new Message(client, guild, new TextChannel(client, guild, channel), data)

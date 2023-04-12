@@ -22,7 +22,7 @@ module.exports = {
         if (typeof client.options.guildsLifeTime === "number" && client.options.guildsLifeTime > 0) {
             var checkGuilds = setInterval(() => {
                 if (client.guilds.size < 1) {
-                    clearInverval(checkGuilds)
+                    clearInterval(checkGuilds)
                     client.ready = true
                     /**
                     * @event client#ready

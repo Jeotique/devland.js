@@ -13,7 +13,7 @@ module.exports = {
         if (!guild) {
             // gestion message par mp
         } else {
-            if(!guild instanceof Guild) guild = new Guild(client, guild)
+            if(!(guild instanceof Guild)) guild = new Guild(client, guild)
             let oldChannel = { error: "Enable the channels cache to get the old channel data", id: data.id, data_is_available: false }
             if (data.type === 0) { // text channel
                 let text = new TextChannel(client, guild, data)

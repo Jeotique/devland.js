@@ -39,7 +39,7 @@ module.exports = class Interaction {
         this.commandName = data?.data?.name
         this.customId = data?.data?.custom_id
         this.values = data?.data?.values
-        this.isSlashCommand = this.type === 2
+        this.isCommand = this.type === 2
         this.isModal = this.type === 5
         this.isMessageComponent = this.type === 3
         this.isButton = this.isMessageComponent && this.data.component_type === 2
@@ -50,13 +50,16 @@ module.exports = class Interaction {
         this.isRoleSelect = this.isMessageComponent && this.data.component_type === 6
         this.isMentionableSelect = this.isMessageComponent && this.data.component_type === 7
         this.isChannelSelect = this.isMessageComponent && this.data.component_type === 8
+        this.isSlashCommand = this.isCommand && this.data.type === 1
+        this.isUserContext = this.isCommand && this.data.type === 2
+        this.isMessageContext = this.isCommand && this.data.type === 3
         this.followUpMessageId = null
         this.deleted = false
     }
 
     async deferUpdate(options = {}) {
         return new Promise(async (resolve, reject) => {
-            if (this.isSlashCommand) return reject(new TypeError("You can't use deferUpdate on a slash command"))
+            if (this.isCommand) return reject(new TypeError("You can't use deferUpdate on a command"))
             if (typeof options !== "object") options = {}
             if (typeof options.ephemeral !== "boolean") options.ephemeral = false
             if (options.ephemeral) options.flags = 1 << 6
@@ -424,5 +427,15 @@ module.exports = class Interaction {
                 return value.value
                 break;
         }
+    }
+
+    getTargetUser(){
+        if(!this.isUserContext) throw new TypeError("This function can be used on a user context only")
+        return new User(this.client, this.data.resolved.users[this.data.target_id])
+    }
+
+    getTargetMessage(){
+        if(!this.isMessageContext) throw new TypeError("This function can be used on a message context only")
+        return new Message(this.client, this.client.guilds.get(this.guildId)||this.guild, this.channel, this.data.resolved.messages[this.data.target_id])
     }
 }

@@ -58,7 +58,7 @@ module.exports = class Request {
                 callOptions.headers['content-type'] = 'application/json';
             } else if (this.data instanceof MultiStream) {
                 if (this.data) callOptions.body = this.data;
-                callOptions.headers['content-type'] = `multipart/form-data; boundary=----------------------------dicksword`;
+                callOptions.headers['content-type'] = `multipart/form-data; boundary=----------------------------devland`;
             }
             this.client.emit('debug', '~~~~sending~~~~');
             got(this.endpoint, callOptions).then(result => {

@@ -15,7 +15,7 @@ module.exports = {
         if (!guild) {
             // gestion message par mp
         } else {
-            if(!guild instanceof Guild) guild = new Guild(client, guild)
+            if(!(guild instanceof Guild)) guild = new Guild(client, guild)
             let thread = new Thread(client, guild, data)
             let oldThread = client.threadChannels.get(thread.id)
             if(!oldThread) oldThread = { error: "Enable the threads cache to get the old thread data", id: data.id, data_is_available: false }

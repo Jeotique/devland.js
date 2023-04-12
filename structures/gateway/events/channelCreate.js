@@ -14,7 +14,7 @@ module.exports = {
         if (!guild) {
             // gestion message par mp
         } else {
-            if(!guild instanceof Guild) guild = new Guild(client, guild)
+            if(!(guild instanceof Guild)) guild = new Guild(client, guild)
             if (data.type === 0) { // text channel
                 let text = new TextChannel(client, guild, data)
                 /**

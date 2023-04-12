@@ -32,7 +32,7 @@ module.exports = class SlashCommand {
         else if (this.type !== 1 && this.description_localizations && typeof this.description_localizations === "object") throw new TypeError("Description localizations is available for only CHAT_INPUT command")
         else this.description_localizations = undefined
         if (this.options && this.options.length > 25) throw new TypeError("Command max options length is 25")
-        if (this.options && this.type !== 1) throw new TypeError("Command options are available for CHAT_INPUT type only")
+        if (this.options && this.options.length > 0 && this.type !== 1) throw new TypeError("Command options are available for CHAT_INPUT type only")
         else if (typeof this.options !== "object") this.options = undefined
         if (this.default_member_permissions && this.default_member_permissions instanceof Permissions) {
             this.default_member_permissions = this.default_member_permissions.bitfield

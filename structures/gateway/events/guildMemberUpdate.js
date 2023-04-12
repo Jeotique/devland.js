@@ -10,7 +10,7 @@ module.exports = {
     run: async (client, d) => {
         const data = d.d
         let guild = client.guilds.get(data.guild_id) || await client.rest.get(client._ENDPOINTS.SERVERS(data.guild_id)).catch(e => { })
-        if (!guild instanceof Guild) guild = new Guild(client, guild)
+        if (!(guild instanceof Guild)) guild = new Guild(client, guild)
         let member = new Member(client, guild, data)
         let oldMember = guild.members.get(member.id)
         if (oldMember) {

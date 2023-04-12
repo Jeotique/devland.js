@@ -70,8 +70,12 @@ module.exports = class Message {
             this.interaction.user = this.client.users.get(this.interaction.user.id) || new User(this.client, this.interaction.user)
         }
         if(data.mentions) data.mentions.map(m => {
-            m.user = m
+            if(m.member){
+            m.member.user = m
             this.memberMentions.set(m.id, new Member(this.client, this.client.guilds.get(this.guildId)||this.guild, m.member))
+            } else {
+                this.memberMentions.set(m.id, new User(this.client, m))
+            }
         })
         if(data.mention_roles) data.mention_roles.map(async r_id => {
             if(this.guild.roles.get(r_id)) this.roleMentions.set(r_id, this.guild.roles.get(r_id))

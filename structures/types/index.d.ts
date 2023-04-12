@@ -9,21 +9,13 @@ declare module 'devland.js' {
         intents: number;
         token: string;
         messagesLifeTime: number;
-        messagesLifeTimeResetAfterEvents: boolean;
         guildsLifeTime: number;
-        guildsLifeTimeResetAfterEvents: boolean;
         channelsLifeTime: number;
-        channelsLifeTimeResetAfterEvents: boolean;
         usersLifeTime: number;
-        usersLifeTimeResetAfterEvents: boolean;
         threadsLifeTime: number;
-        threadsLifeTimeResetAfterEvents: boolean;
         membersLifeTime: number;
-        membersLifeTimeResetAfterEvents: boolean;
         rolesLifeTime: number;
-        rolesLifeTimeResetAfterEvents: boolean;
         invitesLifeTime: number;
-        invitesLifeTimeResetAfterEvents: boolean;
     }
     type wsOptions = {
         large_threshold: number;
@@ -94,6 +86,7 @@ declare module 'devland.js' {
         readonly forumChannels: Store<string, ForumChannel>;
         private readonly dmChannels: Store<string, DmChannel>;
         private readonly collectorCache: Store<number, Collector>;
+        private readonly deletedmessages: Store<string, Message>;
         readonly version: string;
         connect(token?: string): Client;
         toJSON(): JSON;
@@ -218,8 +211,8 @@ declare module 'devland.js' {
         roleUpdate: [old_role: Role | invalid_Role, role: Role];
         roleFakeUpdate: [old_role: Role, role: Role];
         roleDelete: [role: Role | invalid_Role];
-        memberBan: [user: User | invalid_User];
-        memberUnban: [user: User | invalid_User];
+        memberBan: [user: User | invalid_User, guild: Guild];
+        memberUnban: [user: User | invalid_User, guild: Guild];
         inviteCreate: [invite: Invite];
         inviteDelete: [invite: Invite | invalid_Invite];
         webhookCreate: [channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel];
@@ -234,9 +227,22 @@ declare module 'devland.js' {
         integrationCreate: [integration: Integration];
         integrationUpdate: [integration: Integration];
         integrationDelete: [guild: Guild, application_id?: string];
-        messageBulkDelete: [guild?: Guild, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, messageIds: string[]];
-        messageReactionAdd: [guild?: Guild, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, message?: message, user?: User, member?: Member, emoji: Emoji];
-        messageReactionRemove: [guild?: Guild, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, message?: message, user?: User, emoji: Emoji];
+        messageBulkDelete: [guild?: Guild, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, messages: Store<String, Message>, messageIds: string[]];
+        messageReactionAdd: [data: {
+            guild?: Guild,
+            channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel,
+            message?: Message,
+            user?: User,
+            member?: Member,
+            emoji: Emoji
+        }];
+        messageReactionRemove: [data: {
+            guild?: Guild,
+            channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel,
+            message?: Message,
+            user?: User,
+            emoji: Emoji
+        }];
         messageReactionAllRemove: [guild?: Guild, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, message?: message];
         messageReactionRemoveEmoji: [guild?: Guild, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, message?: message, emoji: Emoji];
         presenceUpdate: [presence: object];
@@ -865,7 +871,7 @@ declare module 'devland.js' {
         readonly channelId: string;
         readonly attachments: Store<String, Attachment>;
         readonly embeds: Embed[];
-        readonly memberMentions: Store<String, Member>;
+        readonly memberMentions: Store<String, Member|User>;
         readonly roleMentions: Store<String, Role>;
         readonly channelMentions: Store<String, TextChannel>;
         readonly pinned: boolean;
@@ -956,6 +962,7 @@ declare module 'devland.js' {
         author: authorOptions | undefined;
         footer: footerOptions | undefined;
         image: imageOptions | string | undefined;
+        thumbnail: thumbnailOptions;
         url: string | undefined;
     }
 
@@ -1139,7 +1146,7 @@ declare module 'devland.js' {
         customId: string;
         disabled?: boolean;
         channel_types?: channelType[];
-        channelType?: channelType[];
+        channelTypes?: channelType[];
         private pack();
     }
     export function parseEmoji(text: string): APIEmoji;
@@ -1186,7 +1193,9 @@ declare module 'devland.js' {
         | 'SEND_MESSAGES_IN_THREADS'
         | 'START_EMBEDDED_ACTIVITIES'
         | 'MODERATE_MEMBERS'
-        | 'MANAGE_EVENTS';
+        | 'MANAGE_EVENTS'
+        | 'VIEW_CREATOR_MONETIZATION_ANALYTICS'
+        | 'USE_SOUNDBOARD';
     export type PermissionFlags = Record<PermissionString, bigint>;
     export type PermissionResolvable = BitFieldResolvable<PermissionString, bigint>;
     export type BitFieldResolvable<T extends string, N extends number | bigint> =
@@ -1606,7 +1615,7 @@ declare module 'devland.js' {
         readonly values?: string[];
         readonly isModal: boolean;
         readonly isMessageComponent: boolean;
-        readonly isSlashCommand: boolean;
+        readonly isCommand: boolean;
         readonly isButton: boolean;
         readonly isActionRow: boolean;
         readonly isStringSelect: boolean;
@@ -1615,6 +1624,11 @@ declare module 'devland.js' {
         readonly isRoleSelect: boolean;
         readonly isMentionableSelect: boolean;
         readonly isChannelSelect: boolean;
+        readonly isSlashCommand: boolean;
+        readonly isUserContext: boolean;
+        readonly isMessageContext: boolean;
+        private readonly deleted: boolean;
+        private readonly followUpMessageId: string|null;
         deferUpdate(options?: { ephemeral: boolean }): Promise<Interaction>;
         reply(options: MessageInteractionOptions | string | Embed | ActionRow): Promise<Interaction>;
         deferReply(options?: { ephemeral: boolean }): Promise<Interaction>;
@@ -1628,6 +1642,8 @@ declare module 'devland.js' {
         getSelectedMentionables(): User[];
         getSelectedChannels(): TextChannel[] | VoiceChannel[] | CategoryChannel[] | AnnouncementChannel[] | Thread[] | StageChannel[] | ForumChannel[];
         getCommandValue(name: string): string | number | boolean | User | Role | TextChannel | VoiceChannel | CategoryChannel | AnnouncementChannel | Thread | StageChannel | ForumChannel;
+        getTargetUser(): User;
+        getTargetMessage(): Message;
     }
     type modalOptions = {
         name: string,
@@ -1700,4 +1716,36 @@ declare module 'devland.js' {
         end: [];
         totalCollected: [collect: Store<string, Message|Interaction>];
     }
+    export enum Colors {
+        DEFAULT = 0x000000,
+        WHITE = 0xffffff,
+        AQUA = 0x1abc9c,
+        GREEN = 0x57f287,
+        BLUE = 0x3498db,
+        YELLOW = 0xfee75c,
+        PURPLE = 0x9b59b6,
+        LUMINOUS_VIVID_PINK = 0xe91e63,
+        FUCHSIA = 0xeb459e,
+        GOLD = 0xf1c40f,
+        ORANGE = 0xe67e22,
+        RED = 0xed4245,
+        GREY = 0x95a5a6,
+        NAVY = 0x34495e,
+        DARK_AQUA = 0x11806a,
+        DARK_GREEN = 0x1f8b4c,
+        DARK_BLUE = 0x206694,
+        DARK_PURPLE = 0x71368a,
+        DARK_VIVID_PINK = 0xad1457,
+        DARK_GOLD = 0xc27c0e,
+        DARK_ORANGE = 0xa84300,
+        DARK_RED = 0x992d22,
+        DARK_GREY = 0x979c9f,
+        DARKER_GREY = 0x7f8c8d,
+        LIGHT_GREY = 0xbcc0c0,
+        DARK_NAVY = 0x2c3e50,
+        BLURPLE = 0x5865f2,
+        GREYPLE = 0x99aab5,
+        DARK_BUT_NOT_BLACK = 0x2c2f33,
+        NOT_QUITE_BLACK = 0x23272a,
+      }
 }

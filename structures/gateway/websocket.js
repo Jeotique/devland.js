@@ -57,7 +57,9 @@ module.exports = async (client) => {
                 if (d.t == 'READY') client.readyAt = Date.now();
                 if (!eventFiles.has(Events[d.t])) return
                 let event = eventFiles.get(Events[d.t])
+                try{
                 event.run(client, d)
+                }catch(err){}
                 break;
         }
     });

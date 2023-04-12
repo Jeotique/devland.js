@@ -15,7 +15,7 @@ module.exports = {
         if (!guild) {
             // gestion message par mp
         } else {
-            if(!guild instanceof Guild) guild = new Guild(client, guild)
+            if(!(guild instanceof Guild)) guild = new Guild(client, guild)
             let thread = new Thread(client, guild, data)
             /**
             * Emitted whenever a thread is created
