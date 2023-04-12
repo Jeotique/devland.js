@@ -26,7 +26,8 @@ module.exports = {
         let user = client.users.get(data.user_id) || await client.rest.get(client._ENDPOINTS.USER(data.user_id))
         if(user && !(user instanceof User)) user = new User(client, user)
         let member;
-        if(data.member) member = guild.members.get(data.member.id) || await client.rest.get(client._ENDPOINTS.MEMBERS(guild.id, data.member.id))
+        if(data.member) member = guild.members.get(data.user_id) || await client.rest.get(client._ENDPOINTS.MEMBERS(guild.id, data.user_id))
+        if(member && !(member instanceof Member) && (user instanceof User)) member.user = user
         if(member && !(member instanceof Member)) member = new Member(client, guild, member)
         client.emit('messageReactionAdd', { guild: guild, channel: channel, message: message, user: user, member: member, emoji: emoji })
     }

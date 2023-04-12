@@ -8,6 +8,7 @@ const { default: Store } = require('../util/Store/Store')
 const Permissions = require('../util/Permissions/Permissions')
 const ForumTag = require('./ForumTag')
 const User = require('./User')
+const Member = require('./Member')
 module.exports = class Thread {
     /**
      * 
@@ -397,12 +398,12 @@ module.exports = class Thread {
         })
     }
 
-    async add(member){
-        return new Promise(async(resolve, reject) => {
-            if(typeof member === "undefined") return reject(new TypeError("Member must be defined by a Member instance or a Member Id"))
-            if(member instanceof User) member = member.id
-            if(member instanceof Member) member = member.id
-            if(typeof member !== "string") return reject(new TypeError("Member must be defined by a Member instance or a Member Id"))
+    async add(member) {
+        return new Promise(async (resolve, reject) => {
+            if (typeof member === "undefined") return reject(new TypeError("Member must be defined by a Member instance or a Member Id"))
+            if (member instanceof User) member = member.id
+            if (member instanceof Member) member = member.id
+            if (typeof member !== "string") return reject(new TypeError("Member must be defined by a Member instance or a Member Id"))
             this.client.rest.put(this.client._ENDPOINTS.THREAD_MEMBER(this.id, member)).then(() => {
                 return resolve()
             }).catch(e => {
@@ -411,12 +412,12 @@ module.exports = class Thread {
         })
     }
 
-    async remove(member){
-        return new Promise(async(resolve, reject) => {
-            if(typeof member === "undefined") return reject(new TypeError("Member must be defined by a Member instance or a Member Id"))
-            if(member instanceof User) member = member.id
-            if(member instanceof Member) member = member.id
-            if(typeof member !== "string") return reject(new TypeError("Member must be defined by a Member instance or a Member Id"))
+    async remove(member) {
+        return new Promise(async (resolve, reject) => {
+            if (typeof member === "undefined") return reject(new TypeError("Member must be defined by a Member instance or a Member Id"))
+            if (member instanceof User) member = member.id
+            if (member instanceof Member) member = member.id
+            if (typeof member !== "string") return reject(new TypeError("Member must be defined by a Member instance or a Member Id"))
             this.client.rest.delete(this.client._ENDPOINTS.THREAD_MEMBER(this.id, member)).then(() => {
                 return resolve()
             }).catch(e => {
@@ -425,32 +426,32 @@ module.exports = class Thread {
         })
     }
 
-    createCollector(options = {}){
-        if(typeof options !== "object") throw new TypeError("You must provide options for the collector")
-        if(typeof options.count !== "undefined"){
-            if(typeof options.count !== "number") throw new TypeError("The count must be a number")
+    createCollector(options = {}) {
+        if (typeof options !== "object") throw new TypeError("You must provide options for the collector")
+        if (typeof options.count !== "undefined") {
+            if (typeof options.count !== "number") throw new TypeError("The count must be a number")
         }
-        if(typeof options.type !== "undefined"){
-            if(typeof options.type !== "string") throw new TypeError("The type must be a string")
+        if (typeof options.type !== "undefined") {
+            if (typeof options.type !== "string") throw new TypeError("The type must be a string")
             options.type = options.type.toLowerCase()
-            if(!["message", "component"].includes(options.type)) throw new TypeError("Invalid collector type (message or component)")
+            if (!["message", "component"].includes(options.type)) throw new TypeError("Invalid collector type (message or component)")
         }
-        if(typeof options.time !== "undefined"){
-            if(typeof options.time !== "number") throw new TypeError("The time must be a number")
+        if (typeof options.time !== "undefined") {
+            if (typeof options.time !== "number") throw new TypeError("The time must be a number")
         }
-        if(typeof options.componentType !== "undefined"){
-            if(typeof options.componentType !== "number") throw new TypeError("The componentType must be a number")
-            if(options.componentType < 1 || options.componentType > 8) throw new TypeError("Invalid componentType for the collector")
+        if (typeof options.componentType !== "undefined") {
+            if (typeof options.componentType !== "number") throw new TypeError("The componentType must be a number")
+            if (options.componentType < 1 || options.componentType > 8) throw new TypeError("Invalid componentType for the collector")
         }
-        if(typeof options.filter !== "undefined"){
-            if(typeof options.filter !== "function") throw new TypeError("The filter must be a filter function for the collector, example : 'filter: (collected) => collected.author.id === message.author.id'")
+        if (typeof options.filter !== "undefined") {
+            if (typeof options.filter !== "function") throw new TypeError("The filter must be a filter function for the collector, example : 'filter: (collected) => collected.author.id === message.author.id'")
         }
         let identifier = Date.now()
-        this.client.collectorCache[identifier] = new Collector(this.client, this.client.guilds.get(this.guildId)||this.guild, null, this.channel, options)
+        this.client.collectorCache[identifier] = new Collector(this.client, this.client.guilds.get(this.guildId) || this.guild, null, this.channel, options)
         this.client.collectorCache[identifier]?.on('end', () => {
             delete this.client.collectorCache[identifier]
         })
-        return this.client.collectorCache[identifier]    
+        return this.client.collectorCache[identifier]
     }
 
     awaitMessages(options = {}) {

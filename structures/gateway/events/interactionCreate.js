@@ -25,7 +25,8 @@ module.exports = {
         let user = data.user ? client.users.get(data.user?.id) || await client.rest.get(client._ENDPOINTS.USER(data.user?.id)) : null;
         if(user && !(user instanceof User)) user = new User(client, user)
         let member;
-        if(data.member) member = guild.members.get(data.member.user.id) || await client.rest.get(client._ENDPOINTS.MEMBERS(guild.id, data.member.user.id))
+        if(data.member) member = guild.members.get(data.user?.id) || await client.rest.get(client._ENDPOINTS.MEMBERS(guild.id, data.user?.id))
+        if(member && !(member instanceof Member) && (user instanceof User)) member.user = user
         if(member && !(member instanceof Member)) member = new Member(client, guild, member)
         data.user = user
         data.member = member
