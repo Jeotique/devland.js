@@ -20,7 +20,7 @@ module.exports = class Button {
         let testemoji = null;
         if((!this.label && !this.emoji) || (this.label && typeof this.label !== "string")) throw new TypeError("Button label is invalid")
         if(this.label && this.label.length > 80) throw new TypeError("Label max length of 80")
-        if(!this.style || (this.style && typeof this.style !== "number")) throw new TypeError("Button style is invalid")
+        if(typeof this.style !== "number") throw new TypeError("Button style is invalid")
         if(this.url && typeof this.url !== "string") throw new TypeError("Button url is invalid")
         if(this.emoji instanceof Emoji) this.emoji = this.emoji.pack()
         if(this.emoji && typeof this.emoji === "string") testemoji = parseEmoji(this.emoji)
@@ -29,8 +29,8 @@ module.exports = class Button {
             type: 2,
             label: this.label,
             style: this.style,
-            custom_id: this.custom_id || this.customId,
-            url: this.url,
+            custom_id: this.style === 5 ? undefined : this.custom_id || this.customId,
+            url: this.style === 5 ? this.url : undefined,
             emoji: testemoji,
             disabled: this.disabled
         }

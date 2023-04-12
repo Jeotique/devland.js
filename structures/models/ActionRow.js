@@ -30,10 +30,12 @@ module.exports = class ActionRow {
                 }
             }
             comp = comp.pack()
-            if(!comp.custom_id) throw new TypeError("Custom Id is undefined")
-            if(typeof comp.custom_id !== "string") throw new TypeError("The custom Id must be a string")
-            if(comp.custom_id.length > 100) throw new TypeError("Custom Id max length of 100")
-            if(this.components.find(c => c.custom_id === comp.custom_id)) throw new TypeError("Duplicated custom Id")
+            if(comp.type === 2 && comp.style !== 5 && !comp.custom_id) throw new TypeError("Custom Id is undefined")
+            if(comp.type === 2 && comp.style !== 5 && typeof comp.custom_id !== "string") throw new TypeError("The custom Id must be a string")
+            if(comp.type === 2 && comp.style === 5 && !comp.url) throw new TypeError("Url must be provided for a link button")
+            if(comp.type === 2 && comp.style === 5 && typeof comp.url !== "string") throw new TypeError("The button url must be a string")
+            if(comp.custom_id && comp.custom_id.length > 100) throw new TypeError("Custom Id max length of 100")
+            if(this.components.find(c => c.custom_id && c.custom_id === comp.custom_id)) throw new TypeError("Duplicated custom Id")
             if(this.components.find(c => c.type !== comp.type)) throw new TypeError("You can't use multiple components type in one row, create an other action row")
             this.components.push(comp)
         })

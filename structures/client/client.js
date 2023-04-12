@@ -153,7 +153,7 @@ module.exports = class Client extends EventEmitter {
                     seq: null,
                 }
             },
-            ping: null
+            ping: -1
         }
 
         this.sessionID = null;

@@ -1,5 +1,5 @@
 const Client = require('../../client/client')
-const { Guild, TextChannel, Message, DmChannel, User } = require('../../models')
+const { Guild, TextChannel, Message, DmChannel, User, Member } = require('../../models')
 module.exports = {
     name: 'message',
     /**
@@ -32,6 +32,14 @@ module.exports = {
             if(!(guild instanceof Guild)) guild = new Guild(client, guild)
             let channel = await client.rest.get(client._ENDPOINTS.CHANNEL(data.channel_id)).catch(e => { })
             if (!channel) return
+            let member;
+            if(!data.webhook_id) member = guild.members.get(data.author?.id) || await client.rest.get(client._ENDPOINTS.MEMBERS(guild.id, data.author?.id))
+            let user;
+            if(member && !(member instanceof Member) && !member.user) user = client.users.get(data.author?.id) || await client.rest.get(client._ENDPOINTS.USER(data.author?.id))
+            if(user && !(user instanceof User)) user = new User(client, user)
+            if(user && !member.user) member.user = user
+            if(member && !(member instanceof Member)) member = new Member(client, guild, member)
+            data.member = member
             let message = new Message(client, guild, new TextChannel(client, guild, channel), data)
             /**
              * Emitted whenever a message is sended

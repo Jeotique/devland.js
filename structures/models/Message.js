@@ -63,7 +63,7 @@ module.exports = class Message {
         this.webhookId = data.webhook_id
         this.author = this.webhookId ? null : new User(this.client, data.author)
         this.authorId = this.webhookId ? this.webhookId : data.author.id
-        this.member = this.webhookId ? null : this.guildId ? this.guild.members.get(this.authorId) : null
+        this.member = this.webhookId ? null : this.guildId ? this.member ? this.member : this.guild.members.get(this.authorId) : null
         this.interaction = data.interaction
         this.data_is_available = true
         if(this.interaction && this.interaction.user){
