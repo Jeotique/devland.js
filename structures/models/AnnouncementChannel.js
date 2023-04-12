@@ -92,7 +92,7 @@ module.exports = class AnnouncementChannel {
                 let toTestCustomId = []
                 let alrSeen = {}
                 data['components']?.map(ar => ar?.components.map(comp => toTestCustomId.push(comp)))
-                if (toTestCustomId.length > 0) toTestCustomId.map(test => {
+                if (toTestCustomId.length > 0) toTestCustomId.filter(comp => comp.custom_id).map(test => {
                     if (alrSeen[test.custom_id]) return reject(new TypeError("Duplicated custom Id"))
                     else alrSeen[test.custom_id] = true
                 })
@@ -116,7 +116,7 @@ module.exports = class AnnouncementChannel {
                 let toTestCustomId = []
                 let alrSeen = {}
                 data['components']?.map(ar => ar?.components.map(comp => toTestCustomId.push(comp)))
-                if (toTestCustomId.length > 0) toTestCustomId.map(test => {
+                if (toTestCustomId.length > 0) toTestCustomId.filter(comp => comp.custom_id).map(test => {
                     if (alrSeen[test.custom_id]) return reject(new TypeError("Duplicated custom Id"))
                     else alrSeen[test.custom_id] = true
                 })
