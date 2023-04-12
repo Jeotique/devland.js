@@ -2,6 +2,7 @@ import EventEmitter from "events"
 import ws from 'ws'
 import Store from '../util/Store/Store'
 declare module 'devland.js' {
+    
     type clientOptions = {
         connect: boolean;
         ws: wsOptions;
@@ -272,6 +273,7 @@ declare module 'devland.js' {
         patch(endpoint: string, body: any, options?: object): Promise<any>;
         delete(endpoint: string, options?: object): Promise<any>;
     }
+    export {Store} from '../util/Store/Store';
     namespace Client {
         export class ClientUser {
             private constructor(client: Client, data: object);
