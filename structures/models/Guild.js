@@ -65,7 +65,7 @@ module.exports = class Guild {
         this.invites = new Store()
         this.data_is_available = true
 
-        if(this.icon) {
+        if (this.icon) {
             this.icon = `https://cdn.discordapp.com/icons/${this.id}/${this.icon}${this.icon.startsWith('a_') ? '.gif' : '.png'}?size=512`
         }
     }
@@ -145,7 +145,7 @@ module.exports = class Guild {
         return new Promise(async (resolve, reject) => {
             if (!commands || commands.length < 1) return reject(new TypeError("No command provided"))
             if (commands[0] instanceof Store || commands[0] instanceof Map) {
-                let body = [...commands[0].values()]
+                var body = [...commands[0].values()]
                 body.map(data => {
                     data.map(command => {
                         if (command instanceof GuildCommand) {
@@ -162,13 +162,23 @@ module.exports = class Guild {
                     })
                 })
             } else {
-                let all = []
+                var all = []
                 commands.map(command => {
-                    if (command instanceof GuildCommand) {
-                        all.push(command.pack())
-                    } else if (typeof command == "object") {
-                        all.push(new GuildCommand(command).pack())
-                    } else return reject(new TypeError("Invalid command format"))
+                    if (Array.isArray(command)) {
+                        command.map(cmd => {
+                            if (cmd instanceof GuildCommand) {
+                                all.push(cmd.pack())
+                            } else if (typeof cmd == "object") {
+                                all.push(new GuildCommand(cmd).pack())
+                            } else return reject(new TypeError("Invalid command format"))
+                        })
+                    } else {
+                        if (command instanceof GuildCommand) {
+                            all.push(command.pack())
+                        } else if (typeof command == "object") {
+                            all.push(new GuildCommand(command).pack())
+                        } else return reject(new TypeError("Invalid command format"))
+                    }
                 })
                 all.map(data => {
                     this.client.rest.post(this.client._ENDPOINTS.COMMANDS(this.id), data).then(() => {
@@ -845,13 +855,13 @@ module.exports = class Guild {
         })
     }
 
-    async fetchIntegrations(){
-        return new Promise(async(resolve, reject) => {
+    async fetchIntegrations() {
+        return new Promise(async (resolve, reject) => {
             this.client.rest.get(this.client._ENDPOINTS.INTEGRATIONS(this.id)).then(res => {
                 let collect = new Store()
-                res.map(i => collect.set(i.id, new Integration(this.client, this.client.guilds.get(this.id)||this, i)))
+                res.map(i => collect.set(i.id, new Integration(this.client, this.client.guilds.get(this.id) || this, i)))
                 resolve(collect)
-            }).catch(e=>{
+            }).catch(e => {
                 return reject(new Error(e))
             })
         })
