@@ -202,11 +202,6 @@ module.exports = class CategoryChannel {
                 let data = {
                     name: this.name,
                     type: this.type,
-                    topic: this.topic,
-                    bitrate: this.bitrate,
-                    user_limit: this.user_limit,
-                    rate_limit_per_user: this.rateLimitPerUser,
-                    position: this.position,
                     permission_overwrites: this.permission_overwrites.map(perm => {
                         return {
                             id: perm.id,
@@ -214,15 +209,7 @@ module.exports = class CategoryChannel {
                             allow: perm.allow.length < 1 ? undefined : new Permissions(perm.allow).bitfield.toString(),
                             deny: perm.deny.length < 1 ? undefined : new Permissions(perm.deny).bitfield.toString()
                         }
-                    }),
-                    parent_id: this.parentId || this.parent_id,
-                    nsfw: this.nsfw,
-                    rtc_region: this.rtcRegion,
-                    video_quality_mode: this.videoQualityMode,
-                    default_auto_archive_duration: this.defaultAutoArchiveDuration,
-                    default_reaction_emoji: this.defaultReactionEmoji,
-                    available_tags: this.availableTags,
-                    default_sort_order: this.defaultSortOrder,
+                    })
                 }
                 if (reason) data['reason'] = reason
                 this.client.rest.post(this.client._ENDPOINTS.SERVER_CHANNEL(this.guildId), data).then(newChannel => {

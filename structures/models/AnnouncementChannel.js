@@ -10,6 +10,7 @@ const ForumTag = require('./ForumTag')
 const Webhook = require('./Webhook')
 const DataResolver = require('../util/DateResolver')
 const Invite = require('./Invite')
+const CategoryChannel = require('./CategoryChannel')
 module.exports = class AnnouncementChannel {
     /**
      * 
@@ -353,9 +354,7 @@ module.exports = class AnnouncementChannel {
                     name: this.name,
                     type: this.type,
                     topic: this.topic,
-                    bitrate: this.bitrate,
-                    user_limit: this.userLimit,
-                    rate_limit_per_user: this.rateLimitPerUser,
+                    rate_limit_per_user: this.rate_limit_per_user,
                     position: this.position,
                     permission_overwrites: this.permission_overwrites.map(perm => {
                         return {
@@ -365,14 +364,8 @@ module.exports = class AnnouncementChannel {
                             deny: perm.deny.length < 1 ? undefined : new Permissions(perm.deny).bitfield.toString()
                         }
                     }),
-                    parent_id: this.parentId || this.parent_id,
-                    nsfw: this.nsfw,
-                    rtc_region: this.rtcRegion,
-                    video_quality_mode: this.videoQualityMode,
-                    default_auto_archive_duration: this.defaultAutoArchiveDuration,
-                    default_reaction_emoji: this.defaultReactionEmoji,
-                    available_tags: this.availableTags,
-                    default_sort_order: this.defaultSortOrder,
+                    parent_id: this.parent_id,
+                    nsfw: this.nsfw
                 }
                 if (reason) data['reason'] = reason
                 this.client.rest.post(this.client._ENDPOINTS.SERVER_CHANNEL(this.guildId), data).then(newChannel => {
@@ -471,7 +464,7 @@ module.exports = class AnnouncementChannel {
             if (typeof options.name !== "string") return reject(new TypeError("Create webhook options name must be provided (string)"))
             if (options.name.length < 1 || options.name.length > 80) return reject(new TypeError("Create webhook options name must have a length between 1 and 80"))
             if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
-            if(typeof options.avatar !== "undefined") options.avatar = await DataResolver.resolveImage(options.avatar)
+            if (typeof options.avatar !== "undefined") options.avatar = await DataResolver.resolveImage(options.avatar)
             this.client.rest.post(this.client._ENDPOINTS.CHANNEL_WEBHOOKS(this.id), options).then(res => {
                 resolve(new Webhook(this.client, this.client.guilds.get(this.guildId) || this.guild, res))
             }).catch(e => {
@@ -492,32 +485,32 @@ module.exports = class AnnouncementChannel {
         })
     }
 
-    createCollector(options = {}){
-        if(typeof options !== "object") throw new TypeError("You must provide options for the collector")
-        if(typeof options.count !== "undefined"){
-            if(typeof options.count !== "number") throw new TypeError("The count must be a number")
+    createCollector(options = {}) {
+        if (typeof options !== "object") throw new TypeError("You must provide options for the collector")
+        if (typeof options.count !== "undefined") {
+            if (typeof options.count !== "number") throw new TypeError("The count must be a number")
         }
-        if(typeof options.type !== "undefined"){
-            if(typeof options.type !== "string") throw new TypeError("The type must be a string")
+        if (typeof options.type !== "undefined") {
+            if (typeof options.type !== "string") throw new TypeError("The type must be a string")
             options.type = options.type.toLowerCase()
-            if(!["message", "component"].includes(options.type)) throw new TypeError("Invalid collector type (message or component)")
+            if (!["message", "component"].includes(options.type)) throw new TypeError("Invalid collector type (message or component)")
         }
-        if(typeof options.time !== "undefined"){
-            if(typeof options.time !== "number") throw new TypeError("The time must be a number")
+        if (typeof options.time !== "undefined") {
+            if (typeof options.time !== "number") throw new TypeError("The time must be a number")
         }
-        if(typeof options.componentType !== "undefined"){
-            if(typeof options.componentType !== "number") throw new TypeError("The componentType must be a number")
-            if(options.componentType < 1 || options.componentType > 8) throw new TypeError("Invalid componentType for the collector")
+        if (typeof options.componentType !== "undefined") {
+            if (typeof options.componentType !== "number") throw new TypeError("The componentType must be a number")
+            if (options.componentType < 1 || options.componentType > 8) throw new TypeError("Invalid componentType for the collector")
         }
-        if(typeof options.filter !== "undefined"){
-            if(typeof options.filter !== "function") throw new TypeError("The filter must be a filter function for the collector, example : 'filter: (collected) => collected.author.id === message.author.id'")
+        if (typeof options.filter !== "undefined") {
+            if (typeof options.filter !== "function") throw new TypeError("The filter must be a filter function for the collector, example : 'filter: (collected) => collected.author.id === message.author.id'")
         }
         let identifier = Date.now()
-        this.client.collectorCache[identifier] = new Collector(this.client, this.client.guilds.get(this.guildId)||this.guild, null, this.channel, options)
+        this.client.collectorCache[identifier] = new Collector(this.client, this.client.guilds.get(this.guildId) || this.guild, null, this.channel, options)
         this.client.collectorCache[identifier]?.on('end', () => {
             delete this.client.collectorCache[identifier]
         })
-        return this.client.collectorCache[identifier]    
+        return this.client.collectorCache[identifier]
     }
 
     awaitMessages(options = {}) {
@@ -550,26 +543,26 @@ module.exports = class AnnouncementChannel {
     }
 
     async createInvite(options = {}) {
-        return new Promise(async(resolve, reject) => {
-            if(typeof options !== 'object') return reject(new TypeError("Create invite options must be object"))
-            if(typeof options.max_age !== "undefined"){
-                if(typeof options.max_age !== "number") return reject(new TypeError("Create invite options max_age must be a number"))
-                if(options.max_age < 0 || options.max_age > 604800) return reject(new TypeError("Create invite options max_age must be between 0 and 604800"))
+        return new Promise(async (resolve, reject) => {
+            if (typeof options !== 'object') return reject(new TypeError("Create invite options must be object"))
+            if (typeof options.max_age !== "undefined") {
+                if (typeof options.max_age !== "number") return reject(new TypeError("Create invite options max_age must be a number"))
+                if (options.max_age < 0 || options.max_age > 604800) return reject(new TypeError("Create invite options max_age must be between 0 and 604800"))
             }
-            if(typeof options.max_uses !== "undefined"){
-                if(typeof options.max_uses !== "number") return reject(new TypeError("Create invite options max_uses must be a number"))
-                if(options.max_uses < 0 || options.max_uses > 100) return reject(new TypeError("Create invite options max_uses must be between 0 and 100"))
+            if (typeof options.max_uses !== "undefined") {
+                if (typeof options.max_uses !== "number") return reject(new TypeError("Create invite options max_uses must be a number"))
+                if (options.max_uses < 0 || options.max_uses > 100) return reject(new TypeError("Create invite options max_uses must be between 0 and 100"))
             }
-            if(typeof options.temporary !== "undefined"){
-                if(typeof options.temporary !== "boolean") return reject(new TypeError("Create invite options temporary must be a boolean"))
+            if (typeof options.temporary !== "undefined") {
+                if (typeof options.temporary !== "boolean") return reject(new TypeError("Create invite options temporary must be a boolean"))
             }
-            if(typeof options.unique !== "undefined"){
-                if(typeof options.unique !== "boolean") return reject(new TypeError("Create invite options unique must be a boolean"))
+            if (typeof options.unique !== "undefined") {
+                if (typeof options.unique !== "boolean") return reject(new TypeError("Create invite options unique must be a boolean"))
             }
             if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.post(`${this.client._ENDPOINTS.CHANNEL(this.id)}/invites`, options).then(res => {
-                return resolve(new Invite(this.client, this.client.guilds.get(this.guildId)||this.guild, res, this))
-            }).catch(e=>{
+                return resolve(new Invite(this.client, this.client.guilds.get(this.guildId) || this.guild, res, this))
+            }).catch(e => {
                 return reject(new Error(e))
             })
         })

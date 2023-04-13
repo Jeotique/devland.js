@@ -11,6 +11,7 @@ const Webhook = require('./Webhook')
 const Collector = require('./Collector')
 const DataResolver = require('../util/DateResolver')
 const Invite = require('./Invite')
+const CategoryChannel = require('./CategoryChannel')
 module.exports = class TextChannel {
     /**
      * 
@@ -357,9 +358,7 @@ module.exports = class TextChannel {
                     name: this.name,
                     type: this.type,
                     topic: this.topic,
-                    bitrate: this.bitrate,
-                    user_limit: this.userLimit,
-                    rate_limit_per_user: this.rateLimitPerUser,
+                    rate_limit_per_user: this.rate_limit_per_user,
                     position: this.position,
                     permission_overwrites: this.permission_overwrites.map(perm => {
                         return {
@@ -369,14 +368,8 @@ module.exports = class TextChannel {
                             deny: perm.deny.length < 1 ? undefined : new Permissions(perm.deny).bitfield.toString()
                         }
                     }),
-                    parent_id: this.parentId || this.parent_id,
+                    parent_id: this.parent_id,
                     nsfw: this.nsfw,
-                    rtc_region: this.rtcRegion,
-                    video_quality_mode: this.videoQualityMode,
-                    default_auto_archive_duration: this.defaultAutoArchiveDuration,
-                    default_reaction_emoji: this.defaultReactionEmoji,
-                    available_tags: this.availableTags,
-                    default_sort_order: this.defaultSortOrder,
                 }
                 if (reason) data['reason'] = reason
                 this.client.rest.post(this.client._ENDPOINTS.SERVER_CHANNEL(this.guildId), data).then(newChannel => {

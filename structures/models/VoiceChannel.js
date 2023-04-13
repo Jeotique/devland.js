@@ -8,6 +8,7 @@ const { default: Store } = require('../util/Store/Store')
 const Permissions = require('../util/BitFieldManagement/Permissions')
 const ForumTag = require('./ForumTag')
 const Invite = require('./Invite')
+const CategoryChannel = require('./CategoryChannel')
 module.exports = class VoiceChannel {
     /**
      * 
@@ -41,6 +42,7 @@ module.exports = class VoiceChannel {
         this.createdTimestamp = Utils.getTimestampFrom(this.id)
         this.createdAt = new Date(this.createdTimestamp)
         this.permission_overwrites = []
+        this.video_quality_mode = data.video_quality_mode
         this.data_is_available = true
         data.permission_overwrites?.map(perm => {
             this.permission_overwrites.push({
@@ -355,7 +357,7 @@ module.exports = class VoiceChannel {
                     topic: this.topic,
                     bitrate: this.bitrate,
                     user_limit: this.user_limit,
-                    rate_limit_per_user: this.rateLimitPerUser,
+                    rate_limit_per_user: this.rate_limit_per_user,
                     position: this.position,
                     permission_overwrites: this.permission_overwrites.map(perm => {
                         return {
@@ -365,14 +367,11 @@ module.exports = class VoiceChannel {
                             deny: perm.deny.length < 1 ? undefined : new Permissions(perm.deny).bitfield.toString()
                         }
                     }),
-                    parent_id: this.parentId || this.parent_id,
+                    parent_id: this.parent_id,
                     nsfw: this.nsfw,
-                    rtc_region: this.rtcRegion,
-                    video_quality_mode: this.videoQualityMode,
-                    default_auto_archive_duration: this.defaultAutoArchiveDuration,
-                    default_reaction_emoji: this.defaultReactionEmoji,
-                    available_tags: this.availableTags,
-                    default_sort_order: this.defaultSortOrder,
+                    rtc_region: this.rtc_region,
+                    video_quality_mode: this.video_quality_mode,
+                    
                 }
                 if (reason) data['reason'] = reason
                 this.client.rest.post(this.client._ENDPOINTS.SERVER_CHANNEL(this.guildId), data).then(newChannel => {

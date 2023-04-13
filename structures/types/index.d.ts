@@ -679,6 +679,7 @@ declare module 'devland.js' {
         readonly default_reaction_emoji: APIEmoji | Emoji | string;
         readonly default_sort_order: number;
         readonly default_forum_layout: number;
+        readonly default_auto_archive_duration: 60|1440|4320|10080;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
         send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
@@ -714,6 +715,7 @@ declare module 'devland.js' {
         readonly bitrate: voiceBitrate;
         readonly user_limit: number;
         readonly rtc_region: string;
+        readonly video_quality_mode: videoQualityMode;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
         send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
@@ -785,6 +787,10 @@ declare module 'devland.js' {
         delete_stage(reason?: string): Promise<void>;
         stage(): Promise<StageInstance | void>;
         createInvite(options?: createInviteOptions): Promise<Invite>;
+        send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
+        fetchMessages(options?: fetchMessagesOptions | string): Promise<Store<String, Message>>;
+        createCollector(options?: collectorOptions): Collector;
+        awaitMessages(options?: collectorOptions): Promise<Store<String, Message>>;
     }
     export class CategoryChannel {
         private constructor(client: Client, guild: Guild, data: object)
