@@ -17,6 +17,7 @@ declare module 'devland.js' {
         membersLifeTime: number;
         rolesLifeTime: number;
         invitesLifeTime: number;
+        presencesLifeTime: number;
     }
     type wsOptions = {
         large_threshold: number;
@@ -160,6 +161,12 @@ declare module 'devland.js' {
         channel?: TextChannel | VoiceChannel | AnnouncementChannel | Thread | StageChannel | ForumChannel
         data_is_available: boolean,
     }
+    type invalid_Presence = {
+        error: string,
+        id: string,
+        guild?: Guild,
+        data_is_available: boolean,
+    }
     type threadMembersUpdateData = {
         id: string,
         guild: Guild,
@@ -247,7 +254,7 @@ declare module 'devland.js' {
         }];
         messageReactionAllRemove: [guild: Guild|undefined, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, message: Message|undefined];
         messageReactionRemoveEmoji: [guild: Guild|undefined, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, message: Message|undefined, emoji: Emoji];
-        presenceUpdate: [presence: object];
+        presenceUpdate: [old_presence: Presence | invalid_Presence, presence: Presence];
         webhooksUpdate: [channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel];
         userTypingStart: [guild: Guild|undefined, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, user: User, member: Member|undefined, timestamp: number];
         voiceStateUpdate: [voice_state: VoiceState];
@@ -282,7 +289,7 @@ declare module 'devland.js' {
             readonly username: string;
             readonly mfa_enabled: boolean;
             readonly id: string;
-            readonly flags: number;
+            readonly flags: UserFlags;
             readonly email: string;
             readonly discriminator: string;
             readonly bot: boolean;
@@ -430,6 +437,7 @@ declare module 'devland.js' {
         readonly createdAt: Date;
         readonly members: Store<String, Member>;
         readonly roles: Store<String, Role>;
+        readonly presences: Store<String, Presence>;
         readonly premiumSubscriberRole: Role | null;
         readonly everyoneRole: Role | null;
         readonly data_is_available: boolean;
@@ -482,12 +490,16 @@ declare module 'devland.js' {
         readonly voice: { mute: boolean, deaf: boolean };
         readonly joined_at: string;
         readonly joinedTimestamp: number;
-        readonly flags: number;
+        readonly flags: MemberFlags;
         readonly communication_disabled_until: number;
         readonly avatar: string;
         readonly user: User | null;
         readonly roles: string[];
+        readonly permissions: Permissions;
+        readonly presence: Presence | null;
         readonly data_is_available: boolean;
+        private readonly cachedAt: number | undefined;
+        private readonly expireAt: number | undefined;
         send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
         edit(data: editMemberOptions): Promise<Member>;
         addRoles(roles: Role | Role[] | string | string[], reason?: string): Promise<Member>;
@@ -973,7 +985,7 @@ declare module 'devland.js' {
         private constructor(client: Client, data: object);
         private client: Client;
         readonly username: string;
-        readonly publicFlags: number;
+        readonly flags: UserFlags;
         readonly id: string;
         readonly tag: string;
         readonly discriminator: string;
@@ -1398,7 +1410,7 @@ declare module 'devland.js' {
         readonly managed: boolean;
         readonly icon: string | null;
         readonly hoist: boolean;
-        readonly flags: number;
+        //readonly flags: number;
         readonly color: number;
         readonly data_is_available: boolean;
         readonly createdTimestamp: number;
@@ -1754,4 +1766,134 @@ declare module 'devland.js' {
         DARK_BUT_NOT_BLACK = 0x2c2f33,
         NOT_QUITE_BLACK = 0x23272a,
       }
+      export class Presence {
+        constructor(client: Client, guild: Guild, data: any);
+        private readonly client: Client;
+        readonly guild?: Guild;
+        readonly guildId?: string;
+        readonly user: User;
+        readonly userId: string;
+        readonly status: "idle"|"dnd"|"online"|"offline";
+        readonly activities: Activities[];
+        readonly client_status: clientStatus;
+        readonly data_is_available: boolean;
+        private readonly cachedAt: number | undefined;
+        private readonly expireAt: number | undefined; 
+      }
+      type clientStatus = {
+        desktop?: string,
+        mobile?: string,
+        web?: string
+      }
+      type Activities = {
+        name: string,
+        id?: string,
+        type: ActivityType,
+        url?: string,
+        created_at: number,
+        timestamps: timestampActivity,
+        application_id: string,
+        details?: string,
+        state?: string,
+        emoji?: APIEmoji,
+        party?: activityParty,
+        assets?: activityAssets,
+        secrets?: activitySecrets,
+        instance?: boolean,
+        flags?: ActivityFlags,
+        buttons?: ActivityButton[],
+      }
+      type timestampActivity = {
+        start?: number,
+        end?: number
+      }
+      type activityParty = {
+        id?: string,
+        size?: [current_size: number, max_size: number]
+      }
+      type activityAssets = {
+        large_image?: string,
+        large_text?: string,
+        small_image?: string,
+        small_text?: string
+      }
+      type activitySecrets = {
+        join?: string,
+        spectate?: string,
+        match?: string
+      }
+      type ActivityButton = {
+        label: string,
+        url: string
+      }
+      export type ActivityFlagString =
+        | 'INSTANCE'
+        | 'JOIN'
+        | 'SPECTATE'
+        | 'JOIN_REQUEST'
+        | 'SYNC'
+        | 'PLAY'
+        | 'PARTY_PRIVACY_FRIENDS'
+        | 'PARTY_PRIVACY_VOICE_CHANNEL'
+        | 'EMBEDDED';
+    export type Activity_Flags = Record<ActivityFlagString, bigint>;
+    export type ActivityFlagsResolvable = BitFieldResolvable<ActivityFlagString, bigint>;
+    export class ActivityFlags extends BitField<ActivityFlagString, bigint> {
+        public any(flag: ActivityFlagsResolvable): boolean;
+        public has(flag: ActivityFlagsResolvable): boolean;
+        public missing(bits: BitFieldResolvable<ActivityFlagString, bigint>): ActivityFlagString[];
+        public serialize(): Record<ActivityFlagString, boolean>;
+        public toArray(): ActivityFlagString[];
+        public static ALL: bigint;
+        public static DEFAULT: bigint;
+        public static FLAGS: Activity_Flags;
+        public static resolve(flag?: ActivityFlagsResolvable): bigint;
+    }
+    export type MemberFlagString =
+        | 'DID_REJOIN'
+        | 'COMPLETED_ONBOARDING'
+        | 'BYPASSES_VERIFICATION'
+        | 'STARTED_ONBOARDING';
+    export type Member_Flags = Record<MemberFlagString, bigint>;
+    export type MemberFlagsResolvable = BitFieldResolvable<MemberFlagString, bigint>;
+    export class MemberFlags extends BitField<MemberFlagString, bigint> {
+        public any(flag: MemberFlagsResolvable): boolean;
+        public has(flag: MemberFlagsResolvable): boolean;
+        public missing(bits: BitFieldResolvable<MemberFlagString, bigint>): MemberFlagString[];
+        public serialize(): Record<MemberFlagString, boolean>;
+        public toArray(): MemberFlagString[];
+        public static ALL: bigint;
+        public static DEFAULT: bigint;
+        public static FLAGS: Member_Flags;
+        public static resolve(flag?: MemberFlagsResolvable): bigint;
+    }
+    export type UserFlagString =
+        | 'STAFF'
+        | 'PARTNER'
+        | 'HYPESQUAD'
+        | 'BUG_HUNTER_LEVEL_1'
+        | 'HYPESQUAD_BRAVEY'
+        | 'HYPESQUAD_BRILLANCE'
+        | 'HYPESQUAD_BALANCE'
+        | 'EARLY_SUPPORTER'
+        | 'TEAM_PSEUDO_USER'
+        | 'BUG_HUNTER_LEVEL_2'
+        | 'VERIFIED_BOT'
+        | 'VERIFIED_DEVELOPER'
+        | 'CERTIFIED_MODERATOR'
+        | 'BOT_HTTP_INTERACTIONS'
+        | 'ACTIVE_DEVELOPER';
+    export type User_Flags = Record<UserFlagString, bigint>;
+    export type UserFlagsResolvable = BitFieldResolvable<UserFlagString, bigint>;
+    export class UserFlags extends BitField<UserFlagString, bigint> {
+        public any(flag: UserFlagsResolvable): boolean;
+        public has(flag: UserFlagsResolvable): boolean;
+        public missing(bits: BitFieldResolvable<UserFlagString, bigint>): UserFlagString[];
+        public serialize(): Record<UserFlagString, boolean>;
+        public toArray(): UserFlagString[];
+        public static ALL: bigint;
+        public static DEFAULT: bigint;
+        public static FLAGS: User_Flags;
+        public static resolve(flag?: UserFlagsResolvable): bigint;
+    }
 }

@@ -1,4 +1,4 @@
-const Permissions = require("../util/Permissions/Permissions")
+const Permissions = require("../util/BitFieldManagement/Permissions")
 
 module.exports = class GuildCommand {
     constructor(options = {}) {

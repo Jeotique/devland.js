@@ -20,7 +20,10 @@ const RoleSelect = require('./structures/models/RoleSelect')
 const UserSelect = require('./structures/models/UserSelect')
 const MentionableSelect = require('./structures/models/MentionableSelect')
 const ChannelSelect = require('./structures/models/ChannelSelect')
-const Permissions = require('./structures/util/Permissions/Permissions')
+const Permissions = require('./structures/util/BitFieldManagement/Permissions')
+const ActivityFlags = require('./structures/util/BitFieldManagement/ActivityFlags')
+const MemberFlags = require('./structures/util/BitFieldManagement/MemberFlags')
+const UserFlags = require('./structures/util/BitFieldManagement/UserFlags')
 const GuildCommand = require('./structures/models/GuildCommand')
 const ForumTag = require('./structures/models/ForumTag')
 const {Store} = require('./structures/util/Store/Store')
@@ -36,12 +39,16 @@ const VoiceState = require('./structures/models/VoiceState')
 const Interaction = require('./structures/models/Interaction')
 const Modal = require('./structures/models/Modal')
 const Collector = require('./structures/models/Collector')
-const { __exportStar } = require('tslib');
+const Presence = require('./structures/models/Presence')
+//const {webhookType, ActivityType, guildVerificationLevel, guildMfaLevel, guildDefaultMessageNotifications, guildExplicitContentFilterLevel, guildBoostLevel, guildNsfwLevel, channelType, videoQualityMode, PermissionIdType, stagePrivacyLevel, ComponentsType, ButtonStyle, commandType, commandOptionsType, integrationExpireBehavior, interactionType, textInputStyle} = require('./structures/types/enum')
 module.exports = {
-    Client,
+
+    /** Functions */
     parseEmoji,
     resolveColor,
-    Colors,
+    
+    /** All classes */
+    Client,
     Attachment,
     Guild,
     Message,
@@ -63,6 +70,9 @@ module.exports = {
     MentionableSelect,
     ChannelSelect,
     Permissions,
+    ActivityFlags,
+    MemberFlags,
+    UserFlags,
     GuildCommand,
     ForumTag,
     Store,
@@ -78,4 +88,27 @@ module.exports = {
     Interaction,
     Modal,
     Collector,
+    Presence,
+
+    /** All Enumerations | Need to be fixed */
+   /* Colors,
+    webhookType,
+    ActivityType, 
+    guildVerificationLevel,
+    guildMfaLevel, 
+    guildDefaultMessageNotifications, 
+    guildExplicitContentFilterLevel, 
+    guildBoostLevel, 
+    guildNsfwLevel, 
+    channelType, 
+    videoQualityMode, 
+    PermissionIdType, 
+    stagePrivacyLevel, 
+    ComponentsType, 
+    ButtonStyle, 
+    commandType, 
+    commandOptionsType, 
+    integrationExpireBehavior, 
+    interactionType,
+    textInputStyle, */
 }

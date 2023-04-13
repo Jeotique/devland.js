@@ -11,7 +11,7 @@ module.exports = {
      */
     run: async (client, d) => {
         const data = d.d
-        let guild = client.guilds.get(data.guild_id) || await client.rest.get(client._ENDPOINTS.SERVERS(data.guild_id)).catch(e => { })
+        let guild = client.guilds.get(data.guild_id) || await client.rest.get(client._ENDPOINTS.SERVERS(data.guild_id))
         if (!guild) {
             // gestion message par mp
         } else {

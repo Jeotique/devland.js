@@ -63,7 +63,7 @@ module.exports = class Message {
         this.webhookId = data.webhook_id
         this.author = this.webhookId ? null : new User(this.client, data.author)
         this.authorId = this.webhookId ? this.webhookId : data.author.id
-        this.member = this.webhookId ? null : this.guildId ? this.member ? this.member : this.guild.members.get(this.authorId) : null
+        this.member = this.webhookId ? null : this.guildId ? data.member ? data.member : this.guild.members.get(this.authorId) : null
         this.interaction = data.interaction
         this.data_is_available = true
         if(this.interaction && this.interaction.user){
@@ -95,7 +95,10 @@ module.exports = class Message {
                 this.channelMentions.set(channelraw.id, new TextChannel(this.client, this.client.guilds.get(this.guildId)||this.guild, res))
             }
         })
-        data.attachments.map(attach => this.attachments.set(attach.id, new Attachment(this.client, this, attach)))
+        data.attachments.map(attach => {
+            const Attachment = require('./Attachment')
+            this.attachments.set(attach.id, new Attachment(this.client, this, attach))
+        })
         data.embeds.map(embed => this.embeds.push(new Embed(embed)))
         data.components.map(component => {
             this.components.push(new ActionRow(...component.components.map(op => {

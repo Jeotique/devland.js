@@ -40,6 +40,7 @@ module.exports = class Client extends EventEmitter {
      * @property {number} membersLifeTime
      * @property {number} rolesLifeTime
      * @property {number} invitesLifeTime
+     * @property {number} presencesLifeTime
      */
     /**
      * The client options
@@ -172,6 +173,10 @@ module.exports = class Client extends EventEmitter {
         if (this.options.invitesLifeTime > 0 && !this.options.guildsLifeTime) {
             this.options.invitesLifeTime = null
             process.emitWarning("The guilds cache must be enabled if you want to use the invites cache")
+        }
+        if (this.options.presencesLifeTime > 0 && !this.options.presencesLifeTime) {
+            this.options.presencesLifeTime = null
+            process.emitWarning("The guilds cache must be enabled if you want to use the presences cache")
         }
         this.rest = new RESTHandler(this)
         this.user = new Models.ClientUser(this)

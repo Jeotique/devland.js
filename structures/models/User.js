@@ -2,6 +2,7 @@ const Utils = require('../util')
 const Client = require('../client/client')
 const DmChannel = require('./DmChannel')
 const Message = require('./Message')
+const UserFlags = require('../util/BitFieldManagement/UserFlags')
 
 module.exports = class User {
     /**
@@ -18,7 +19,7 @@ module.exports = class User {
      */
         Object.defineProperty(this, 'client', { value: client })
         this.username = data.username
-        this.publicFlags = data.public_flags
+        this.flags = new UserFlags(BigInt(data.public_flags))
         this.id = data.id
         this.tag = `${data.username}#${data.discriminator}`
         this.discriminator = data.discriminator

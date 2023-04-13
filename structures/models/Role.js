@@ -1,6 +1,6 @@
 const Guild = require('./Guild')
 const Client = require('../client/client')
-const Permissions = require('../util/Permissions/Permissions')
+const Permissions = require('../util/BitFieldManagement/Permissions')
 const Utils = require('../util/index')
 
 module.exports = class Role {
@@ -20,7 +20,7 @@ module.exports = class Role {
         this.managed = data.managed
         this.icon = data.icon
         this.hoist = data.hoist
-        this.flags = data.flags
+        //this.flags = data.flags
         this.color = data.color
         this.createdTimestamp = Utils.getTimestampFrom(data.id)
         this.createdAt = new Date(this.createdTimestamp)

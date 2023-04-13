@@ -58,6 +58,7 @@ module.exports = {
             checkUsersCache()
             checkMessagesCache()
             checkChannelsCache()
+            checkPresencesCache()
         }, 4000)
         async function checkRoleCache() {
             if (typeof client.options.guildsLifeTime !== 'number') return
@@ -83,6 +84,27 @@ module.exports = {
                     if (Date.now() < member.expireAt) return
                     else guild.members.delete(member.id)
                     client.emit('debug', `(${member.id}) Member removed from the cache`)
+                    client.guilds.set(guild.id, guild)
+                })
+            })
+        }
+        async function checkPresencesCache(){
+            if (typeof client.options.guildsLifeTime !== 'number') return
+            if (client.options.guildsLifeTime < 1) return
+            if (typeof client.options.presencesLifeTime !== 'number') return
+            if (client.options.presencesLifeTime < 1) return
+            client.guilds.map(guild => {
+                guild.presences.map(presence => {
+                    if (Date.now() < presence.expireAt) return
+                    else {
+                        guild.presences.delete(presence.user?.id)
+                        let member = guild.members.get(presence.user?.id)
+                        if(member){
+                            member.presence = null
+                            guild.members.set(presence.user?.id, member)
+                        }
+                    }
+                    client.emit('debug', `(${presence.user?.id}) Presence removed from the cache`)
                     client.guilds.set(guild.id, guild)
                 })
             })

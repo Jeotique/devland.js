@@ -12,6 +12,7 @@ module.exports = {
 
         let guild = client.guilds.get(data.id)
         client.guilds.delete(data.id)
+        client.guildsIds = client.guildsIds.filter(id => id !== data.id)
         if(guild) {
             /**
              * Emitted whenever a guild is leaved

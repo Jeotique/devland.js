@@ -15,6 +15,7 @@ class APIError {
             case 405: this.message = "Method not allowed, contact the support"; break;
             case 429: this.message = "Too many requests"; break;
             case 502: this.message = "Gateway unavailable, wait a bit and retry"; break;
+            default: this.message = "Server error"; break;
         }
     }
 

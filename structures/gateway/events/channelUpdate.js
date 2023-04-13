@@ -9,12 +9,27 @@ module.exports = {
      */
     run: async (client, d) => {
         const data = d.d
-        let guild = client.guilds.get(data.guild_id) || await client.rest.get(client._ENDPOINTS.SERVERS(data.guild_id)).catch(e => { })
+        let guild = client.guilds.get(data.guild_id) || await client.rest.get(client._ENDPOINTS.SERVERS(data.guild_id))
         if (!guild) {
             // gestion message par mp
         } else {
-            if(!(guild instanceof Guild)) guild = new Guild(client, guild)
+            setTimeout(async() => {
+            if (!(guild instanceof Guild)) guild = new Guild(client, guild)
             let oldChannel = { error: "Enable the channels cache to get the old channel data", id: data.id, data_is_available: false }
+            if (data.type !== 4) {
+                if (typeof client.options.channelsLifeTime === "number" && client.options.channelsLifeTime > 0) {
+                    if (data.parent_id) {
+                        let category = client.categoryChannels.get(data.parent_id)
+                        category.childrens.push(data.id)
+                        client.categoryChannels.set(category.id, category)
+                    } else {
+                        client.categoryChannels.filter(c => c.childrens.includes(data.id)).map(category => {
+                            category.childrens = category.childrens.filter(id => id !== data.id)
+                            client.categoryChannels.set(category.id, category)
+                        })
+                    }
+                }
+            }
             if (data.type === 0) { // text channel
                 let text = new TextChannel(client, guild, data)
                 if (client.textChannels.has(text.id)) oldChannel = client.textChannels.get(text.id)
@@ -61,7 +76,12 @@ module.exports = {
                 }
             } else if (data.type === 4) { // category channel
                 let category = new CategoryChannel(client, guild, data)
+                category.childrens = []
                 if (client.categoryChannels.has(category.id)) oldChannel = client.categoryChannels.get(category.id)
+                let allChannels = await client.rest.get(client._ENDPOINTS.SERVER_CHANNEL(data.guild_id))
+                if (allChannels) {
+                    allChannels.filter(child => child.parent_id === data.id).map(child => category.childrens.push(child.id))
+                }
                 /**
                 * Emitted whenever a channel is stage
                 * @event client#channelUpdate
@@ -148,6 +168,7 @@ module.exports = {
                     client.forumChannels.set(forum.id, forum)
                 }
             }
-        }
+        }, 350)
+    }
     }
 }

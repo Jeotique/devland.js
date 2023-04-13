@@ -10,7 +10,7 @@ module.exports = {
      */
     run: async (client, d) => {
         const data = d.d
-        let guild = client.guilds.get(data.guild_id) || await client.rest.get(client._ENDPOINTS.SERVERS(data.guild_id)).catch(e => { })
+        let guild = client.guilds.get(data.guild_id) || await client.rest.get(client._ENDPOINTS.SERVERS(data.guild_id))
         if (!guild) {
             // gestion message par mp
         } else {
@@ -22,36 +22,71 @@ module.exports = {
                 if (data.type === 0) { // text channel
                     let channel = client.textChannels.get(data.id)
                     channel.guild = guild
+                    if(channel.parent_id){
+                        let category = client.categoryChannels.get(channel.parent_id)
+                        if(category) {
+                            category.childrens = category.childrens.filter(id => id !== channel.id)
+                            client.categoryChannels.set(category.id, category)
+                        }
+                    }
                     client.emit('channelDelete', channel)
                     client.emit('channelDeleteText', channel)
                     client.textChannels.delete(data.id)
                 } else if (data.type === 2) { // voice channel
                     let channel = client.voiceChannels.get(data.id)
                     channel.guild = guild
+                    if(channel.parent_id){
+                        let category = client.categoryChannels.get(channel.parent_id)
+                        if(category) {
+                            category.childrens = category.childrens.filter(id => id !== channel.id)
+                            client.categoryChannels.set(category.id, category)
+                        }
+                    }
                     client.emit('channelDelete', channel)
                     client.emit('channelDeleteVoice', channel)
                     client.voiceChannels.delete(data.id)
                 } else if (data.type === 4) { // category channel
                     let channel = client.categoryChannels.get(data.id)
-                    channel.guild = guild
-                    client.emit('channelDelete', channel)
-                    client.emit('channelDeleteCategory', channel)
+                    let newChannel = new CategoryChannel(client, guild, channel)
+                    client.emit('channelDelete', newChannel)
+                    client.emit('channelDeleteCategory', newChannel)
                     client.categoryChannels.delete(data.id)
                 } else if (data.type === 5){ // announcement channel
                     let channel = client.announcementChannels.get(data.id)
                     channel.guild = guild
+                    if(channel.parent_id){
+                        let category = client.categoryChannels.get(channel.parent_id)
+                        if(category) {
+                            category.childrens = category.childrens.filter(id => id !== channel.id)
+                            client.categoryChannels.set(category.id, category)
+                        }
+                    }
                     client.emit('channelDelete', channel)
                     client.emit('channelDeleteAnnouncement', channel)
                     client.announcementChannels.delete(data.id)
                 } else if (data.type === 13){ // stage channel
                     let channel = client.stageChannels.get(data.id)
                     channel.guild = guild
+                    if(channel.parent_id){
+                        let category = client.categoryChannels.get(channel.parent_id)
+                        if(category) {
+                            category.childrens = category.childrens.filter(id => id !== channel.id)
+                            client.categoryChannels.set(category.id, category)
+                        }
+                    }
                     client.emit('channelDelete', channel)
                     client.emit('channelDeleteStage', channel)
                     client.stageChannels.delete(data.id)
                 } else if (data.type === 15){ // forum channel
                     let channel = client.forumChannels.get(data.id)
                     channel.guild = guild
+                    if(channel.parent_id){
+                        let category = client.categoryChannels.get(channel.parent_id)
+                        if(category) {
+                            category.childrens = category.childrens.filter(id => id !== channel.id)
+                            client.categoryChannels.set(category.id, category)
+                        }
+                    }
                     client.emit('channelDelete', channel)
                     client.emit('channelDeleteForum', channel)
                     client.forumChannels.delete(data.id)

@@ -10,11 +10,20 @@ module.exports = {
      */
     run: async (client, d) => {
         const data = d.d
-        let guild = client.guilds.get(data.guild_id) || await client.rest.get(client._ENDPOINTS.SERVERS(data.guild_id)).catch(e => { })
+        let guild = client.guilds.get(data.guild_id) || await client.rest.get(client._ENDPOINTS.SERVERS(data.guild_id))
         if (!guild) {
             // gestion message par mp
         } else {
             if(!(guild instanceof Guild)) guild = new Guild(client, guild)
+            if (typeof client.options.channelsLifeTime === "number" && client.options.channelsLifeTime > 0) {
+                if(data.parent_id){
+                    let category = client.categoryChannels.get(data.parent_id)
+                    if(category){
+                        category.childrens.push(data.id)
+                        client.categoryChannels.set(category.id, category)
+                    }
+                }
+            }
             if (data.type === 0) { // text channel
                 let text = new TextChannel(client, guild, data)
                 /**

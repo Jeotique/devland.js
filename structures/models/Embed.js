@@ -59,6 +59,7 @@ module.exports = class Embed {
         if(typeof this.color !== "undefined") this.color = Utils.resolveColor(this.color)
         if(typeof this.image === 'string') this.image = {url: this.image}
         if(typeof this.thumbnail === 'string') this.thumbnail = {url: this.thumbnail}
+        if(typeof this.timestamp !== "undefined") this.timestamp = this.timestamp?.toString()
         for(const [key, value] of Object.entries(this)) packed[key] = value
         return packed
     }

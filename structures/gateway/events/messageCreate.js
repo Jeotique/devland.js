@@ -1,5 +1,5 @@
 const Client = require('../../client/client')
-const { Guild, TextChannel, Message, DmChannel, User, Member } = require('../../models')
+const { Guild, TextChannel, Message, DmChannel, User, Member, VoiceChannel, AnnouncementChannel, Thread, StageChannel, ForumChannel } = require('../../models')
 module.exports = {
     name: 'message',
     /**
@@ -9,7 +9,7 @@ module.exports = {
      */
     run: async (client, d) => {
         const data = d.d
-        let guild = client.guilds.get(data.guild_id) || await client.rest.get(client._ENDPOINTS.SERVERS(data.guild_id)).catch(e => { })
+        let guild = client.guilds.get(data.guild_id) || await client.rest.get(client._ENDPOINTS.SERVERS(data.guild_id))
         if (!guild) {
             let channel = await client.rest.get(client._ENDPOINTS.CHANNEL(data.channel_id)).catch(e => { })
             if (!channel) return
@@ -30,8 +30,14 @@ module.exports = {
             }
         } else {
             if(!(guild instanceof Guild)) guild = new Guild(client, guild)
-            let channel = await client.rest.get(client._ENDPOINTS.CHANNEL(data.channel_id)).catch(e => { })
-            if (!channel) return
+            let channel = await client.rest.get(client._ENDPOINTS.CHANNEL(data.channel_id)).catch(e => {  })
+            if (!channel) return 
+            if (channel.type === 0) channel = new TextChannel(client, guild, channel)
+            else if (channel.type === 2) channel = new VoiceChannel(client, guild, channel)
+            else if (channel.type === 5) channel = new AnnouncementChannel(client, guild, channel)
+            else if (channel.type === 10 || channel.type === 11 || channel.type === 12) channel = new Thread(client, guild, channel)
+            else if (channel.type === 13) channel = new StageChannel(client, guild, channel)
+            else if (channel.type === 15) channel = new ForumChannel(client, guild, channel)
             let member;
             if(!data.webhook_id) member = guild.members.get(data.author?.id) || await client.rest.get(client._ENDPOINTS.MEMBERS(guild.id, data.author?.id))
             let user;
@@ -40,7 +46,7 @@ module.exports = {
             if(user && !member.user) member.user = user
             if(member && !(member instanceof Member)) member = new Member(client, guild, member)
             data.member = member
-            let message = new Message(client, guild, new TextChannel(client, guild, channel), data)
+            let message = new Message(client, guild, channel, data)
             /**
              * Emitted whenever a message is sended
              * @event client#message

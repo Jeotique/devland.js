@@ -1,4 +1,5 @@
-const Permissions = require('../util/Permissions/Permissions')
+const MemberFlags = require('../util/BitFieldManagement/MemberFlags')
+const Permissions = require('../util/BitFieldManagement/Permissions')
 const Guild = require('./Guild')
 const Role = require('./Role')
 const StageChannel = require('./StageChannel')
@@ -20,7 +21,7 @@ module.exports = class Member {
         }
         this.joined_at = data.joined_at
         this.joinedTimestamp = new Date(data.joinedTimestamp).getTime()
-        this.flags = data.flags
+        this.flags = new MemberFlags(BigInt(data.flags))
         this.communication_disabled_until = data.communication_disabled_until
         this.avatar = data.avatar
         this.roles = data.roles
@@ -30,6 +31,7 @@ module.exports = class Member {
         this.permissions = (this.id === this.guild.ownerId) ? new Permissions("ADMINISTRATOR") : this.roles.length > 0 && this.guild.roles.size > 0 ? new Permissions(this.roles.map(role_id => {
             return this.guild.roles.get(role_id)?.permissions.toArray()
         })) : new Permissions()
+        this.presence = guild.presences.get(this.id) || null
     }
 
     async send(options) {

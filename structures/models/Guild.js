@@ -12,7 +12,7 @@ const StageChannel = require('./StageChannel')
 const ForumChannel = require('./ForumChannel')
 const Member = require('./Member')
 const Role = require('./Role')
-const Permissions = require('../util/Permissions/Permissions')
+const Permissions = require('../util/BitFieldManagement/Permissions')
 const Constants = require('../util/Constants')
 const AuditLogs = require('./AuditLogs')
 const Ban = require('./Ban')
@@ -63,6 +63,7 @@ module.exports = class Guild {
         this.members = new Store()
         this.roles = new Store()
         this.invites = new Store()
+        this.presences = new Store()
         this.data_is_available = true
 
         if (this.icon) {
@@ -558,6 +559,7 @@ module.exports = class Guild {
             if (user instanceof Member) user = user.id
             if (typeof user !== "string") return reject(new TypeError("The user must be a string or a valid User instance"))
             this.client.rest.get(this.client._ENDPOINTS.MEMBERS(this.id, user)).then(res => {
+                console.log(res)
                 let member = new Member(this.client, this, res)
                 resolve(member)
                 if (typeof this.client.options.membersLifeTime === "number" && this.client.options.membersLifeTime > 0) {

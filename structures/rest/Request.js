@@ -1,4 +1,4 @@
-const got = require('got');
+const got = require('custom-got');
 const MultiStream = require('multistream');
 const URL = require('url')
 module.exports = class Request {

@@ -1,6 +1,7 @@
 const Client = require('../../client/client')
 const Models = require('../../models')
 const Member = require('../../models/Member')
+const Presence = require('../../models/Presence')
 const Role = require('../../models/Role')
 module.exports = {
     name: 'guildCreate',
@@ -13,8 +14,9 @@ module.exports = {
         const data = d.d
         if (client.guilds.has(data.id) && client.guilds.get(data.id).ready === false) {
             data.ready = true
+
             let guild = new Models.Guild(client, data)
-            if(typeof client.options.rolesLifeTime === "number" && client.options.rolesLifeTime > 0) {
+            if (typeof client.options.rolesLifeTime === "number" && client.options.rolesLifeTime > 0) {
                 data.roles.map(role_data => {
                     let role = new Role(client, guild, role_data)
                     role.cachedAt = Date.now()
@@ -30,7 +32,38 @@ module.exports = {
                     client.users.set(user.id, user)
                 })
             }
-            if(typeof client.options.membersLifeTime === "number" && client.options.membersLifeTime > 0) {
+            if (typeof client.options.presencesLifeTime === "number" && client.options.presencesLifeTime > 0) {
+                data.members.map(member => {
+                    let user = client.users.get(member.user.id) || new Models.User(client, member.user)
+                    let presence_data = data.presences.find(p => p.user?.id === user.id)
+                    if (!presence_data) {
+                        let raw_data = {
+                            user: user
+                        }
+                        let presence = new Presence(client, guild, raw_data)
+                        presence.cachedAt = Date.now()
+                        presence.expireAt = Date.now() + client.options.presencesLifeTime
+                        if (guild.members.has(user.id)) {
+                            let g_member = guild.members.get(user.id)
+                            g_member.presence = presence
+                            guild.members.set(user.id, g_member)
+                        }
+                        guild.presences.set(user.id, presence)
+                    } else {
+                        presence_data.user = user
+                        let presence = new Presence(client, guild, presence_data)
+                        presence.cachedAt = Date.now()
+                        presence.expireAt = Date.now() + client.options.presencesLifeTime
+                        if (guild.members.has(user.id)) {
+                            let g_member = guild.members.get(user.id)
+                            g_member.presence = presence
+                            guild.members.set(user.id, g_member)
+                        }
+                        guild.presences.set(user.id, presence)
+                    }
+                })
+            }
+            if (typeof client.options.membersLifeTime === "number" && client.options.membersLifeTime > 0) {
                 data.members.map(member_data => {
                     let member = new Member(client, guild, member_data)
                     member.cachedAt = Date.now()
@@ -53,7 +86,7 @@ module.exports = {
                 })
                 data.channels.filter(channel => channel.type === 4).map(channel => {
                     let category = new Models.CategoryChannel(client, guild, channel)
-                    data.channels.filter(child => child.parent_id === category.id || child.parentId === category.id).map(child => category.childrens.push(child))
+                    data.channels.filter(child => child.parent_id === category.id || child.parentId === category.id).map(child => category.childrens.push(child.id))
                     category.cachedAt = Date.now()
                     category.expireAt = Date.now() + client.options.channelsLifeTime
                     client.categoryChannels.set(category.id, category)
@@ -95,8 +128,10 @@ module.exports = {
             client.guilds.set(guild.id, guild)
         } else {
             data.ready = true
+            console.log(data.presences)
+            client.guildsIds.push(data.id)
             let guild = new Models.Guild(client, data)
-            if(typeof client.options.rolesLifeTime === "number" && client.options.rolesLifeTime > 0) {
+            if (typeof client.options.rolesLifeTime === "number" && client.options.rolesLifeTime > 0) {
                 data.roles.map(role_data => {
                     let role = new Role(client, guild, role_data)
                     role.cachedAt = Date.now()
@@ -112,7 +147,38 @@ module.exports = {
                     client.users.set(user.id, user)
                 })
             }
-            if(typeof client.options.membersLifeTime === "number" && client.options.membersLifeTime > 0) {
+            if (typeof client.options.presencesLifeTime === "number" && client.options.presencesLifeTime > 0) {
+                data.members.map(member => {
+                    let user = client.users.get(member.user.id) || new Models.User(client, member.user)
+                    let presence_data = data.presences.find(p => p.user?.id === user.id)
+                    if (!presence_data) {
+                        let raw_data = {
+                            user: user
+                        }
+                        let presence = new Presence(client, guild, raw_data)
+                        presence.cachedAt = Date.now()
+                        presence.expireAt = Date.now() + client.options.presencesLifeTime
+                        if (guild.members.has(user.id)) {
+                            let g_member = guild.members.get(user.id)
+                            g_member.presence = presence
+                            guild.members.set(user.id, g_member)
+                        }
+                        guild.presences.set(user.id, presence)
+                    } else {
+                        presence_data.user = user
+                        let presence = new Presence(client, guild, presence_data)
+                        presence.cachedAt = Date.now()
+                        presence.expireAt = Date.now() + client.options.presencesLifeTime
+                        if (guild.members.has(user.id)) {
+                            let g_member = guild.members.get(user.id)
+                            g_member.presence = presence
+                            guild.members.set(user.id, g_member)
+                        }
+                        guild.presences.set(user.id, presence)
+                    }
+                })
+            }
+            if (typeof client.options.membersLifeTime === "number" && client.options.membersLifeTime > 0) {
                 data.members.map(member_data => {
                     let member = new Member(client, guild, member_data)
                     member.cachedAt = Date.now()
@@ -135,7 +201,7 @@ module.exports = {
                 })
                 data.channels.filter(channel => channel.type === 4).map(channel => {
                     let category = new Models.CategoryChannel(client, guild, channel)
-                    data.channels.filter(child => child.parent_id === category.id || child.parentId === category.id).map(child => category.childrens.push(child))
+                    data.channels.filter(child => child.parent_id === category.id || child.parentId === category.id).map(child => category.childrens.push(child.id))
                     category.cachedAt = Date.now()
                     category.expireAt = Date.now() + client.options.channelsLifeTime
                     client.categoryChannels.set(category.id, category)

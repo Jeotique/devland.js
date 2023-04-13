@@ -1,4 +1,5 @@
 const Client = require('../client/client')
+const UserFlags = require('../util/BitFieldManagement/UserFlags')
 
 module.exports = class ClientUser {
   constructor(client, data = {}) {
@@ -31,7 +32,7 @@ module.exports = class ClientUser {
     /**
      * @type {number}
      */
-    this.flags = data.flags
+    this.flags = new UserFlags(BigInt(data.flags??0))
     /**
      * @type {string}
      */
@@ -52,6 +53,10 @@ module.exports = class ClientUser {
      * @type {string}
      */
     this.tag = data.tag
+
+    if(this.avatar){
+      this.avatar = `https://cdn.discordapp.com/avatars/${this.id}/${this.avatar}${this.avatar.startsWith('a_') ? '.gif' : '.png'}?size=512`
+  }
   }
 
   setPresence(presence) {
