@@ -21,7 +21,7 @@ module.exports = class User {
      */
         Object.defineProperty(this, 'client', { value: client })
         this.username = data.username
-        this.flags = new UserFlags(BigInt(data.public_flags))
+        this.flags = new UserFlags(BigInt(data.public_flags??0))
         this.id = data.id
         this.tag = `${data.username}#${data.discriminator}`
         this.discriminator = data.discriminator
