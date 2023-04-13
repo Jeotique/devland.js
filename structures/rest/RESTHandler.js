@@ -29,22 +29,42 @@ module.exports = class RESTHandler {
                 if (res.ok || res.complete) {
                     try {
                         res.promise.resolve(JSON.parse(res.body))
-                    } catch (err) { try{
-                        let test = JSON.stringify(res.body)
-                        res.promise.resolve(JSON.parse(test))
-                    }catch(errr) {res.promise.resolve(res.body) }}
+                    } catch (err) {
+                        try {
+                            let test = JSON.stringify(res.body)
+                            res.promise.resolve(JSON.parse(test))
+                        } catch (errr) { res.promise.resolve(res.body) }
+                    }
                     return resolve();
                 } else {
-                    //  console.log(res)
-                    //console.log(res.headers["retry_after"])
                     if (res.status === 429 || res.statusCode === 429) {
                         this._ratelimits.unshift(res.req);
-                        setTimeout(() => resolve(), res.headers["retry_after"] * 1000);
+                        setTimeout(() => resolve(), res.headers["retry_after"] || res.headers["Retry-After"]);
+                        try {
+                            this.client.emit('debug',
+                                `Rate limit hit
+                        Message : ${res?.body?.message || res.headers["message"]}
+                        Global : ${res?.body?.global || res.headers["global"]}
+                        Method : ${req.method}
+                        Path : ${req.endpoint}
+                        Retry in : ${res.headers["retry_after"]}
+                        Code : ${res?.body?.code || res.headers["code"]}`)
+                        } catch (err) { }
                         return;
                     }
-                    if (res.status === 200 || res.statusCode === 200) return res.promise.resolve(res?.body)
-                    let errorMessage = new APIError(null, null, req.method, res.statusCode, null, null).get()
-                    res.promise.reject(new Error(errorMessage))
+                    if (res.status === 200 || res.statusCode === 200) {
+                        try {
+                            res.promise.resolve(JSON.parse(res?.body))
+                        } catch (err) {
+                            try {
+                                let test = JSON.stringify(res?.body)
+                                res.promise.resolve(JSON.parse(test))
+                            } catch (errr) { res.promise.resolve(res?.body) }
+                        }
+                    } else {
+                        let errorMessage = new APIError(null, null, req.method, res.statusCode, null, null).get()
+                        res.promise.reject(new Error(errorMessage))
+                    }
                 }
             });
         });

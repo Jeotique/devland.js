@@ -367,7 +367,7 @@ module.exports = class VoiceChannel {
                             deny: perm.deny.length < 1 ? undefined : new Permissions(perm.deny).bitfield.toString()
                         }
                     }),
-                    parent_id: this.parent_id,
+                    parent_id: this.parent_id ? this.client.options.channelsLifeTime ? this.client.categoryChannels.has(this.parent_id) ? this.parent_id : undefined : this.parent_id : undefined,
                     nsfw: this.nsfw,
                     rtc_region: this.rtc_region,
                     video_quality_mode: this.video_quality_mode,
