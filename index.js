@@ -24,6 +24,7 @@ const Permissions = require('./structures/util/BitFieldManagement/Permissions')
 const ActivityFlags = require('./structures/util/BitFieldManagement/ActivityFlags')
 const MemberFlags = require('./structures/util/BitFieldManagement/MemberFlags')
 const UserFlags = require('./structures/util/BitFieldManagement/UserFlags')
+const MessageFlags = require('./structures/util/BitFieldManagement/MessageFlags')
 const GuildCommand = require('./structures/models/GuildCommand')
 const ForumTag = require('./structures/models/ForumTag')
 const {Store} = require('./structures/util/Store/Store')
@@ -40,7 +41,7 @@ const Interaction = require('./structures/models/Interaction')
 const Modal = require('./structures/models/Modal')
 const Collector = require('./structures/models/Collector')
 const Presence = require('./structures/models/Presence')
-//const {webhookType, ActivityType, guildVerificationLevel, guildMfaLevel, guildDefaultMessageNotifications, guildExplicitContentFilterLevel, guildBoostLevel, guildNsfwLevel, channelType, videoQualityMode, PermissionIdType, stagePrivacyLevel, ComponentsType, ButtonStyle, commandType, commandOptionsType, integrationExpireBehavior, interactionType, textInputStyle} = require('./structures/types/enum')
+const {webhookType, ActivityType, guildVerificationLevel, guildMfaLevel, guildDefaultMessageNotifications, guildExplicitContentFilterLevel, guildBoostLevel, guildNsfwLevel, channelType, videoQualityMode, PermissionIdType, stagePrivacyLevel, ComponentsType, ButtonStyle, commandType, commandOptionsType, integrationExpireBehavior, interactionType, textInputStyle} = require('./structures/types/enum')
 module.exports = {
 
     /** Functions */
@@ -73,6 +74,7 @@ module.exports = {
     ActivityFlags,
     MemberFlags,
     UserFlags,
+    MessageFlags,
     GuildCommand,
     ForumTag,
     Store,
@@ -90,8 +92,8 @@ module.exports = {
     Collector,
     Presence,
 
-    /** All Enumerations | Need to be fixed */
-   /* Colors,
+    /** All EnumerationsZ */
+    Colors,
     webhookType,
     ActivityType, 
     guildVerificationLevel,
@@ -110,5 +112,5 @@ module.exports = {
     commandOptionsType, 
     integrationExpireBehavior, 
     interactionType,
-    textInputStyle, */
+    textInputStyle, 
 }

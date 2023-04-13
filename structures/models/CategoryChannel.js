@@ -7,6 +7,9 @@ const ActionRow = require('./ActionRow')
 const { default: Store } = require('../util/Store/Store')
 const Permissions = require('../util/BitFieldManagement/Permissions')
 const ForumTag = require('./ForumTag')
+const AnnouncementChannel = require('./AnnouncementChannel')
+const StageChannel = require('./StageChannel')
+const ForumChannel = require('./ForumChannel')
 module.exports = class CategoryChannel {
     /**
      * 
@@ -250,9 +253,9 @@ module.exports = class CategoryChannel {
     async fetchTextChannels() {
         return new Promise(async (resolve, reject) => {
             this.client.rest.get(this.client._ENDPOINTS.SERVER_CHANNEL(this.id)).then(res => {
-                res = res.filter(channel => channel.type === 0 || channel.parent_id === this.id || channel.parentId === this.id)
+                res = res.filter(channel => channel.type === 0 && (channel.parent_id === this.id))
                 let collect = new Store()
-                res.map(channel => collect.set(channel.id, new TextChannel(this.client, this.client.guilds.get(this.id) || this, channel)))
+                res.map(channel => collect.set(channel.id, new TextChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, channel)))
                 return resolve(collect)
             }).catch(e => {
                 return reject(new Error(e))
@@ -263,9 +266,48 @@ module.exports = class CategoryChannel {
     async fetchVoiceChannels() {
         return new Promise(async (resolve, reject) => {
             this.client.rest.get(this.client._ENDPOINTS.SERVER_CHANNEL(this.id)).then(res => {
-                res = res.filter(channel => channel.type === 2 || channel.parent_id === this.id || channel.parentId === this.id)
+                res = res.filter(channel => channel.type === 2 && (channel.parent_id === this.id))
                 let collect = new Store()
-                res.map(channel => collect.set(channel.id, new VoiceChannel(this.client, this.client.guilds.get(this.id) || this, channel)))
+                res.map(channel => collect.set(channel.id, new VoiceChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, channel)))
+                return resolve(collect)
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async fetchAnnouncementChannels() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.get(this.client._ENDPOINTS.SERVER_CHANNEL(this.id)).then(res => {
+                res = res.filter(channel => channel.type === 5 && (channel.parent_id === this.id))
+                let collect = new Store()
+                res.map(channel => collect.set(channel.id, new AnnouncementChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, channel)))
+                return resolve(collect)
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async fetchStageChannels() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.get(this.client._ENDPOINTS.SERVER_CHANNEL(this.id)).then(res => {
+                res = res.filter(channel => channel.type === 13 && (channel.parent_id === this.id))
+                let collect = new Store()
+                res.map(channel => collect.set(channel.id, new StageChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, channel)))
+                return resolve(collect)
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async fetchForumChannels() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.get(this.client._ENDPOINTS.SERVER_CHANNEL(this.id)).then(res => {
+                res = res.filter(channel => channel.type === 15 && (channel.parent_id === this.id))
+                let collect = new Store()
+                res.map(channel => collect.set(channel.id, new ForumChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, channel)))
                 return resolve(collect)
             }).catch(e => {
                 return reject(new Error(e))

@@ -128,7 +128,6 @@ module.exports = {
             client.guilds.set(guild.id, guild)
         } else {
             data.ready = true
-            console.log(data.presences)
             client.guildsIds.push(data.id)
             let guild = new Models.Guild(client, data)
             if (typeof client.options.rolesLifeTime === "number" && client.options.rolesLifeTime > 0) {

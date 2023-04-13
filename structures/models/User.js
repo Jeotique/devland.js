@@ -3,6 +3,8 @@ const Client = require('../client/client')
 const DmChannel = require('./DmChannel')
 const Message = require('./Message')
 const UserFlags = require('../util/BitFieldManagement/UserFlags')
+const Embed = require('./Embed')
+const ActionRow = require('./ActionRow')
 
 module.exports = class User {
     /**
@@ -30,7 +32,7 @@ module.exports = class User {
         this.createdTimestamp = Utils.getTimestampFrom(this.id)
         this.createdAt = new Date(this.createdTimestamp)
 
-        if(this.avatar){
+        if (this.avatar) {
             this.avatar = `https://cdn.discordapp.com/avatars/${this.id}/${this.avatar}${this.avatar.startsWith('a_') ? '.gif' : '.png'}?size=512`
         }
     }
@@ -149,16 +151,22 @@ module.exports = class User {
                 }
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
-                if (typeof options['embeds'] === 'object') options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
-                data['embeds'] = options['embeds']
+                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
                 data['tts'] = options['tts']
                 data['nonce'] = options['nonce']
                 data['allowed_mentions'] = options['allowedMentions']
+                if (typeof data['allowed_mentions'] !== 'undefined') {
+                    if (!Array.isArray(data['allowed_mentions'])) data['allowed_mentions'] = undefined
+                    else {
+                        data['allowed_mentions'] = { parse: [...options['allowedMentions']] }
+                    }
+                }
                 data['components'] = []
                 options['components']?.map(comp => {
                     if (comp instanceof ActionRow) data['components'].push(comp.pack())
                     else return reject(new TypeError("Invalid component, must be a ActionRow instance"))
                 })
+                data['files'] = await Utils.lookForFiles(options.files)
                 let toTestCustomId = []
                 let alrSeen = {}
                 data['components']?.map(ar => ar?.components.map(comp => toTestCustomId.push(comp)))
@@ -195,12 +203,12 @@ module.exports = class User {
         })
     }
 
-    async fetchBanner(size){
-        return new Promise(async(resolve, reject) => {
-            if(typeof size !== "number") size = 1024
-            let user = await this.client.rest.get(this.client._ENDPOINTS.USER(this.id)).catch(e=>{return reject(new Error(e))})
-            if(!user.banner) return resolve(null)
-            else return resolve(`https://cdn.discordapp.com/banners/${this.id}/${user.banner}${banner.startsWith('a_')?'.gif':'.png'}?size=${size}`)
+    async fetchBanner(size) {
+        return new Promise(async (resolve, reject) => {
+            if (typeof size !== "number") size = 1024
+            let user = await this.client.rest.get(this.client._ENDPOINTS.USER(this.id)).catch(e => { return reject(new Error(e)) })
+            if (!user.banner) return resolve(null)
+            else return resolve(`https://cdn.discordapp.com/banners/${this.id}/${user.banner}${banner.startsWith('a_') ? '.gif' : '.png'}?size=${size}`)
         })
     }
 }

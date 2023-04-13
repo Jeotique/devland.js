@@ -49,8 +49,9 @@ threadsLifeTime: milliseconds, //will unlock bot.threadChannels
 membersLifeTime: milliseconds, //will unlock <guild>.members
 rolesLifeTime: milliseconds, //will unlock <guild>.roles
 invitesLifeTime: milliseconds //will unlock <guild>.invites
+presencesLifeTime: milliseconds //will unlock <guild>.presences and <member>.presence
 
-// warning, for the members, roles & invites cache the guilds cache must be enabled too
+// warning, for the members, roles, presences, & invites cache the guilds cache must be enabled too
 ```
 **All ws options available for the client :**
 ```js

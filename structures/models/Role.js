@@ -2,6 +2,7 @@ const Guild = require('./Guild')
 const Client = require('../client/client')
 const Permissions = require('../util/BitFieldManagement/Permissions')
 const Utils = require('../util/index')
+const DataResolver = require('../util/DateResolver')
 
 module.exports = class Role {
     constructor(client, guild, data) {
@@ -51,6 +52,7 @@ module.exports = class Role {
                     options.unicode_emoji = options.unicode_emoji.id ? `${options.unicode_emoji.name}` : `<${options.unicode_emoji.animated ? "a" : ""}:${options.unicode_emoji.name}:${options.unicode_emoji.id}>`
                 }
                 if (typeof options.unicode_emoji !== "string") return reject(new TypeError("Edit role options unicode_emoji must be a string"))
+                if (!this.guild.features.has("ROLE_ICONS")) options.unicode_emoji = undefined
             }
             if (typeof options.mentionable !== "undefined") {
                 if (typeof options.mentionable !== "boolean") return reject(new TypeError("Edit role options mentionable must be a boolean"))
@@ -58,6 +60,8 @@ module.exports = class Role {
             if (typeof options.position !== "undefined") {
                 if (typeof options.position !== "number") return reject(new TypeError("Edit role options position must be a number"))
             }
+            if (typeof options.icon !== "undefined") options.icon = await DataResolver.resolveImage(options.icon)
+            if (!this.guild.features.has("ROLE_ICONS")) options.icon = undefined
             if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.patch(this.client._ENDPOINTS.ROLES(this.guildId, this.id), options).then(res => {
                 let role = new Role(this.client, this.client.guilds.get(this.id) || this, res)
@@ -89,15 +93,15 @@ module.exports = class Role {
         })
     }
 
-    async delete(reason){
-        return new Promise(async(resolve, reject) => {
+    async delete(reason) {
+        return new Promise(async (resolve, reject) => {
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.delete(this.client._ENDPOINTS.ROLES(this.guildId, this.id), {
                 reason: reason
-            }).then(()=>{
+            }).then(() => {
                 resolve(this)
                 this.guild.roles.delete(this.id)
-            }).catch(e=>{
+            }).catch(e => {
                 return reject(new Error(e))
             })
         })
@@ -107,11 +111,11 @@ module.exports = class Role {
         return `#${this.color.toString(16).padStart(6, '0')}`;
     }
 
-    comparePositions(role){
+    comparePositions(role) {
         const resolvedRole1 = this
         const resolvedRole2 = role instanceof Role ? role : this.guild.roles.get(role)
-        if(!resolvedRole1 || !resolvedRole2) throw new TypeError("One of the two roles is undefined.")
-        if(resolvedRole1.position === resolvedRole2.position){
+        if (!resolvedRole1 || !resolvedRole2) throw new TypeError("One of the two roles is undefined.")
+        if (resolvedRole1.position === resolvedRole2.position) {
             return Number(BigInt(resolvedRole2.id) - BigInt(resolvedRole1.id))
         }
         return resolvedRole1.position - resolvedRole2.position

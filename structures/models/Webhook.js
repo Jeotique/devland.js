@@ -5,6 +5,7 @@ const Utils = require('../util/index')
 const TextChannel = require('./TextChannel')
 const AnnouncementChannel = require('./AnnouncementChannel')
 const ForumChannel = require('./ForumChannel')
+const DataResolver = require('../util/DateResolver')
 module.exports = class Webhook {
     constructor(client, guild, data) {
         Object.defineProperty(this, 'client', { value: client })
@@ -35,6 +36,7 @@ module.exports = class Webhook {
             if (options.channel_id instanceof AnnouncementChannel) options.channel_id = options.channel_id.id
             if (options.channel_id instanceof ForumChannel) options.channel_id = options.channel_id.id
             if (typeof options.channel_id !== "undefined" && typeof options.channel_id !== "string") return reject(new TypeError("Edit webhook options the channel must be a valid Channel instance or a valid Id"))
+            if (typeof options.avatar !== "undefined") options.avatar = await DataResolver.resolveImage(options.avatar)
             if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS(this.id), options).then(res => {
                 let newweb = new Webhook(this.client, this.client.guilds.get(this.guildId) || this.guild, res)
@@ -113,16 +115,22 @@ module.exports = class Webhook {
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
-                if (typeof options['embeds'] === 'object') options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
-                data['embeds'] = options['embeds']
+                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
                 data['tts'] = options['tts']
                 data['nonce'] = options['nonce']
                 data['allowed_mentions'] = options['allowedMentions']
+                if (typeof data['allowed_mentions'] !== 'undefined') {
+                    if (!Array.isArray(data['allowed_mentions'])) data['allowed_mentions'] = undefined
+                    else {
+                        data['allowed_mentions'] = { parse: [...options['allowedMentions']] }
+                    }
+                }
                 data['components'] = []
                 options['components']?.map(comp => {
                     if (comp instanceof ActionRow) data['components'].push(comp.pack())
                     else return reject(new TypeError("Invalid component, must be a ActionRow instance"))
                 })
+                data['files'] = await Utils.lookForFiles(options.files)
                 let toTestCustomId = []
                 let alrSeen = {}
                 data['components']?.map(ar => ar?.components.map(comp => toTestCustomId.push(comp)))

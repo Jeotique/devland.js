@@ -18,6 +18,7 @@ const AuditLogs = require('./AuditLogs')
 const Ban = require('./Ban')
 const Invite = require('./Invite')
 const Integration = require('./Integration')
+const DataResolver = require('../util/DateResolver')
 
 module.exports = class Guild {
     /**
@@ -154,7 +155,6 @@ module.exports = class Guild {
                         } else if (typeof command == "object") {
                             command = new GuildCommand(command).pack()
                         } else return reject(new TypeError("Invalid command format"))
-                        console.log(command)
                         this.client.rest.post(this.client._ENDPOINTS.COMMANDS(this.id), command).then(() => {
                             return resolve(true)
                         }).catch(e => {
@@ -252,6 +252,7 @@ module.exports = class Guild {
             if (typeof options.roles !== "object") return reject(new TypeError("Create emoji options roles must be a array"))
             if (options.roles.find(value => typeof value !== "string")) return reject(new TypeError("Create emoji options roles must contains only roles Id"))
             if (typeof options.image === "undefined") return reject(new TypeError("Create emoji options image cannot be undefined"))
+            options.image = await DataResolver.resolveImage(options.image)
             if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("Create emoji options reason must be string or a undefined value"))
             this.client.rest.post(this.client._ENDPOINTS.EMOJI(this.id), {
                 name: options.name,
@@ -329,6 +330,7 @@ module.exports = class Guild {
             if (typeof options.premium_progress_bar_enabled !== "undefined") {
                 if (typeof options.premium_progress_bar_enabled !== "boolean") return reject(new TypeError("The guild premium progress bar enabled must be a boolean"))
             }
+            if (typeof options.icon !== "undefined") options.icon = await DataResolver.resolveImage(options.icon)
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be string or a undefined value"))
             options['reason'] = reason
             this.client.rest.patch(this.client._ENDPOINTS.SERVERS(this.id), options).then(res => {
@@ -559,7 +561,6 @@ module.exports = class Guild {
             if (user instanceof Member) user = user.id
             if (typeof user !== "string") return reject(new TypeError("The user must be a string or a valid User instance"))
             this.client.rest.get(this.client._ENDPOINTS.MEMBERS(this.id, user)).then(res => {
-                console.log(res)
                 let member = new Member(this.client, this, res)
                 resolve(member)
                 if (typeof this.client.options.membersLifeTime === "number" && this.client.options.membersLifeTime > 0) {
@@ -644,10 +645,13 @@ module.exports = class Guild {
                     options.unicode_emoji = options.unicode_emoji.id ? `${options.unicode_emoji.name}` : `<${options.unicode_emoji.animated ? "a" : ""}:${options.unicode_emoji.name}:${options.unicode_emoji.id}>`
                 }
                 if (typeof options.unicode_emoji !== "string") return reject(new TypeError("Create role options unicode_emoji must be a string"))
+                if (!this.features.has("ROLE_ICONS")) options.unicode_emoji = undefined
             }
             if (typeof options.mentionable !== "undefined") {
                 if (typeof options.mentionable !== "boolean") return reject(new TypeError("Create role options mentionable must be a boolean"))
             }
+            if (typeof options.icon !== "undefined") options.icon = await DataResolver.resolveImage(options.icon)
+            if (!this.features.has("ROLE_ICONS")) options.icon = undefined
             if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.post(this.client._ENDPOINTS.ROLES(this.id), options).then(res => {
                 let role = new Role(this.client, this.client.guilds.get(this.id) || this, res)

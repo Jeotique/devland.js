@@ -1,3 +1,5 @@
+const DataResolver = require('./DateResolver');
+
 const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 const isObject = d => typeof d === 'object' && d !== null;
 module.exports.mergeDefault = (def, given) => {
@@ -47,13 +49,13 @@ module.exports.createDefaultOptions = () => {
 const EPOCH = 1_420_070_400_000;
 let INCREMENT = BigInt(0);
 module.exports.getTimestampFrom = (snowflake) => {
-  try{
-  return Number(BigInt(snowflake) >> 22n) + EPOCH
-  }catch(e){return 0}
+  try {
+    return Number(BigInt(snowflake) >> 22n) + EPOCH
+  } catch (e) { return 0 }
 }
 
 const clean = (text) => {
-  if (typeof(text) == 'string') return text.replace(/[`@]/g, '$&\u200b');
+  if (typeof (text) == 'string') return text.replace(/[`@]/g, '$&\u200b');
   else return text;
 };
 
@@ -61,6 +63,13 @@ module.exports.cleanMessage = async (content) => {
   const cleaned = clean(content);
   return cleaned;
 }
+
+module.exports.basename = (path, ext) => {
+  const { parse } = require('node:path')
+  const res = parse(path);
+  return ext && res.ext.startsWith(ext) ? res.name : res.base.split('?')[0];
+}
+
 
 module.exports.Colors = {
   DEFAULT: 0x000000,
@@ -97,18 +106,18 @@ module.exports.Colors = {
 
 module.exports.resolveColor = (color) => {
   if (typeof color === 'string') {
-      color = color.toUpperCase()
-      if (color === 'RANDOM') return Math.floor(Math.random() * (0xffffff + 1));
-      if (color === 'DEFAULT') return 0;
-      color = this.Colors[color] ?? parseInt(color.replace('#', ''), 16);
-    } else if (Array.isArray(color)) {
-      color = (color[0] << 16) + (color[1] << 8) + color[2];
-    }
+    color = color.toUpperCase()
+    if (color === 'RANDOM') return Math.floor(Math.random() * (0xffffff + 1));
+    if (color === 'DEFAULT') return 0;
+    color = this.Colors[color] ?? parseInt(color.replace('#', ''), 16);
+  } else if (Array.isArray(color)) {
+    color = (color[0] << 16) + (color[1] << 8) + color[2];
+  }
 
-    if (color < 0 || color > 0xffffff) throw new RangeError('COLOR_RANGE');
-    else if (Number.isNaN(color)) throw new TypeError('COLOR_CONVERT');
+  if (color < 0 || color > 0xffffff) throw new RangeError('COLOR_RANGE');
+  else if (Number.isNaN(color)) throw new TypeError('COLOR_CONVERT');
 
-    return color;
+  return color;
 }
 
 /**
@@ -125,4 +134,33 @@ module.exports.parseEmoji = (text) => {
   if (!text.includes(':')) return { animated: false, name: text, id: null };
   const match = text.match(/<?(?:(a):)?(\w{2,32}):(\d{17,19})?>?/);
   return match && { animated: Boolean(match[1]), name: match[2], id: match[3] ?? null };
+}
+
+module.exports.lookForFiles = async (files) => {
+  if (!files || !Array.isArray(files)) return null
+  return await Promise.all(files.map(file => this.resolveFile(file)) ?? [])
+}
+
+module.exports.resolveFile = async (fileLike) => {
+  let attachment;
+  let name;
+
+  const findName = thing => {
+    if (typeof thing === 'string') return this.basename(thing)
+    if (thing.path) return this.basename(thing.path)
+    return 'file.jpg'
+  }
+
+  const ownAttachment =
+    typeof fileLike === 'string' || fileLike instanceof Buffer || typeof fileLike.pipe === 'function';
+  if (ownAttachment) {
+    attachment = fileLike;
+    name = findName(attachment);
+  } else {
+    attachment = fileLike.attachment;
+    name = fileLike.name ?? findName(attachment);
+  }
+
+  const resource = await DataResolver.resolveFile(attachment)
+  return { attachment, name, file: resource }
 }

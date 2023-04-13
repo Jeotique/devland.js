@@ -297,7 +297,7 @@ declare module 'devland.js' {
             readonly tag: string;
             setPresence(presence: presenceOptions);
             setName(name: string): Promise<ClientUser>;
-            setAvatar(avatar: any): Promise<ClientUser>;
+            setAvatar(avatar: string|Buffer): Promise<ClientUser>;
             private _patch(data: any);
             private _parse(data: object);
         }
@@ -353,7 +353,7 @@ declare module 'devland.js' {
     type createEmojiOptions = {
         name: string,
         roles?: string[],
-        image: any,
+        image: string|Buffer,
         reason?: string,
     }
     type editGuildOptions = {
@@ -363,7 +363,7 @@ declare module 'devland.js' {
         explicit_content_filter?: guildExplicitContentFilterLevel,
         afk_channel_id?: string | VoiceChannel,
         afk_timeout?: number,
-        icon?: any,
+        icon?: string|Buffer,
         owner_id?: User | string,
         splash?: any,
         discovery_splash?: any,
@@ -391,6 +391,7 @@ declare module 'devland.js' {
         color?: string | number,
         hoist?: boolean,
         unicode_emoji?: Emoji | string,
+        icon?: string | Buffer,
         mentionable?: boolean,
         reason?: string,
     }
@@ -539,8 +540,15 @@ declare module 'devland.js' {
         components: ActionRow[],
         tts: boolean,
         nonce: number | string,
-        allowed_mentions: string[],
+        allowedMentions: allowedMentionsList[],
+        files: string[]|filesObject[]|Buffer[],
     }
+    type filesObject = {
+        attachment: string,
+        name: string,
+        description: string,
+    }
+    type allowedMentionsList = "roles" | "users" | "everyone"
     type fetchMessagesOptions = {
         limit?: number,
         around?: string,
@@ -581,8 +589,15 @@ declare module 'devland.js' {
     }
     type createWebhookOptions = {
         name: string,
-        avatar?: any,
+        avatar?: string|Buffer,
         reason?: string,
+    }
+    type createInviteOptions = {
+        max_age?: number,
+        max_uses?: number,
+        temporary?: boolean,
+        unique?: boolean,
+        reason?: string
     }
     export class TextChannel {
         private constructor(client: Client, guild: Guild, data: object)
@@ -617,6 +632,7 @@ declare module 'devland.js' {
         fetchWebhooks(): Promise<Store<String, Webhook>>;
         createCollector(options?: collectorOptions): Collector;
         awaitMessages(options?: collectorOptions): Promise<Store<String, Message>>;
+        createInvite(options?: createInviteOptions): Promise<Invite>;
     }
     export class DmChannel {
         private constructor(client: Client, guild: Guild, data: object)
@@ -674,6 +690,7 @@ declare module 'devland.js' {
         bulkDelete(data: number | Message[] | string[]): Promise<void>;
         createCollector(options?: collectorOptions): Collector;
         awaitMessages(options?: collectorOptions): Promise<Store<String, Message>>;
+        createInvite(options?: createInviteOptions): Promise<Invite>;
     }
     export type voiceBitrate = 8000 | 128000 | 256000 | 384000;
     export class VoiceChannel {
@@ -710,6 +727,7 @@ declare module 'devland.js' {
         leave();
         createCollector(options?: collectorOptions): Collector;
         awaitMessages(options?: collectorOptions): Promise<Store<String, Message>>;
+        createInvite(options?: createInviteOptions): Promise<Invite>;
     }
     type stageStartOptions = {
         topic: string,
@@ -766,6 +784,7 @@ declare module 'devland.js' {
         edit_stage(options: stageEditOptions): Promise<StageInstance>;
         delete_stage(reason?: string): Promise<void>;
         stage(): Promise<StageInstance | void>;
+        createInvite(options?: createInviteOptions): Promise<Invite>;
     }
     export class CategoryChannel {
         private constructor(client: Client, guild: Guild, data: object)
@@ -790,6 +809,9 @@ declare module 'devland.js' {
         setPosition(position: number): Promise<CategoryChannel>;
         fetchTextChannels(): Promise<Store<String, TextChannel>>;
         fetchVoiceChannels(): Promise<Store<String, VoiceChannel>>;
+        fetchAnnouncementChannels(): Promise<Store<String, AnnouncementChannel>>;
+        fetchStageChannels(): Promise<Store<String, StageChannel>>;
+        fetchForumChannels(): Promise<Store<String, ForumChannel>>;
     }
     export class AnnouncementChannel {
         private constructor(client: Client, guild: Guild, data: object)
@@ -825,6 +847,7 @@ declare module 'devland.js' {
         fetchWebhooks(): Promise<Store<String, Webhook>>;
         createCollector(options?: collectorOptions): Collector;
         awaitMessages(options?: collectorOptions): Promise<Store<String, Message>>;
+        createInvite(options?: createInviteOptions): Promise<Invite>;
     }
     type ThreadMetadata = {
         archived: boolean,
@@ -896,7 +919,7 @@ declare module 'devland.js' {
         readonly createdAt: Date;
         readonly guildId?: string;
         readonly editTimestamp: number | null;
-        readonly flags: number;
+        readonly flags: MessageFlags;
         readonly components: ActionRow[];
         readonly messageReplyied: Message | null;
         readonly deleted: boolean;
@@ -1390,6 +1413,7 @@ declare module 'devland.js' {
         color?: string | number,
         hoist?: boolean,
         unicode_emoji?: Emoji | string,
+        icon?: string|Buffer,
         mentionable?: boolean,
         position?: number,
         reason?: string,
@@ -1457,7 +1481,7 @@ declare module 'devland.js' {
         readonly guildId: string;
         readonly channel?: TextChannel | VoiceChannel | AnnouncementChannel | Thread | StageChannel | ForumChannel | null;
         readonly channelId: string;
-        readonly inviter: User;
+        readonly inviter?: User;
         readonly uses: number;
         readonly maxUses: number;
         readonly maxAge: number;
@@ -1485,7 +1509,7 @@ declare module 'devland.js' {
     }
     type editWebhookOptions = {
         name: string,
-        avatar?: any,
+        avatar?: string|Buffer,
         channel_id?: string | TextChannel | AnnouncementChannel | ForumChannel,
         reason?: string,
     }
@@ -1895,5 +1919,29 @@ declare module 'devland.js' {
         public static DEFAULT: bigint;
         public static FLAGS: User_Flags;
         public static resolve(flag?: UserFlagsResolvable): bigint;
+    }
+    export type MessageFlagString =
+        | 'CROSSPOSTED'
+        | 'IS_CROSSPOST'
+        | 'SUPPRESS_EMBEDS'
+        | 'SOURCE_MESSAGE_DELETED'
+        | 'URGENT'
+        | 'HAS_THREAD'
+        | 'EPHEMERAL'
+        | 'LOADING'
+        | 'FAILED_TO_MENTION_SOME_ROLES_IN_THREAD'
+        | 'SUPPRESS_NOTIFICATIONS';
+    export type Message_Flags = Record<MessageFlagString, bigint>;
+    export type MessageFlagsResolvable = BitFieldResolvable<MessageFlagString, bigint>;
+    export class MessageFlags extends BitField<MessageFlagString, bigint> {
+        public any(flag: MessageFlagsResolvable): boolean;
+        public has(flag: MessageFlagsResolvable): boolean;
+        public missing(bits: BitFieldResolvable<MessageFlagString, bigint>): MessageFlagString[];
+        public serialize(): Record<MessageFlagString, boolean>;
+        public toArray(): MessageFlagString[];
+        public static ALL: bigint;
+        public static DEFAULT: bigint;
+        public static FLAGS: Message_Flags;
+        public static resolve(flag?: MessageFlagsResolvable): bigint;
     }
 }

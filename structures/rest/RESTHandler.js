@@ -7,14 +7,14 @@ module.exports = class RESTHandler {
      * @param {Client} client 
      */
     constructor(client) {
-        Object.defineProperty(this, "client", {value: client, writable: false})
+        Object.defineProperty(this, "client", { value: client, writable: false })
 
         this.handling = false
 
         this._ratelimits = []
     }
 
-    queueRequest(token, endpoint, method, data, options){
+    queueRequest(token, endpoint, method, data, options) {
         return new Promise((resolve, reject) => {
             this._ratelimits.push(new Request([this.client, token, endpoint, method, data, options], resolve, reject))
             this.handle()
@@ -24,20 +24,25 @@ module.exports = class RESTHandler {
     executeRequest(req) {
         this.handling = true;
         return new Promise((resolve, reject) => {
-            if(!req) return;
+            if (!req) return;
             req.build().then(res => {
                 if (res.ok || res.complete) {
-                    res.promise.resolve(res.body);
+                    try {
+                        res.promise.resolve(JSON.parse(res.body))
+                    } catch (err) { try{
+                        let test = JSON.stringify(res.body)
+                        res.promise.resolve(JSON.parse(test))
+                    }catch(errr) {res.promise.resolve(res.body) }}
                     return resolve();
                 } else {
-                  //  console.log(res)
+                    //  console.log(res)
                     //console.log(res.headers["retry_after"])
                     if (res.status === 429 || res.statusCode === 429) {
                         this._ratelimits.unshift(res.req);
-                        setTimeout(() => resolve(), res.headers["retry_after"]*1000);
+                        setTimeout(() => resolve(), res.headers["retry_after"] * 1000);
                         return;
                     }
-                    if(res.status === 200 || res.statusCode === 200) return res.promise.resolve(res?.body)
+                    if (res.status === 200 || res.statusCode === 200) return res.promise.resolve(res?.body)
                     let errorMessage = new APIError(null, null, req.method, res.statusCode, null, null).get()
                     res.promise.reject(new Error(errorMessage))
                 }
@@ -46,7 +51,7 @@ module.exports = class RESTHandler {
     }
 
     handle() {
-        if(this._ratelimits.length === 0) return
+        if (this._ratelimits.length === 0) return
         this.executeRequest(this._ratelimits.shift()).then(() => {
             this.handling = false;
             this.handle();
@@ -61,7 +66,7 @@ module.exports = class RESTHandler {
      * @param {object} [options={}] The optional options object.
      * @returns {Promise<any>}
      */
-     request(endpoint, method, data, options = {}) {
+    request(endpoint, method, data, options = {}) {
         return this.queueRequest(this.client.token, endpoint, method, data, options);
     }
 

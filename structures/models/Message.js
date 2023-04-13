@@ -16,6 +16,7 @@ const ChannelSelect = require('./ChannelSelect')
 const Collector = require('./Collector')
 const Member = require('./Member')
 const Role = require('./Role')
+const MessageFlags = require('../util/BitFieldManagement/MessageFlags')
 module.exports = class Message {
     /**
      * 
@@ -56,7 +57,7 @@ module.exports = class Message {
         this.createdAt = new Date(this.createdTimestamp)
         this.guildId = this.guild?.id
         this.editTimestamp = new Date(data.edited_timestamp)
-        this.flags = data.flags
+        this.flags = new MessageFlags(BigInt(data.flags??0))
         this.components = []
         this.messageReplyied = data.referenced_message ? new Message(this.client, this.guild, this.channel, data.referenced_message) : null
         this.deleted = false
@@ -173,6 +174,12 @@ module.exports = class Message {
                 data['tts'] = options['tts']
                 data['nonce'] = options['nonce']
                 data['allowed_mentions'] = options['allowedMentions']
+                if (typeof data['allowed_mentions'] !== 'undefined') {
+                    if (!Array.isArray(data['allowed_mentions'])) data['allowed_mentions'] = undefined
+                    else {
+                        data['allowed_mentions'] = { parse: [...options['allowedMentions']] }
+                    }
+                }
                 data['components'] = []
                 if (options['components'] && options['components']?.length > 0) options['components']?.map(comp => {
                     if (comp instanceof ActionRow) data['components'].push(comp.pack())
@@ -273,16 +280,22 @@ module.exports = class Message {
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
-                if (typeof options['embeds'] === 'object') options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
-                data['embeds'] = options['embeds']
+                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
                 data['tts'] = options['tts']
                 data['nonce'] = options['nonce']
                 data['allowed_mentions'] = options['allowedMentions']
+                if (typeof data['allowed_mentions'] !== 'undefined') {
+                    if (!Array.isArray(data['allowed_mentions'])) data['allowed_mentions'] = undefined
+                    else {
+                        data['allowed_mentions'] = { parse: [...options['allowedMentions']] }
+                    }
+                }
                 data['components'] = []
                 options['components']?.map(comp => {
                     if (comp instanceof ActionRow) data['components'].push(comp.pack())
                     else return reject(new TypeError("Invalid component, must be a ActionRow instance"))
                 })
+                data['files'] = await Utils.lookForFiles(options.files)
                 let toTestCustomId = []
                 let alrSeen = {}
                 data['components']?.map(ar => ar?.components.map(comp => toTestCustomId.push(comp)))

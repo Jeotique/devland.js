@@ -9,6 +9,8 @@ const Permissions = require('../util/BitFieldManagement/Permissions')
 const ForumTag = require('./ForumTag')
 const Webhook = require('./Webhook')
 const Collector = require('./Collector')
+const DataResolver = require('../util/DateResolver')
+const Invite = require('./Invite')
 module.exports = class TextChannel {
     /**
      * 
@@ -72,7 +74,8 @@ module.exports = class TextChannel {
                 tts: false,
                 nonce: undefined,
                 allowed_mentions: undefined,
-                components: []
+                components: [],
+                files: null,
             }
             if (typeof options === 'string') {
                 data['content'] = options
@@ -104,16 +107,23 @@ module.exports = class TextChannel {
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
-                if (typeof options['embeds'] === 'object') options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
-                data['embeds'] = options['embeds']
+                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
                 data['tts'] = options['tts']
+                if (typeof options['tts'] !== "boolean") data['tts'] = false
                 data['nonce'] = options['nonce']
                 data['allowed_mentions'] = options['allowedMentions']
+                if (typeof data['allowed_mentions'] !== 'undefined') {
+                    if (!Array.isArray(data['allowed_mentions'])) data['allowed_mentions'] = undefined
+                    else {
+                        data['allowed_mentions'] = { parse: [...options['allowedMentions']] }
+                    }
+                }
                 data['components'] = []
                 options['components']?.map(comp => {
                     if (comp instanceof ActionRow) data['components'].push(comp.pack())
                     else return reject(new TypeError("Invalid component, must be a ActionRow instance"))
                 })
+                data['files'] = await Utils.lookForFiles(options.files)
                 let toTestCustomId = []
                 let alrSeen = {}
                 data['components']?.map(ar => ar?.components.map(comp => toTestCustomId.push(comp)))
@@ -129,6 +139,7 @@ module.exports = class TextChannel {
             } else return reject(new TypeError("Send without any options is not authorized"))
         })
     }
+
 
     async fetchMessages(options) {
         return new Promise(async (resolve, reject) => {
@@ -450,6 +461,7 @@ module.exports = class TextChannel {
             if (typeof options.name !== "string") return reject(new TypeError("Create webhook options name must be provided (string)"))
             if (options.name.length < 1 || options.name.length > 80) return reject(new TypeError("Create webhook options name must have a length between 1 and 80"))
             if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            if (typeof options.avatar !== "undefined") options.avatar = await DataResolver.resolveImage(options.avatar)
             this.client.rest.post(this.client._ENDPOINTS.CHANNEL_WEBHOOKS(this.id), options).then(res => {
                 resolve(new Webhook(this.client, this.client.guilds.get(this.guildId) || this.guild, res))
             }).catch(e => {
@@ -522,6 +534,32 @@ module.exports = class TextChannel {
             this.client.collectorCache[identifier]?.on('collected', collected => {
                 resolve(collected)
                 delete this.client.collectorCache[identifier]
+            })
+        })
+    }
+
+    async createInvite(options = {}) {
+        return new Promise(async (resolve, reject) => {
+            if (typeof options !== 'object') return reject(new TypeError("Create invite options must be object"))
+            if (typeof options.max_age !== "undefined") {
+                if (typeof options.max_age !== "number") return reject(new TypeError("Create invite options max_age must be a number"))
+                if (options.max_age < 0 || options.max_age > 604800) return reject(new TypeError("Create invite options max_age must be between 0 and 604800"))
+            }
+            if (typeof options.max_uses !== "undefined") {
+                if (typeof options.max_uses !== "number") return reject(new TypeError("Create invite options max_uses must be a number"))
+                if (options.max_uses < 0 || options.max_uses > 100) return reject(new TypeError("Create invite options max_uses must be between 0 and 100"))
+            }
+            if (typeof options.temporary !== "undefined") {
+                if (typeof options.temporary !== "boolean") return reject(new TypeError("Create invite options temporary must be a boolean"))
+            }
+            if (typeof options.unique !== "undefined") {
+                if (typeof options.unique !== "boolean") return reject(new TypeError("Create invite options unique must be a boolean"))
+            }
+            if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            this.client.rest.post(`${this.client._ENDPOINTS.CHANNEL(this.id)}/invites`, options).then(res => {
+                return resolve(new Invite(this.client, this.client.guilds.get(this.guildId) || this.guild, res, this))
+            }).catch(e => {
+                return reject(new Error(e))
             })
         })
     }

@@ -1,5 +1,6 @@
 const Client = require('../client/client')
 const UserFlags = require('../util/BitFieldManagement/UserFlags')
+const DataResolver = require('../util/DateResolver')
 
 module.exports = class ClientUser {
   constructor(client, data = {}) {
@@ -85,6 +86,7 @@ module.exports = class ClientUser {
   setAvatar(avatar){
     return new Promise(async(resolve, reject) => {
       if(typeof avatar === "undefined") return reject(new TypeError("You need to provid me a avatar"))
+      avatar = await DataResolver.resolveImage(avatar)
       this.client.rest.patch(this.client._ENDPOINTS.ME, {
         avatar: avatar
       }).then(res => {
