@@ -248,7 +248,6 @@ module.exports = {
                     let user = client.users.get(member.user.id) || new Models.User(client, member.user)
                     let member_class = guild.members.get(member.user.id) || new Models.Member(client, guild, member)
                     let voice_data = data.voice_states.find(p => p.user_id === user.id)
-                    console.log(voice_data)
                     if (!voice_data) {
                         let raw_data = {
                             user: user,

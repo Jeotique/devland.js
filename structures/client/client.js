@@ -8,6 +8,7 @@ const { Message, Guild, TextChannel, User, VoiceChannel, CategoryChannel, Announ
 const Thread = require('../models/Thread')
 const ForumChannel = require('../models/ForumChannel')
 const IntentFlags = require('../util/BitFieldManagement/IntentFlags')
+const ShardClientUtil = require('../sharding/ShardClientUtil')
 /**
  * @extends {EventEmitter}
  */
@@ -44,6 +45,8 @@ module.exports = class Client extends EventEmitter {
      * @property {number} presencesLifeTime
      * @property {number} voicesLifeTime
      * @property {boolean} waitCacheBeforeReady
+     * @property {number} shardId
+     * @property {number} shardCount
      */
     /**
      * The client options
@@ -192,6 +195,20 @@ module.exports = class Client extends EventEmitter {
             this.options.voicesLifeTime = null
             process.emitWarning("The guilds cache must be enabled if you want to use the voices cache")
         }
+
+        if(!this.options.shardId && 'SHARD_ID' in process.env){
+            this.options.shardId = Number(process.env.SHARD_ID)
+        }
+        if(!this.options.shardCount && 'SHARD_COUNT' in process.env){
+            this.options.shardCount = Number(process.env.SHARD_COUNT)
+        }
+        if(typeof this.options.shardId !== "number" || isNaN(this.options.shardId)) throw new TypeError("shardId must be a number")
+        if(typeof this.options.shardCount !== "number" || isNaN(this.options.shardCount)) throw new TypeError("shardCount must be a number")
+        if(this.options.shardId < 0) throw new RangeError("shardId can't be less than 0")
+        if(this.options.shardCount < 0) throw new RangeError("shardCount can't be less than 0")
+        if(this.options.shardId !== 0 && this.options.shardId >= this.options.shardCount) throw new RangeError("shardId must be less than shardCount")
+        this.shard = process.env.SHARDING_MANAGER ? ShardClientUtil.singleton(this) : null
+
         this.rest = new RESTHandler(this)
         this.user = new Models.ClientUser(this)
         /**

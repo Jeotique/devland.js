@@ -80,7 +80,8 @@ module.exports = async (client) => {
                             afk: client.options.presence.afk,
                             since: client.options.presence.since,
                         },
-                        intents: client.options.intents
+                        intents: client.options.intents,
+                        shard: client.options.shardCount > 0 ? [Number(client.options.shardId), Number(client.options.shardCount)] : undefined
                     }
                 }));
                 break;

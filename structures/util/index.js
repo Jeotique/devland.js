@@ -44,8 +44,57 @@ module.exports.createDefaultOptions = () => {
     presencesLifeTime: null,
     voicesLifeTime: null,
     waitCacheBeforeReady: true,
+    shardId: 0,
+    shardCount: 0,
     token: null,
   }
+}
+
+module.exports.createDefaultShardOptions = () => {
+  return {
+    totalShards: 'auto',
+    respawn: true,
+    shardArgs: [],
+    token: null,
+    autospawn: false,
+  }
+}
+
+module.exports.makeError = (obj) => {
+  const err = new Error(obj.message);
+  err.name = obj.name;
+  err.stack = obj.stack;
+  return err;
+}
+
+module.exports.makePlainError = (err) => {
+  return {
+    name: err.name,
+    message: err.message,
+    stack: err.stack,
+  };
+}
+
+module.exports.fetchRecommendedShards = async (token, guildsPerShard = 1000) => {
+  return new Promise(async (resolve, reject) => {
+    if (!token) throw new Error('TOKEN_MISSING');
+    const fetch = require('node-fetch')
+    fetch(`https://discordapp.com/api/gateway/bot`, {
+      method: 'GET',
+      headers: { Authorization: `Bot ${token.replace(/^Bot\s*/i, '')}` },
+    }).then(async res => {
+      if (res.ok) {
+        let t = await res.json();
+        return resolve(t.shards * (1000 / guildsPerShard))
+      }
+    }).catch(e => { console.log(e) });
+  })
+}
+
+module.exports.delayFor = (ms) => {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
 }
 
 const EPOCH = 1_420_070_400_000;
