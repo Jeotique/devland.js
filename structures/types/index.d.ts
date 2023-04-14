@@ -20,6 +20,8 @@ declare module 'devland.js' {
         presencesLifeTime: number;
         voicesLifeTime: number;
         waitCacheBeforeReady: boolean;
+        shardId: number;
+        shardCount: number;
     }
     type wsOptions = {
         large_threshold: number;
@@ -89,6 +91,7 @@ declare module 'devland.js' {
         readonly users: Store<string, User>;
         readonly stageChannels: Store<string, StageChannel>;
         readonly forumChannels: Store<string, ForumChannel>;
+        readonly shard: ShardClientUtil|null;
         private readonly dmChannels: Store<string, DmChannel>;
         private readonly collectorCache: Store<number, Collector>;
         private readonly deletedmessages: Store<string, Message>;
@@ -2093,5 +2096,115 @@ declare module 'devland.js' {
         channel_id: string,
         duration_seconds: number,
         custom_message?: string
+    }
+    type shardOptions = {
+        totalShards: string|number,
+        respawn: boolean,
+        shardArgs: string[],
+        execArgv: string[],
+        token: string,
+        autospawn: boolean,
+    }
+    export class ShardingManager extends EventEmitter {
+        constructor(file: string, options: shardOptions);
+        file: string;
+        totalShards: string|number;
+        respawn: boolean;
+        shardArgs: string[];
+        execArgv: string[];
+        token: string|null;
+        autospawn: boolean;
+        shards: Store<number, Shard>;
+        createShard(id?: 0): Shard;
+        spawn(amount?: number|string, delay?: number, waitForReady?: boolean): Promise<Store<number, Shard>>;
+        broadcast(message: any): Promise<Shard[]>;
+        broadcastEval(script: string): Promise<Array<*>>;
+        fetchClientValues(prop: string): Promise<Array<*>>;
+        respawnAll(shardDelay?: number, respawnDelay?: number, waitForReady?: boolean): Promise<Store<number, Shard>>;
+        public on<K extends keyof ShardingManagerEvents>(event: K, listener: (...args: ShardingManagerEvents[K]) => Awaitable<void>): this;
+        public on<S extends string | symbol>(
+            event: Exclude<S, keyof ShardingManagerEvents>,
+            listener: (...args: any[]) => Awaitable<void>,
+        ): this;
+        public once<K extends keyof ShardingManagerEvents>(event: K, listener: (...args: ShardingManagerEvents[K]) => Awaitable<void>): this;
+        public once<S extends string | symbol>(
+            event: Exclude<S, keyof ShardingManagerEvents>,
+            listener: (...args: any[]) => Awaitable<void>,
+        ): this;
+        public emit<K extends keyof ShardingManagerEvents>(event: K, ...args: ShardingManagerEvents[K]): boolean;
+        public emit<S extends string | symbol>(event: Exclude<S, keyof ShardingManagerEvents>, ...args: unknown[]): boolean;
+        public off<K extends keyof ShardingManagerEvents>(event: K, listener: (...args: ShardingManagerEvents[K]) => Awaitable<void>): this;
+        public off<S extends string | symbol>(
+            event: Exclude<S, keyof ShardingManagerEvents>,
+            listener: (...args: any[]) => Awaitable<void>,
+        ): this;
+        public removeAllListeners<K extends keyof ShardingManagerEvents>(event?: K): this;
+        public removeAllListeners<S extends string | symbol>(event?: Exclude<S, keyof ShardingManagerEvents>): this;
+    }
+    interface ShardingManagerEvents {
+        shardCreate: [shard: Shard];
+    }
+    import {childProcess} from 'child_process';
+    export class Shard extends EventEmitter {
+        constructor(manager: ShardingManager, id: number);
+        readonly manager: ShardingManager;
+        readonly id: number;
+        readonly args: string[];
+        readonly execArgv: ?string[];
+        readonly env: object;
+        readonly ready: boolean;
+        readonly process: childProcess;
+        private readonly _evals: Map<string, Promise>;
+        private readonly _fetches: Map<string, Promise>;
+        private readonly _exitListener: Function;
+        spawn(waitForReady?: boolean): Promise<childProcess>;
+        kill();
+        respawn(delay?: number, waitForReady?: boolean): Promise<childProcess>;
+        send(message: any): Promise<Shard>;
+        fetchClientValue(prop: string): Promise<any>;
+        eval(script: string|Function): Promise<any>;
+        private _handleMessage(message: any);
+        private _handleExit(respawn?: boolean);
+        public on<K extends keyof ShardEvents>(event: K, listener: (...args: ShardEvents[K]) => Awaitable<void>): this;
+        public on<S extends string | symbol>(
+            event: Exclude<S, keyof ShardEvents>,
+            listener: (...args: any[]) => Awaitable<void>,
+        ): this;
+        public once<K extends keyof ShardEvents>(event: K, listener: (...args: ShardEvents[K]) => Awaitable<void>): this;
+        public once<S extends string | symbol>(
+            event: Exclude<S, keyof ShardEvents>,
+            listener: (...args: any[]) => Awaitable<void>,
+        ): this;
+        public emit<K extends keyof ShardEvents>(event: K, ...args: ShardEvents[K]): boolean;
+        public emit<S extends string | symbol>(event: Exclude<S, keyof ShardEvents>, ...args: unknown[]): boolean;
+        public off<K extends keyof ShardEvents>(event: K, listener: (...args: ShardEvents[K]) => Awaitable<void>): this;
+        public off<S extends string | symbol>(
+            event: Exclude<S, keyof ShardEvents>,
+            listener: (...args: any[]) => Awaitable<void>,
+        ): this;
+        public removeAllListeners<K extends keyof ShardEvents>(event?: K): this;
+        public removeAllListeners<S extends string | symbol>(event?: Exclude<S, keyof ShardEvents>): this;
+    }
+    interface ShardEvents {
+        ready: [];
+        disconnect: [];
+        reconnecting: [];
+        message: [message: any];
+        death: [process: childProcess];
+        error: [error: any];
+        spawn: [process: childProcess];
+    }
+    export class ShardClientUtil {
+        constructor(client: Client);
+        private readonly client: Client;
+        readonly id: number;
+        readonly count: number;
+        send(message: any): Promise<void>;
+        fetchClientValues(prop: string): Promise<Array<*>>;
+        broadcastEval(script: string|Function): Promise<Array<*>>;
+        respawnAll(shardDelay?: number, respawnDelay: 500, waitForReady?: boolean): Promise<void>;
+        private _handleMessage(message: any);
+        private _respond(type: string, message: any);
+        singleton(client: Client): Promise<ShardClientUtil>;
     }
 }

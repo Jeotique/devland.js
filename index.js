@@ -43,6 +43,9 @@ const Modal = require('./structures/models/Modal')
 const Collector = require('./structures/models/Collector')
 const Presence = require('./structures/models/Presence')
 const AutoModRule = require('./structures/models/AutoModRule')
+const ShardingManager = require('./structures/sharding/ShardingManager')
+const Shard = require('./structures/sharding/Shard')
+const ShardClientUtil = require('./structures/sharding/ShardClientUtil')
 const {webhookType, ActivityType, guildVerificationLevel, guildMfaLevel, guildDefaultMessageNotifications, guildExplicitContentFilterLevel, guildBoostLevel, guildNsfwLevel, channelType, videoQualityMode, PermissionIdType, stagePrivacyLevel, ComponentsType, ButtonStyle, commandType, commandOptionsType, integrationExpireBehavior, interactionType, textInputStyle, AutoModEventType, AutoModTriggerType, AutoModTriggerPresets, AutoModActionType} = require('./structures/types/enum')
 module.exports = {
 
@@ -89,6 +92,11 @@ module.exports = {
     Collector,
     Presence,
     AutoModRule,
+
+    /** Shard system */
+    ShardingManager,
+    Shard,
+    ShardClientUtil,
 
     /** Flags (bitfield) */
     Permissions,
