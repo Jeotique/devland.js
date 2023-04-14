@@ -1,5 +1,4 @@
 const Client = require('../client/client')
-const { Guild, User } = require('./index')
 const Utils = require('../util/index')
 
 module.exports = class AutoModRule {

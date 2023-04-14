@@ -3,10 +3,10 @@ const p = require('phin').promisified;
 module.exports = async (client) => {
     if (client.ws.gateway.heartbeat.recieved == false) throw new Error(`Last heartbeat hasn't been acknowledged, terminating connection`);
 
-    setInterval(() => {
+    client.heartbeat = setInterval(() => {
         client.ws.socket.send(JSON.stringify({
             op: 1,
-            d: 0
+            d: client.seq === 0 ? null : client.seq
         }));
         client.ws.gateway.heartbeat.last = Date.now()
         client.ws.gateway.heartbeat.recieved = false;

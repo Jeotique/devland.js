@@ -9,10 +9,10 @@ module.exports = {
      */
     run: async (client, d) => {
         const data = d.d
-
         data.user.tag = data.user.username + '#' + data.user.discriminator
         client.user = new Models.ClientUser(client, data.user)
         client.sessionID = data.session_id
+        client.ws.gateway.resume_gateway_url = data.resume_gateway_url
         for (const [obj] in data.guilds) {
             client.guildsIds.push(data.guilds[obj].id)
             if (typeof client.options.guildsLifeTime === "number" && client.options.guildsLifeTime > 0) {

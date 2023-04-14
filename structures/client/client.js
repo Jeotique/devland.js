@@ -156,11 +156,17 @@ module.exports = class Client extends EventEmitter {
              */
                     recieved: false,
                     seq: null,
-                }
+                },
+                resume_gateway_url: null
             },
             ping: -1
         }
 
+        // don't use !
+        this.seq = 0
+        // don't use !
+        this.heartbeat = null
+        // don't use !
         this.sessionID = null;
         /**
          * @type {clientOptions}
@@ -248,6 +254,10 @@ module.exports = class Client extends EventEmitter {
         }
     }
 
+    get uptime() {
+        return this.readyAt ? Date.now()-this.readyAt : 0
+    }
+
     static get version() { return '1.0.0' }
     /**
      * Connect your bot to the discord gateway
@@ -261,6 +271,11 @@ module.exports = class Client extends EventEmitter {
 
         attemptLogin(this);
         return this
+    }
+
+    destroy(){
+        if(!this.ws.connected) throw new TypeError("The bot is not connected to the gateway")
+        this.ws.socket.close(8888);
     }
 
     toJSON() {
