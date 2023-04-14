@@ -11,7 +11,7 @@ module.exports = {
         const data = d.d
         let message = client.messages.get(data.id)
         client.messages.delete(data.id)
-        let guild = client.guilds.get(data.guild_id) || await client.rest.get(client._ENDPOINTS.SERVERS(data.guild_id))
+        let guild = data.guild_id ? (client.guilds.get(data.guild_id) || await client.rest.get(client._ENDPOINTS.SERVERS(data.guild_id))) : undefined
         let channel = await client.rest.get(client._ENDPOINTS.CHANNEL(data.channel_id)).catch(e => { })
         if (!channel) return
         if (message) {

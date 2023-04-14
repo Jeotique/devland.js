@@ -49,5 +49,9 @@ module.exports = {
     'INTEGRATION_UPDATE': 'integrationUpdate',
     'INTEGRATION_DELETE': 'integrationDelete',
     'WEBHOOKS_UPDATE': 'webhooksUpdate',
-    'INTERACTION_CREATE': 'interactionCreate'
+    'INTERACTION_CREATE': 'interactionCreate',
+    'AUTO_MODERATION_RULE_CREATE': 'autoModRuleCreate',
+    'AUTO_MODERATION_RULE_UPDATE': 'autoModRuleUpdate',
+    'AUTO_MODERATION_RULE_DELETE': 'autoModRuleDelete',
+    'AUTO_MODERATION_RULE_EXECUTION': 'autoModRuleExecution'
 }

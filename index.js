@@ -25,6 +25,7 @@ const ActivityFlags = require('./structures/util/BitFieldManagement/ActivityFlag
 const MemberFlags = require('./structures/util/BitFieldManagement/MemberFlags')
 const UserFlags = require('./structures/util/BitFieldManagement/UserFlags')
 const MessageFlags = require('./structures/util/BitFieldManagement/MessageFlags')
+const IntentFlags = require('./structures/util/BitFieldManagement/IntentFlags')
 const GuildCommand = require('./structures/models/GuildCommand')
 const ForumTag = require('./structures/models/ForumTag')
 const {Store} = require('./structures/util/Store/Store')
@@ -41,7 +42,8 @@ const Interaction = require('./structures/models/Interaction')
 const Modal = require('./structures/models/Modal')
 const Collector = require('./structures/models/Collector')
 const Presence = require('./structures/models/Presence')
-const {webhookType, ActivityType, guildVerificationLevel, guildMfaLevel, guildDefaultMessageNotifications, guildExplicitContentFilterLevel, guildBoostLevel, guildNsfwLevel, channelType, videoQualityMode, PermissionIdType, stagePrivacyLevel, ComponentsType, ButtonStyle, commandType, commandOptionsType, integrationExpireBehavior, interactionType, textInputStyle} = require('./structures/types/enum')
+const AutoModRule = require('./structures/models/AutoModRule')
+const {webhookType, ActivityType, guildVerificationLevel, guildMfaLevel, guildDefaultMessageNotifications, guildExplicitContentFilterLevel, guildBoostLevel, guildNsfwLevel, channelType, videoQualityMode, PermissionIdType, stagePrivacyLevel, ComponentsType, ButtonStyle, commandType, commandOptionsType, integrationExpireBehavior, interactionType, textInputStyle, AutoModEventType, AutoModTriggerType, AutoModTriggerPresets, AutoModActionType} = require('./structures/types/enum')
 module.exports = {
 
     /** Functions */
@@ -70,11 +72,6 @@ module.exports = {
     UserSelect,
     MentionableSelect,
     ChannelSelect,
-    Permissions,
-    ActivityFlags,
-    MemberFlags,
-    UserFlags,
-    MessageFlags,
     GuildCommand,
     ForumTag,
     Store,
@@ -91,8 +88,17 @@ module.exports = {
     Modal,
     Collector,
     Presence,
+    AutoModRule,
 
-    /** All EnumerationsZ */
+    /** Flags (bitfield) */
+    Permissions,
+    ActivityFlags,
+    MemberFlags,
+    UserFlags,
+    MessageFlags,
+    IntentFlags,
+
+    /** All Enumerations */
     Colors,
     webhookType,
     ActivityType, 
@@ -113,4 +119,8 @@ module.exports = {
     integrationExpireBehavior, 
     interactionType,
     textInputStyle, 
+    AutoModEventType,
+    AutoModTriggerType,
+    AutoModTriggerPresets,
+    AutoModActionType,
 }

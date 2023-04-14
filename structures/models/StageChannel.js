@@ -163,6 +163,7 @@ module.exports = class StageChannel {
                 if (options.default_forum_layout === null) options.default_forum_layout = 0
                 if (typeof options.default_forum_layout !== "number") return reject(new TypeError("Default forum layout must be set to null or a number"))
             }
+            if (reason === null) reason = undefined
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             options["reason"] = reason
             this.client.rest.patch(this.client._ENDPOINTS.CHANNEL(this.id), options).then(res => {
@@ -177,6 +178,7 @@ module.exports = class StageChannel {
 
     async delete(reason, time) {
         return new Promise(async (resolve, reject) => {
+            if (reason === null) reason = undefined
             if (reason === null) reason = undefined
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             if (time === null) time = 0
@@ -198,6 +200,7 @@ module.exports = class StageChannel {
 
     async clone(reason, time) {
         return new Promise(async (resolve, reject) => {
+            if (reason === null) reason = undefined
             if (reason === null) reason = undefined
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             if (time === null) time = 0
@@ -260,6 +263,7 @@ module.exports = class StageChannel {
             if (typeof options.privacy_level !== "undefined" && typeof options.privacy_level !== "number") return reject(new TypeError("The stage start options privacy level must be number"))
             if (typeof options.privacy_level === "number" && (options.privacy_level < 1 || options.privacy_level > 2)) return reject(new TypeError("The stage start options privacy level must be between 1 and 2"))
             if (typeof options.send_start_notification !== "boolean") options.send_start_notification = false
+            if (options.reason === null) options.reason = undefined
             if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.post(this.client._ENDPOINTS.STAGE(), options).then((res) => {
                 return resolve(res)
@@ -287,6 +291,7 @@ module.exports = class StageChannel {
             if (options.topic.length < 1 || options.topic.length > 120) return reject(new TypeError("The stage start options topic length must be between 1 and 120"))
             if (typeof options.privacy_level !== "undefined" && typeof options.privacy_level !== "number") return reject(new TypeError("The stage start options privacy level must be number"))
             if (typeof options.privacy_level === "number" && (options.privacy_level < 1 || options.privacy_level > 2)) return reject(new TypeError("The stage start options privacy level must be between 1 and 2"))
+            if (options.reason === null) options.reason = undefined
             if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.patch(this.client._ENDPOINTS.STAGE()+'/'+this.id, options).then((res) => {
                 return resolve(res)
@@ -298,6 +303,7 @@ module.exports = class StageChannel {
 
     async delete_stage(reason){
         return new Promise(async(resolve, reject) => {
+            if (reason === null) reason = undefined
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.delete(this.client._ENDPOINTS.STAGE()+'/'+this.id, {
                 reason: reason
@@ -326,6 +332,7 @@ module.exports = class StageChannel {
             if(typeof options.unique !== "undefined"){
                 if(typeof options.unique !== "boolean") return reject(new TypeError("Create invite options unique must be a boolean"))
             }
+            if (options.reason === null) options.reason = undefined
             if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.post(`${this.client._ENDPOINTS.CHANNEL(this.id)}/invites`, options).then(res => {
                 return resolve(new Invite(this.client, this.client.guilds.get(this.guildId)||this.guild, res, this))

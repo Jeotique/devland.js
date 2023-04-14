@@ -12,13 +12,14 @@ module.exports = class VoiceState {
         this.userId = data.user_id
         this.member = data.member
         this.session_id = data.session_id
-        this.deaf = data.deaf
-        this.mute = data.mute
-        this.self_deaf = data.self_deaf
-        this.self_mute = data.self_mute
-        this.self_stream = data.self_stream
-        this.self_video = data.self_video
+        this.deaf = data.deaf || false
+        this.mute = data.mute || false
+        this.self_deaf = data.self_deaf || false
+        this.self_mute = data.self_mute || false
+        this.self_stream = data.self_stream || false
+        this.self_video = data.self_video || false
         this.suppress = data.suppress
         this.request_to_speak_timestamp = data.request_to_speak_timestamp
+        this.data_is_available = true
     }
 }

@@ -30,6 +30,7 @@ module.exports = class Integration {
 
     delete(reason){
         return new Promise(async(resolve, reject) => {
+            if (reason === null) reason = undefined
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.delete(this.client._ENDPOINTS.INTEGRATIONS(this.guildId, this.id), {
                 reason: reason

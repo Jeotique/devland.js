@@ -34,5 +34,20 @@ module.exports = {
         client.voiceChannels.filter(channel => channel.guildId === guild.id).map(channel => {
             client.voiceChannels.delete(channel.id)
         })
+        client.announcementChannels.filter(channel => channel.guildId === guild.id).map(channel => {
+            client.voiceChannels.delete(channel.id)
+        })
+        client.threadChannels.filter(channel => channel.guildId === guild.id).map(channel => {
+            client.voiceChannels.delete(channel.id)
+        })
+        client.stageChannels.filter(channel => channel.guildId === guild.id).map(channel => {
+            client.voiceChannels.delete(channel.id)
+        })
+        client.forumChannels.filter(channel => channel.guildId === guild.id).map(channel => {
+            client.voiceChannels.delete(channel.id)
+        })
+        client.categoryChannels.filter(channel => channel.guildId === guild.id).map(channel => {
+            client.voiceChannels.delete(channel.id)
+        })
     }
 }

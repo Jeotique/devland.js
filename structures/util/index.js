@@ -42,6 +42,8 @@ module.exports.createDefaultOptions = () => {
     rolesLifeTime: null,
     invitesLifeTime: null,
     presencesLifeTime: null,
+    voicesLifeTime: null,
+    waitCacheBeforeReady: true,
     token: null,
   }
 }

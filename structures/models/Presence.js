@@ -2,7 +2,7 @@ const User = require('./User')
 const Client = require('../client/client')
 const Guild = require('./Guild')
 const ActivityFlags = require('../util/BitFieldManagement/ActivityFlags')
-
+const {Store} = require('../util/Store/Store')
 module.exports = class Presence {
     constructor(client, guild, data){
         Object.defineProperty(this, 'client', { value: client })

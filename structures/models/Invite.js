@@ -8,7 +8,7 @@ module.exports = class Invite {
         this.guild = guild
         this.guildId = guild.id
         this.channel = channel || client.textChannels.get(data.channel.id) || client.voiceChannels.get(data.channel.id) || client.announcementChannels.get(data.channel.id) || client.threadChannels.get(data.channel.id) || client.stageChannels.get(data.channel.id) || client.forumChannels.get(data.channel.id) || null
-        this.channelId = data.channel.id
+        this.channelId = data.channel_id
         this.code = data.code
         this.expire_At = data.expires_at
         this.inviter = data.inviter ? client.users.get(data.inviter.id) || new User(client, data.inviter) : null
@@ -23,6 +23,7 @@ module.exports = class Invite {
 
     async delete(reason) {
         return new Promise(async (resolve, reject) => {
+            if (reason === null) reason = undefined
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.delete(this.client._ENDPOINTS.INVITES(this.code), {
                 reason: reason

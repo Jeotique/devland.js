@@ -152,3 +152,22 @@ module.exports.Colors = {
     DARK_BUT_NOT_BLACK: 0x2c2f33,
     NOT_QUITE_BLACK: 0x23272a,
   }
+module.exports.AutoModEventType = {
+    MESSAGE_SEND: 1
+}
+module.exports.AutoModTriggerType = {
+    KEYWORD: 1,
+    SPAM: 3,
+    KEYWORD_PRESET: 4,
+    MENTION_SPAM: 5
+}
+module.exports.AutoModTriggerPresets = {
+    PROFANITY: 1,
+    SEXUAL_CONTENT: 2,
+    SLURS: 3
+}
+module.exports.AutoModActionType = {
+    BLOCK_MESSAGE: 1,
+    SEND_ALERT_MESSAGE: 2,
+    TIMEOUT: 3
+}

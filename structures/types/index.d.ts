@@ -7,7 +7,7 @@ declare module 'devland.js' {
         connect: boolean;
         ws: wsOptions;
         presence: presenceOptions;
-        intents: number;
+        intents: IntentFlagString[]|number;
         token: string;
         messagesLifeTime: number;
         guildsLifeTime: number;
@@ -18,6 +18,8 @@ declare module 'devland.js' {
         rolesLifeTime: number;
         invitesLifeTime: number;
         presencesLifeTime: number;
+        voicesLifeTime: number;
+        waitCacheBeforeReady: boolean;
     }
     type wsOptions = {
         large_threshold: number;
@@ -167,6 +169,12 @@ declare module 'devland.js' {
         guild?: Guild,
         data_is_available: boolean,
     }
+    type invalid_VoiceState = {
+        error: string,
+        id: string,
+        guild?: Guild,
+        data_is_available: boolean,
+    }
     type threadMembersUpdateData = {
         id: string,
         guild: Guild,
@@ -257,13 +265,30 @@ declare module 'devland.js' {
         presenceUpdate: [old_presence: Presence | invalid_Presence, presence: Presence];
         webhooksUpdate: [channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel];
         userTypingStart: [guild: Guild|undefined, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, user: User, member: Member|undefined, timestamp: number];
-        voiceStateUpdate: [voice_state: VoiceState];
+        voiceStateUpdate: [old_voice_state: VoiceState | invalid_VoiceState, voice_state: VoiceState];
         voiceServerUpdate: [voice_server: {
             guild: Guild,
             token: string,
             endpoint: string,
         }];
         interaction: [interaction: Interaction];
+        autoModRuleCreate: [rule: AutoModRule];
+        autoModRuleUpdate: [rule: AutoModRule];
+        autoModRuleDelete: [rule: AutoModRule];
+        autoModRuleExecution: [data: AutoModExec];
+    }
+    type AutoModExec = {
+        guild_id: string,
+        action: AutoModActions,
+        rule_id: string,
+        rule_trigger_type: AutoModTriggerType,
+        user_id: string,
+        channel_id?: string,
+        message_id?: string,
+        alert_system_message_id?: string,
+        content: string,
+        matched_keyword?: string,
+        matched_content?: string
     }
     class RESTHandler {
         private constructor(client: Client);
@@ -420,6 +445,7 @@ declare module 'devland.js' {
         readonly banner: string | null;
         readonly ownerId: string;
         readonly region: string;
+        readonly member_count: number;
         readonly verification_level: guildVerificationLevel;
         readonly mfaLevel: guildMfaLevel;
         readonly default_message_notifications: guildDefaultMessageNotifications;
@@ -439,6 +465,7 @@ declare module 'devland.js' {
         readonly members: Store<String, Member>;
         readonly roles: Store<String, Role>;
         readonly presences: Store<String, Presence>;
+        readonly voicesStates: Store<String, VoiceState>;
         readonly premiumSubscriberRole: Role | null;
         readonly everyoneRole: Role | null;
         readonly data_is_available: boolean;
@@ -475,6 +502,20 @@ declare module 'devland.js' {
         fetchInvite(): Promise<Store<String, Invite>>;
         fetchWebhooks(): Promise<Store<String, Webhook>>;
         fetchIntegrations(): Promise<Store<String, Integration>>;
+        fetchAutoModRules(): Promise<Store<String, AutoModRule>>;
+        fetchAutoModRule(rule_id: string|AutoModRule): Promise<AutoModRule>;
+        createAutoModRule(options: createAutoModRuleOptions): Promise<AutoModRule>;
+    }
+    type createAutoModRuleOptions = {
+        name: string,
+        event_type: AutoModEventType,
+        trigger_type: AutoModTriggerType,
+        trigger_metadata?: AutoModTriggerMetadata,
+        actions: AutoModActions[],
+        enabled?: boolean,
+        exempt_roles?: string[],
+        exempt_channels?: string[],
+        reason?: string
     }
     type fetchMembersOptions = {
         limit: number,
@@ -488,7 +529,7 @@ declare module 'devland.js' {
         readonly premium_since: string;
         readonly pending: boolean;
         readonly nick: string;
-        readonly voice: { mute: boolean, deaf: boolean };
+        readonly voice: VoiceState;
         readonly joined_at: string;
         readonly joinedTimestamp: number;
         readonly flags: MemberFlags;
@@ -972,7 +1013,8 @@ declare module 'devland.js' {
     }
     type authorOptions = {
         name: string,
-        icon_url?: string
+        icon_url?: string,
+        url?: string,
     }
     type footerOptions = {
         text: string,
@@ -1595,6 +1637,9 @@ declare module 'devland.js' {
         readonly self_video: boolean;
         readonly suppress: boolean;
         readonly request_to_speak_timestamp: number;
+        readonly data_is_available: boolean;
+        private readonly cachedAt: number;
+        private readonly expireAt: number;
     }
     export enum interactionType {
         PING = 1,
@@ -1692,6 +1737,7 @@ declare module 'devland.js' {
         getCommandValue(name: string): string | number | boolean | User | Role | TextChannel | VoiceChannel | CategoryChannel | AnnouncementChannel | Thread | StageChannel | ForumChannel;
         getTargetUser(): User;
         getTargetMessage(): Message;
+        sendAutoCompleteChoices(options: commandChoicesOptions[]): Promise<Interaction>;
     }
     type modalOptions = {
         name: string,
@@ -1949,5 +1995,103 @@ declare module 'devland.js' {
         public static DEFAULT: bigint;
         public static FLAGS: Message_Flags;
         public static resolve(flag?: MessageFlagsResolvable): bigint;
+    }
+    export type IntentFlagString =
+        | 'GUILDS'
+        | 'GUILD_MEMBERS'
+        | 'GUILD_MODERATION'
+        | 'GUILD_EMOJIS_AND_STICKERS'
+        | 'GUILD_INTEGRATIONS'
+        | 'GUILD_WEBHOOKS'
+        | 'GUILD_INVITES'
+        | 'GUILD_VOICE_STATES'
+        | 'GUILD_PRESENCES'
+        | 'GUILD_MESSAGES'
+        | 'GUILD_MESSAGE_REACTIONS'
+        | 'GUILD_MESSAGE_TYPING'
+        | 'DIRECT_MESSAGES'
+        | 'DIRECT_MESSAGE_REACTIONS'
+        | 'DIRECT_MESSAGE_TYPING'
+        | 'MESSAGE_CONTENT'
+        | 'GUILD_SCHEDULED_EVENTS'
+        | 'AUTO_MODERATION_CONFIGURATION'
+        | 'AUTO_MODERATION_EXECUTION';
+    export type Intent_Flags = Record<IntentFlagString, bigint>;
+    export type IntentFlagsResolvable = BitFieldResolvable<IntentFlagString, bigint>;
+    export class IntentFlags extends BitField<IntentFlagString, bigint> {
+        public any(flag: IntentFlagsResolvable): boolean;
+        public has(flag: IntentFlagsResolvable): boolean;
+        public missing(bits: BitFieldResolvable<IntentFlagString, bigint>): IntentFlagString[];
+        public serialize(): Record<IntentFlagString, boolean>;
+        public toArray(): IntentFlagString[];
+        public static ALL: bigint;
+        public static DEFAULT: bigint;
+        public static FLAGS: Intent_Flags;
+        public static resolve(flag?: IntentFlagsResolvable): bigint;
+    }
+    export class AutoModRule {
+        constructor(client: Client, guild: Guild, data: any);
+        readonly id: string;
+        readonly createdTimestamp: number;
+        readonly createdAt: Date;
+        readonly guildId: string;
+        readonly guild?: Guild;
+        readonly name: string;
+        readonly creatorId: string;
+        readonly creator?: User;
+        readonly event_type: AutoModEventType;
+        readonly trigger_type: AutoModTriggerType;
+        readonly trigger_metadata: AutoModTriggerMetadata;
+        readonly actions: AutoModActions[];
+        readonly enabled: boolean;
+        readonly exempt_roles: string[];
+        readonly exempt_channels: string[];
+        edit(options: editAutoModRuleOptions): Promise<AutoModRule>;
+        delete(reason?: string): Promise<AutoModRule>;
+    }
+    type editAutoModRuleOptions = {
+        name: string,
+        event_type: AutoModEventType,
+        trigger_metadata?: AutoModTriggerMetadata,
+        actions: AutoModActions[],
+        enabled?: boolean,
+        exempt_roles?: string[],
+        exempt_channels?: string[],
+        reason?: string
+    }
+    enum AutoModEventType {
+        MESSAGE_SEND = 1
+    }
+    export enum AutoModTriggerType {
+        KEYWORD = 1,
+        SPAM = 3,
+        KEYWORD_PRESET = 4,
+        MENTION_SPAM = 5
+    }
+    type AutoModTriggerMetadata = {
+        keyword_filter: string[],
+        regex_patterns:  string[],
+        presets: AutoModTriggerPresets[],
+        allow_list: string[],
+        mention_total_limit: number,
+    }
+    export enum AutoModTriggerPresets {
+        PROFANITY = 1,
+        SEXUAL_CONTENT = 2,
+        SLURS = 3
+    }
+    type AutoModActions = {
+        type: AutoModActionType,
+        metadata?: AutoModActionMetadata
+    }
+    export enum AutoModActionType {
+        BLOCK_MESSAGE = 1,
+        SEND_ALERT_MESSAGE = 2,
+        TIMEOUT = 3
+    }
+    type AutoModActionMetadata = {
+        channel_id: string,
+        duration_seconds: number,
+        custom_message?: string
     }
 }

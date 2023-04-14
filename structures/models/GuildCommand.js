@@ -31,8 +31,10 @@ module.exports = class GuildCommand {
         if (this.description_localizations && typeof this.description_localizations === "object") if (Object.keys(this.description_localizations).find(key => this.description_localizations[key].length > 100)) throw new TypeError("Description localizations max length of 100")
         else if (this.type !== 1 && this.description_localizations && typeof this.description_localizations === "object") throw new TypeError("Description localizations is available for only CHAT_INPUT command")
         else this.description_localizations = undefined
+        if (this.options && !Array.isArray(this.options)) throw new TypeError("Command options must be a array")
         if (this.options && this.options.length > 25) throw new TypeError("Command max options length is 25")
         if (this.options && this.options.length > 0 && this.type !== 1) throw new TypeError("Command options are available for CHAT_INPUT type only")
+        if (this.options && this.options.length > 0 && this.options.find(op => op.autocomplete && (op.type !== 3 && op.type !== 4 && op.type !== 10))) throw new TypeError("Autocomplete option can only be from the type 'STRING' 'INTEGER' 'NUMBER'")
         else if (typeof this.options !== "object") this.options = undefined
         if (this.default_member_permissions && this.default_member_permissions instanceof Permissions) {
             this.default_member_permissions = this.default_member_permissions.bitfield
@@ -42,6 +44,7 @@ module.exports = class GuildCommand {
             this.default_member_permissions == new Permissions(...this.default_member_permissions).bitfield.toString()
         } else this.default_member_permissions = undefined
         if (typeof this.nsfw !== "undefined" && typeof this.nsfw !== "boolean") throw new TypeError("Command nsfw value must be a boolean")
+
         return {
             type: this.type,
             name: this.name,

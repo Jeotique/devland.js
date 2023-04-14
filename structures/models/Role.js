@@ -3,7 +3,7 @@ const Client = require('../client/client')
 const Permissions = require('../util/BitFieldManagement/Permissions')
 const Utils = require('../util/index')
 const DataResolver = require('../util/DateResolver')
-
+const {Store} = require('../util/Store/Store')
 module.exports = class Role {
     constructor(client, guild, data) {
         Object.defineProperty(this, 'client', { value: client })
@@ -62,6 +62,7 @@ module.exports = class Role {
             }
             if (typeof options.icon !== "undefined") options.icon = await DataResolver.resolveImage(options.icon)
             if (!this.guild.features.has("ROLE_ICONS")) options.icon = undefined
+            if (options.reason === null) options.reason = undefined
             if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.patch(this.client._ENDPOINTS.ROLES(this.guildId, this.id), options).then(res => {
                 let role = new Role(this.client, this.client.guilds.get(this.id) || this, res)
@@ -95,6 +96,7 @@ module.exports = class Role {
 
     async delete(reason) {
         return new Promise(async (resolve, reject) => {
+            if (reason === null) reason = undefined
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.delete(this.client._ENDPOINTS.ROLES(this.guildId, this.id), {
                 reason: reason

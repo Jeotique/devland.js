@@ -5,6 +5,7 @@ const Role = require('./Role')
 const StageChannel = require('./StageChannel')
 const User = require('./User')
 const VoiceChannel = require('./VoiceChannel')
+const {Store} = require('../util/Store/Store')
 
 module.exports = class Member {
     constructor(client, guild, data) {
@@ -15,10 +16,7 @@ module.exports = class Member {
         this.premium_since = data.premium_since
         this.pending = data.pending
         this.nick = data.nick
-        this.voice = {
-            mute: data.mute,
-            deaf: data.deaf
-        }
+        this.voice = guild.voicesStates.get(this.id) || null
         this.joined_at = data.joined_at
         this.joinedTimestamp = new Date(data.joinedTimestamp).getTime()
         this.flags = new MemberFlags(BigInt(data.flags))
@@ -111,6 +109,7 @@ module.exports = class Member {
                 else return reject(new TypeError("Invalid role provided"))
             })
             else return reject(new TypeError("Invalid role provided"))
+            if (reason === null) reason = undefined
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             data.filter(r => !this.roles.includes(r)).map(r => this.roles.push(r))
             this.client.rest.patch(this.client._ENDPOINTS.MEMBERS(this.guildId, this.id), {
@@ -144,6 +143,7 @@ module.exports = class Member {
                 else return reject(new TypeError("Invalid role provided"))
             })
             else return reject(new TypeError("Invalid role provided"))
+            if (reason === null) reason = undefined
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.roles = this.roles.filter(r => !data.includes(r))
             this.client.rest.patch(this.client._ENDPOINTS.MEMBERS(this.guildId, this.id), {
@@ -192,6 +192,7 @@ module.exports = class Member {
 
     async kick(reason) {
         return new Promise(async (resolve, reject) => {
+            if (reason === null) reason = undefined
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.guild.kickMember(this.id, reason).then(member => {
                 return resolve(member)
@@ -204,6 +205,7 @@ module.exports = class Member {
     async ban(delete_message_seconds, reason) {
         return new Promise(async (resolve, reject) => {
             if (typeof delete_message_seconds !== "undefined" && typeof delete_message_seconds !== "number") return reject(new TypeError("delete_message_seconds must be a number"))
+            if (reason === null) reason = undefined
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.guild.banMember(this.id, delete_message_seconds, reason).then(member => {
                 return resolve(member)

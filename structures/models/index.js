@@ -34,6 +34,7 @@ const Interaction = require('./Interaction')
 const Modal = require('./Modal')
 const Collector = require('./Collector')
 const Presence = require('./Presence')
+const AutoModRule = require('./AutoModRule')
 module.exports = {
     ClientUser,
     Attachment,
@@ -71,4 +72,5 @@ module.exports = {
     Modal,
     Collector,
     Presence,
+    AutoModRule,
 }

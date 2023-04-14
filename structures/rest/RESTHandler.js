@@ -39,7 +39,7 @@ module.exports = class RESTHandler {
                 } else {
                     if (res.status === 429 || res.statusCode === 429) {
                         this._ratelimits.unshift(res.req);
-                        setTimeout(() => resolve(), res.headers["retry_after"] || res.headers["Retry-After"]);
+                        setTimeout(() => resolve(), (res.headers["retry_after"] || res.headers["Retry-After"])*1000);
                         try {
                             this.client.emit('debug',
                                 `Rate limit hit
@@ -47,7 +47,7 @@ module.exports = class RESTHandler {
                         Global : ${res?.body?.global || res.headers["global"]}
                         Method : ${req.method}
                         Path : ${req.endpoint}
-                        Retry in : ${res.headers["retry_after"]}
+                        Retry in : ${res.headers["retry_after"]||res.headers["Retry-After"]}s
                         Code : ${res?.body?.code || res.headers["code"]}`)
                         } catch (err) { }
                         return;

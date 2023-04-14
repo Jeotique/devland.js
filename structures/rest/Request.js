@@ -21,7 +21,7 @@ module.exports = class Request {
     }
 
     _setHeaders() {
-        if (this.data && this.data?.reason) {
+        if ((this.data && this.data?.reason) || (this.options && this.options?.reason)) {
             return {
                 'accept': '*/*',
                 'accept-language': 'en-US;q=0.8',
@@ -29,7 +29,7 @@ module.exports = class Request {
                 'user_agent': 'Discord Bot (devland.js)',
                 'dnt': 1,
                 'Authorization': 'Bot ' + this.token,
-                'X-Audit-Log-Reason': this.data.reason,
+                'X-Audit-Log-Reason': this.data?.reason||this.options?.reason,
                 'use_x_forwarded_for': true,
             }
         } else {
@@ -91,7 +91,6 @@ module.exports = class Request {
                 result.req = this
                 res(result)
             }).catch((err) => {
-                console.log(err)
                 this.client.emit('debug', '~~~~error with the request~~~~')
                 err.promise = this.promise
                 err.req = this

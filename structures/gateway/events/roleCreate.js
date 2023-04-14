@@ -10,7 +10,7 @@ module.exports = {
      */
     run: async (client, d) => {
         const data = d.d
-        let guild = client.guilds.get(data.guild_id) || await client.rest.get(client._ENDPOINTS.SERVERS(data.guild_id))
+        let guild = data.guild_id ? (client.guilds.get(data.guild_id) || await client.rest.get(client._ENDPOINTS.SERVERS(data.guild_id))) : undefined
         if (!(guild instanceof Guild)) guild = new Guild(client, guild)
         let role = new Role(client, guild, data.role)
         /**

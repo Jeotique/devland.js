@@ -37,6 +37,7 @@ module.exports = class Webhook {
             if (options.channel_id instanceof ForumChannel) options.channel_id = options.channel_id.id
             if (typeof options.channel_id !== "undefined" && typeof options.channel_id !== "string") return reject(new TypeError("Edit webhook options the channel must be a valid Channel instance or a valid Id"))
             if (typeof options.avatar !== "undefined") options.avatar = await DataResolver.resolveImage(options.avatar)
+            if (options.reason === null) options.reason = undefined
             if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS(this.id), options).then(res => {
                 let newweb = new Webhook(this.client, this.client.guilds.get(this.guildId) || this.guild, res)
@@ -50,6 +51,7 @@ module.exports = class Webhook {
 
     async delete(reason) {
         return new Promise(async (resolve, reject) => {
+            if (reason === null) reason = undefined
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.delete(this.client._ENDPOINTS.WEBHOOKS(this.id), {
                 reason: reason

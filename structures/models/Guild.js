@@ -19,6 +19,7 @@ const Ban = require('./Ban')
 const Invite = require('./Invite')
 const Integration = require('./Integration')
 const DataResolver = require('../util/DateResolver')
+const AutoModRule = require('./AutoModRule')
 
 module.exports = class Guild {
     /**
@@ -45,6 +46,7 @@ module.exports = class Guild {
         this.banner = data.banner
         this.ownerId = data.owner_id
         this.region = data.region
+        this.member_count = data.member_count
         this.verification_level = data.verification_level
         this.mfa_level = data.mfa_level
         this.default_message_notifications = data.default_message_notifications
@@ -65,6 +67,7 @@ module.exports = class Guild {
         this.roles = new Store()
         this.invites = new Store()
         this.presences = new Store()
+        this.voicesStates = new Store()
         this.data_is_available = true
 
         if (this.icon) {
@@ -253,6 +256,7 @@ module.exports = class Guild {
             if (options.roles.find(value => typeof value !== "string")) return reject(new TypeError("Create emoji options roles must contains only roles Id"))
             if (typeof options.image === "undefined") return reject(new TypeError("Create emoji options image cannot be undefined"))
             options.image = await DataResolver.resolveImage(options.image)
+            if(options.reason === null) options.reason = undefined
             if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("Create emoji options reason must be string or a undefined value"))
             this.client.rest.post(this.client._ENDPOINTS.EMOJI(this.id), {
                 name: options.name,
@@ -652,6 +656,7 @@ module.exports = class Guild {
             }
             if (typeof options.icon !== "undefined") options.icon = await DataResolver.resolveImage(options.icon)
             if (!this.features.has("ROLE_ICONS")) options.icon = undefined
+            if (options.reason === null) options.reason = undefined
             if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.post(this.client._ENDPOINTS.ROLES(this.id), options).then(res => {
                 let role = new Role(this.client, this.client.guilds.get(this.id) || this, res)
@@ -716,6 +721,7 @@ module.exports = class Guild {
             if (user instanceof User) user = user.id
             if (user instanceof Member) user = user.id
             if (typeof user !== "string") return reject(new TypeError("The user must be a valid User or Member instance or a valid Id"))
+            if (reason === null) reason = undefined
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             let member = this.members.get(user) || null
             this.client.rest.delete(this.client._ENDPOINTS.MEMBERS(this.id, user), {
@@ -739,6 +745,7 @@ module.exports = class Guild {
             if (user instanceof User) user = user.id
             if (user instanceof Member) user = user.id
             if (typeof user !== "string") return reject(new TypeError("The user must be a valid User or Member instance or a valid Id"))
+            if (reason === null) reason = undefined
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             let member = this.members.get(user) || null
             if (typeof delete_message_seconds !== "undefined" && typeof delete_message_seconds !== "number") return reject(new TypeError("delete_message_seconds must be a number"))
@@ -764,6 +771,7 @@ module.exports = class Guild {
             if (user instanceof User) user = user.id
             if (user instanceof Member) user = user.id
             if (typeof user !== "string") return reject(new TypeError("The user must be a valid User or Member instance or a valid Id"))
+            if (reason === null) reason = undefined
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.delete(this.client._ENDPOINTS.BANS(this.id, user), {
                 reason: reason
@@ -820,6 +828,7 @@ module.exports = class Guild {
                 })
                 options.include_roles = a
             }
+            if (options.reason === null) options.reason = undefined
             if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.post(this.client._ENDPOINTS.PRUNE(this.id), options).then(() => {
                 return resolve(this)
@@ -868,6 +877,113 @@ module.exports = class Guild {
                 res.map(i => collect.set(i.id, new Integration(this.client, this.client.guilds.get(this.id) || this, i)))
                 resolve(collect)
             }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async fetchAutoModRules(){
+        return new Promise(async(resolve, reject) => {
+            this.client.rest.get(this.client._ENDPOINTS.AUTOMOD(this.id)).then(res => {
+                let collect = new Store()
+                if(res.length < 1) return resolve(collect)
+                res.map(async(value) => {
+                    value.creator = this.client.users.get(value.creator_id) || await this.client.rest.get(this.client._ENDPOINTS.USER(value.creator_id)).catch(e=>{})
+                    if(value.creator && !(value.creator instanceof User)) value.creator = new User(this.client, value.creator)
+                    let rules = new AutoModRule(this.client, this.client.guilds.get(this.id)||this, value)
+                    collect.set(rules.id, rules)
+                    if(collect.size === res.length) return resolve(collect)
+                })
+            }).catch(e=>{
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async fetchAutoModRule(rule_id){
+        return new Promise(async(resolve, reject) => {
+            if(rule_id instanceof AutoModRules) rule_id = rule_id.id
+            if(typeof rule_id !== "string") return reject(new TypeError("The rule Id must be a string"))
+            this.client.rest.get(this.client._ENDPOINTS.AUTOMOD(this.id, rule_id)).then(async res => {
+                res.creator = this.client.users.get(res.creator_id) || await this.client.rest.get(this.client._ENDPOINTS.USER(res.creator_id)).catch(e=>{})
+                if(res.creator && !(res.creator instanceof User)) res.creator = new User(this.client, res.creator)
+                return resolve(new AutoModRule(this.client, this.client.guilds.get(this.id)||this, res))
+            }).catch(e=>{
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async createAutoModRule(options = {}){
+        return new Promise(async(resolve, reject) => {
+            if(typeof options !== "object") return reject(new TypeError("Create automod rules options must be a object"))
+            if(typeof options.name !== "string") return reject(new TypeError("Create automod rules options name must be a string"))
+            if(typeof options.event_type !== "number") return reject(new TypeError("Create automod rules options event type must be a number"))
+            if(options.event_type !== 1) return reject(new TypeError("Create automod rules options event type is valid, only type 1 is supported"))
+            if(typeof options.trigger_type !== "number") return reject(new TypeError("Create automod rules options trigger type must be a number"))
+            if(options.trigger_type < 1 || options.trigger_type === 2 || options.trigger_type > 5) return reject(new TypeError("Create automod rules options trigger type invalid"))
+            if(typeof options.trigger_metadata !== "undefined"){
+                if(typeof options.trigger_metadata !== "object") return reject(new TypeError("Create automod rules options trigger metadata must be a object"))
+                if(typeof options.trigger_metadata.keyword_filter !== "undefined"){
+                    if(!Array.isArray(options.trigger_metadata.keyword_filter)) return reject(new TypeError("Create automod rules options trigger metadata keyword filter must be a array"))
+                    if(options.trigger_metadata.keyword_filter.find(k => typeof k !== "string")) return reject(new TypeError("Create automod rules options trigger metadata keyword filter can contains string only"))
+                    if(options.trigger_metadata.keyword_filter.length > 1000) return reject(new TypeError("Create automod rules options trigger metadata keyword filter maximum length of 1000"))
+                }
+                if(typeof options.trigger_metadata.regex_patterns !== "undefined"){
+                    if(!Array.isArray(options.trigger_metadata.regex_patterns)) return reject(new TypeError("Create automod rules options trigger metadata regex patterns must be a array"))
+                    if(options.trigger_metadata.regex_patterns.find(k => typeof k !== "string")) return reject(new TypeError("Create automod rules options trigger metadata regex patterns can contains string only"))
+                    if(options.trigger_metadata.regex_patterns.length > 1000) return reject(new TypeError("Create automod rules options trigger metadata regex patterns maximum length of 10"))
+                }
+                if(typeof options.trigger_metadata.presets !== "undefined"){
+                    if(!Array.isArray(options.trigger_metadata.presets)) return reject(new TypeError("Create automod rules options trigger metadata presets must be a array"))
+                    if(options.trigger_metadata.presets.find(k => typeof k !== "number")) return reject(new TypeError("Create automod rules options trigger metadata presets can contains number only"))
+                    if(options.trigger_metadata.presets.find(k => k < 1 || k > 3)) return reject(new TypeError("Create automod rules options trigger metadata presets invalid"))
+                }
+                if(typeof options.trigger_metadata.allow_list !== "undefined"){
+                    if(!Array.isArray(options.trigger_metadata.allow_list)) return reject(new TypeError("Create automod rules options trigger metadata allow list must be a array"))
+                    if(options.trigger_metadata.allow_list.find(k => typeof k !== "string")) return reject(new TypeError("Create automod rules options trigger metadata allow list can contains string only"))
+                    if(options.trigger_metadata.allow_list.length > 100 && (!options.trigger_metadata.presets || options.trigger_metadata.presets?.length < 1)) return reject(new TypeError("Create automod rules options trigger metadata allow list maximum length of 100"))
+                    if(options.trigger_metadata.allow_list.length > 1000) return reject(new TypeError("Create automod rules options trigger metadata allow list maximum length of 1000"))
+                }
+                if(typeof options.trigger_metadata.mention_total_limit !== "undefined"){
+                    if(typeof options.trigger_metadata.mention_total_limit !== "number") return reject(new TypeError("Create automod rules options trigger metadata mention total limit must be a number"))
+                    if(options.trigger_metadata.mention_total_limit > 50) return reject(new TypeError("Create automod rules options trigger metadata mention total limit maximum of 50"))
+                }
+            }
+            if(typeof options.actions === "undefined") return reject(new TypeError("Create automod rules options actions must be a array"))
+            if(!Array.isArray(options.actions)) return reject(new TypeError("Create automod rules options actions must be a array"))
+            if(options.actions.length < 1) return reject(new TypeError("Create automod rules options actions you must provid at least one action"))
+            if(options.actions.find(a => typeof a.type !== "number")) return reject(new TypeError("Create automod rules options action type must be a number"))
+            if(options.actions.find(a => a.type < 1 || a.type > 3)) return reject(new TypeError("Create automod rules options action type invalid"))
+            options.actions.map(action => {
+                if(typeof action.metadata !== "undefined"){
+                    if(typeof action.metadata !== "object") return reject(new TypeError("Create automod rules options action metadata must be a object"))
+                    if(typeof action.metadata.channel_id !== "undefined" && typeof action.metadata.channel_id !== "string") return reject(new TypeError("Create automod rules options action metadata channel Id must be a string"))
+                    if(typeof action.metadata.duration_seconds !== "undefined" && typeof action.metadata.duration_seconds !== "number") return reject(new TypeError("Create automod rules options action metadata duration seconds must be a number"))
+                    if(typeof action.metadata.duration_seconds !== "undefined" && action.metadata.duration_seconds > 2419200) return reject(new TypeError("Create automod rules options action metadata duration seconds maximum of 2419200 (4 weeks)"))
+                    if(typeof action.metadata.custom_message !== "undefined" && typeof action.metadata.custom_message !== "string") return reject(new TypeError("Create automod rules options action metadata custom message must be a string"))
+                    if(typeof action.metadata.custom_message !== "undefined" && action.metadata.custom_message.length > 150) return reject(new TypeError("Create automod rules options action metadata custom message length maximum of 150"))
+                }
+            })
+            if(typeof options.enabled !== "undefined") {
+                if(typeof options.enabled !== "boolean") return reject(new TypeError("Create automod rules options enabled must be a boolean"))
+            }
+            if(typeof options.exempt_roles !== "undefined"){
+                if(!Array.isArray(options.exempt_roles)) return reject(new TypeError("Create automod rules options exempt roles must be a array"))
+                if(options.exempt_roles.find(a => typeof a !== "string")) return reject(new TypeError("Create automod rules options exempt roles can contains only string"))
+                if(options.exempt_roles.length > 20) return reject(new TypeError("Create automod rules options exempt roles maximum length of 20"))
+            }
+            if(typeof options.exempt_channels !== "undefined"){
+                if(!Array.isArray(options.exempt_channels)) return reject(new TypeError("Create automod rules options exempt channels must be a array"))
+                if(options.exempt_channels.find(a => typeof a !== "string")) return reject(new TypeError("Create automod rules options exempt channels can contains only string"))
+                if(options.exempt_channels.length > 50) return reject(new TypeError("Create automod rules options exempt channels maximum length of 50"))
+            }
+            if(options.reason === null) options.reason = undefined
+            if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("Create automod rules options reason must be string or a undefined value"))
+            this.client.rest.post(this.client._ENDPOINTS.AUTOMOD(this.id), options).then(res => {
+                res.creator = this.client.user
+                return resolve(new AutoModRule(this.client, this.client.guilds.get(this.id)||this, res))
+            }).catch(e=>{
                 return reject(new Error(e))
             })
         })

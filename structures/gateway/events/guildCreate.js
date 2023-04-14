@@ -14,7 +14,6 @@ module.exports = {
         const data = d.d
         if (client.guilds.has(data.id) && client.guilds.get(data.id).ready === false) {
             data.ready = true
-
             let guild = new Models.Guild(client, data)
             if (typeof client.options.rolesLifeTime === "number" && client.options.rolesLifeTime > 0) {
                 data.roles.map(role_data => {
@@ -60,6 +59,73 @@ module.exports = {
                             guild.members.set(user.id, g_member)
                         }
                         guild.presences.set(user.id, presence)
+                    }
+                })
+            }
+            if (typeof client.options.voicesLifeTime === "number" && client.options.voicesLifeTime > 0) {
+                data.members.map(async member => {
+                    let user = client.users.get(member.user.id) || new Models.User(client, member.user)
+                    let member_class = guild.members.get(member.user.id) || new Models.Member(client, guild, member)
+                    let voice_data = data.voice_states.find(p => p.user_id === user.id)
+                    if (!voice_data) {
+                        let raw_data = {
+                            user: user,
+                            guild: guild,
+                            member: member_class,
+                            user_id: user.id,
+                            guild_id: guild.id,
+                        }
+                        let voice = new Models.VoiceState(client, raw_data)
+                        voice.cachedAt = Date.now()
+                        voice.expireAt = Date.now() + client.options.voicesLifeTime
+                        if (guild.members.has(user.id)) {
+                            let g_member = guild.members.get(user.id)
+                            g_member.voice = voice
+                            guild.members.set(user.id, g_member)
+                        }
+                        guild.voicesStates.set(user.id, voice)
+                    } else {
+                        let channel = await client.rest.get(client._ENDPOINTS.CHANNEL(voice_data.channel_id)).catch(e => { })
+                        if (channel) {
+                            if (channel.type === 0) channel = new Models.TextChannel(client, guild, channel)
+                            else if (channel.type === 1) channel = new Models.DmChannel(client, channel)
+                            else if (channel.type === 2) channel = new Models.VoiceChannel(client, guild, channel)
+                            else if (channel.type === 5) channel = new Models.AnnouncementChannel(client, guild, channel)
+                            else if (channel.type === 10 || channel.type === 11 || channel.type === 12) channel = new Models.Thread(client, guild, channel)
+                            else if (channel.type === 13) channel = new Models.StageChannel(client, guild, channel)
+                            else if (channel.type === 15) channel = new Models.ForumChannel(client, guild, channel)
+                            voice_data.user = user
+                            voice_data.guild = guild
+                            voice_data.guild_id = guild.id
+                            voice_data.member = guild.members.get(member.user.id) || member_class
+                            voice_data.channel = channel
+                            let voice = new Models.VoiceState(client, voice_data)
+                            voice.cachedAt = Date.now()
+                            voice.expireAt = Date.now() + client.options.voicesLifeTime
+                            if (guild.members.has(user.id)) {
+                                let g_member = guild.members.get(user.id)
+                                g_member.voice = voice
+                                guild.members.set(user.id, g_member)
+                            }
+                            guild.voicesStates.set(user.id, voice)
+                        } else {
+                            let raw_data = {
+                                user: user,
+                                guild: guild,
+                                member: guild.members.get(member.user.id) || member_class,
+                                user_id: user.id,
+                                guild_id: guild.id,
+                            }
+                            let voice = new Models.VoiceState(client, raw_data)
+                            voice.cachedAt = Date.now()
+                            voice.expireAt = Date.now() + client.options.voicesLifeTime
+                            if (guild.members.has(user.id)) {
+                                let g_member = guild.members.get(user.id)
+                                g_member.voice = voice
+                                guild.members.set(user.id, g_member)
+                            }
+                            guild.voicesStates.set(user.id, voice)
+                        }
                     }
                 })
             }
@@ -174,6 +240,75 @@ module.exports = {
                             guild.members.set(user.id, g_member)
                         }
                         guild.presences.set(user.id, presence)
+                    }
+                })
+            }
+            if (typeof client.options.voicesLifeTime === "number" && client.options.voicesLifeTime > 0) {
+                data.members.map(async member => {
+                    let user = client.users.get(member.user.id) || new Models.User(client, member.user)
+                    let member_class = guild.members.get(member.user.id) || new Models.Member(client, guild, member)
+                    let voice_data = data.voice_states.find(p => p.user_id === user.id)
+                    console.log(voice_data)
+                    if (!voice_data) {
+                        let raw_data = {
+                            user: user,
+                            guild: guild,
+                            member: member_class,
+                            user_id: user.id,
+                            guild_id: guild.id,
+                        }
+                        let voice = new Models.VoiceState(client, raw_data)
+                        voice.cachedAt = Date.now()
+                        voice.expireAt = Date.now() + client.options.voicesLifeTime
+                        if (guild.members.has(user.id)) {
+                            let g_member = guild.members.get(user.id)
+                            g_member.voice = voice
+                            guild.members.set(user.id, g_member)
+                        }
+                        guild.voicesStates.set(user.id, voice)
+                    } else {
+                        let channel = await client.rest.get(client._ENDPOINTS.CHANNEL(voice_data.channel_id))//.catch(e => {  })
+                        if (channel) {
+                            if (channel.type === 0) channel = new Models.TextChannel(client, guild, channel)
+                            else if (channel.type === 1) channel = new Models.DmChannel(client, channel)
+                            else if (channel.type === 2) channel = new Models.VoiceChannel(client, guild, channel)
+                            else if (channel.type === 5) channel = new Models.AnnouncementChannel(client, guild, channel)
+                            else if (channel.type === 10 || channel.type === 11 || channel.type === 12) channel = new Models.Thread(client, guild, channel)
+                            else if (channel.type === 13) channel = new Models.StageChannel(client, guild, channel)
+                            else if (channel.type === 15) channel = new Models.ForumChannel(client, guild, channel)
+                            voice_data.user = user
+                            voice_data.guild = guild
+                            voice_data.guild_id = guild.id
+                            voice_data.member = guild.members.get(member.user.id) || member_class
+                            voice_data.channel = channel
+                            let voice = new Models.VoiceState(client, voice_data)
+                            voice.cachedAt = Date.now()
+                            voice.expireAt = Date.now() + client.options.voicesLifeTime
+                            if (guild.members.has(user.id)) {
+                                let g_member = guild.members.get(user.id)
+                                g_member.voice = voice
+                                guild.members.set(user.id, g_member)
+                            }
+                            guild.voicesStates.set(user.id, voice)
+                            console.log("added jeo in cache")
+                        } else {
+                            let raw_data = {
+                                user: user,
+                                guild: guild,
+                                member: guild.members.get(member.user.id) || member_class,
+                                user_id: user.id,
+                                guild_id: guild.id,
+                            }
+                            let voice = new Models.VoiceState(client, raw_data)
+                            voice.cachedAt = Date.now()
+                            voice.expireAt = Date.now() + client.options.voicesLifeTime
+                            if (guild.members.has(user.id)) {
+                                let g_member = guild.members.get(user.id)
+                                g_member.voice = voice
+                                guild.members.set(user.id, g_member)
+                            }
+                            guild.voicesStates.set(user.id, voice)
+                        }
                     }
                 })
             }

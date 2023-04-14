@@ -300,6 +300,7 @@ module.exports = class Thread {
                 if (options.default_forum_layout === null) options.default_forum_layout = 0
                 if (typeof options.default_forum_layout !== "number") return reject(new TypeError("Default forum layout must be set to null or a number"))
             }
+            if (reason === null) reason = undefined
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             options["reason"] = reason
             this.client.rest.patch(this.client._ENDPOINTS.CHANNEL(this.id), options).then(res => {
@@ -314,6 +315,7 @@ module.exports = class Thread {
 
     async delete(reason, time) {
         return new Promise(async (resolve, reject) => {
+            if (reason === null) reason = undefined
             if (reason === null) reason = undefined
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             if (time === null) time = 0

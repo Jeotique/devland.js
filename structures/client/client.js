@@ -7,6 +7,7 @@ const { Store } = require('../util/Store/Store')
 const { Message, Guild, TextChannel, User, VoiceChannel, CategoryChannel, AnnouncementChannel, StageChannel, DmChannel } = require('../models')
 const Thread = require('../models/Thread')
 const ForumChannel = require('../models/ForumChannel')
+const IntentFlags = require('../util/BitFieldManagement/IntentFlags')
 /**
  * @extends {EventEmitter}
  */
@@ -41,6 +42,8 @@ module.exports = class Client extends EventEmitter {
      * @property {number} rolesLifeTime
      * @property {number} invitesLifeTime
      * @property {number} presencesLifeTime
+     * @property {number} voicesLifeTime
+     * @property {boolean} waitCacheBeforeReady
      */
     /**
      * The client options
@@ -109,6 +112,7 @@ module.exports = class Client extends EventEmitter {
             INTEGRATIONS: (serverID, integrationID) => { return `${this._ENDPOINTS.SERVERS(serverID)}/integrations${integrationID?`/${integrationID}`:``}`; },
             INTERACTIONS: (interactionID, interactionToken) => { return DiscordAPI + '/interactions/' + interactionID + '/' + interactionToken + '/callback'; },
             INTERACTIONS_MESSAGE: (interactionID, interactionToken) => { return DiscordAPI + '/interactions/' + interactionID + '/' + interactionToken; },
+            AUTOMOD: (serverID, ruleID) => { return `${this._ENDPOINTS.SERVERS(serverID)}/auto-moderations/rules${ruleID?`/${ruleID}`:``}`; },
         }
 
         this.token = options?.token
@@ -177,6 +181,10 @@ module.exports = class Client extends EventEmitter {
         if (this.options.presencesLifeTime > 0 && !this.options.presencesLifeTime) {
             this.options.presencesLifeTime = null
             process.emitWarning("The guilds cache must be enabled if you want to use the presences cache")
+        }
+        if (this.options.voicesLifeTime > 0 && !this.options.voicesLifeTime) {
+            this.options.voicesLifeTime = null
+            process.emitWarning("The guilds cache must be enabled if you want to use the voices cache")
         }
         this.rest = new RESTHandler(this)
         this.user = new Models.ClientUser(this)
@@ -247,6 +255,7 @@ module.exports = class Client extends EventEmitter {
      */
     connect(token) {
         if (token && typeof token === 'string') this.token = token;
+        if(Array.isArray(this.options.intents)) this.options.intents = parseInt(new IntentFlags(this.options.intents).bitfield)
         const attemptLogin = require('../gateway/websocket');
         if (this.ws.connected) throw new Error(`The client is already connected to the gateway`);
 

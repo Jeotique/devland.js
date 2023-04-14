@@ -1,5 +1,6 @@
 const Client = require('../../client/client')
 const { Guild, TextChannel, Message, DmChannel, Member, User, VoiceChannel, AnnouncementChannel, Thread, StageChannel, ForumChannel } = require('../../models')
+const MessageFlags = require('../../util/BitFieldManagement/MessageFlags')
 module.exports = {
     name: 'messageUpdate',
     /**
@@ -10,8 +11,10 @@ module.exports = {
     run: async (client, d) => {
         const data = d.d
         let oldMessage = client.messages.get(data.id)
-        let guild = client.guilds.get(data.guild_id) || await client.rest.get(client._ENDPOINTS.SERVERS(data.guild_id))
-        if(guild && !(guild instanceof Guild)) guild = new Guild(client, guild)
+        let guild = data.guild_id ? (client.guilds.get(data.guild_id) || await client.rest.get(client._ENDPOINTS.SERVERS(data.guild_id))) : undefined
+        if (guild && !(guild instanceof Guild)) guild = new Guild(client, guild)
+        let test = new MessageFlags(BigInt(data.flags ?? 0))
+        if (test.has("LOADING")) return;
         if (!guild) {
             let channel = await client.rest.get(client._ENDPOINTS.CHANNEL(data.channel_id)).catch(e => { })
             if (!channel) return
@@ -53,12 +56,12 @@ module.exports = {
             else if (channel.type === 13) channel = new StageChannel(client, guild, channel)
             else if (channel.type === 15) channel = new ForumChannel(client, guild, channel)
             let member;
-            if(!data.webhook_id) member = guild.members.get(data.author?.id) || await client.rest.get(client._ENDPOINTS.MEMBERS(guild.id, data.author?.id))
+            if (!data.webhook_id) member = guild.members.get(data.author?.id) || await client.rest.get(client._ENDPOINTS.MEMBERS(guild.id, data.author?.id))
             let user;
-            if(member && !(member instanceof Member) && !member.user) user = client.users.get(data.author?.id) || await client.rest.get(client._ENDPOINTS.USER(data.author?.id))
-            if(user && !(user instanceof User)) user = new User(client, user)
-            if(user && !member.user) member.user = user
-            if(member && !(member instanceof Member)) member = new Member(client, guild, member)
+            if (member && !(member instanceof Member) && !member.user) user = client.users.get(data.author?.id) || await client.rest.get(client._ENDPOINTS.USER(data.author?.id))
+            if (user && !(user instanceof User)) user = new User(client, user)
+            if (user && !member.user) member.user = user
+            if (member && !(member instanceof Member)) member = new Member(client, guild, member)
             data.member = member
             let message = new Message(client, guild, channel, data)
 

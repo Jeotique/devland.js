@@ -31,6 +31,9 @@ module.exports = {
                     client.emit('ready', client)
                 } else {
                     if (client.guilds.filter(g => g.ready === true).size < client.guilds.size) return
+                    if (client.options.waitCacheBeforeReady && client.options.membersLifeTime && client.guilds.filter(g => g.members.size < g.member_count).size > 0) return
+                    if (client.options.waitCacheBeforeReady && client.options.presencesLifeTime && client.guilds.filter(g => g.presences.size < g.member_count).size > 0) return 
+                    if (client.options.waitCacheBeforeReady && client.options.voicesLifeTime && client.guilds.filter(g => g.voicesStates.size < g.member_count).size > 0) return
                     clearInterval(checkGuilds)
                     client.ready = true
                     /**
@@ -59,6 +62,7 @@ module.exports = {
             checkMessagesCache()
             checkChannelsCache()
             checkPresencesCache()
+            checkVoicesCache()
         }, 4000)
         async function checkRoleCache() {
             if (typeof client.options.guildsLifeTime !== 'number') return
@@ -88,7 +92,7 @@ module.exports = {
                 })
             })
         }
-        async function checkPresencesCache(){
+        async function checkPresencesCache() {
             if (typeof client.options.guildsLifeTime !== 'number') return
             if (client.options.guildsLifeTime < 1) return
             if (typeof client.options.presencesLifeTime !== 'number') return
@@ -99,12 +103,33 @@ module.exports = {
                     else {
                         guild.presences.delete(presence.user?.id)
                         let member = guild.members.get(presence.user?.id)
-                        if(member){
+                        if (member) {
                             member.presence = null
                             guild.members.set(presence.user?.id, member)
                         }
                     }
                     client.emit('debug', `(${presence.user?.id}) Presence removed from the cache`)
+                    client.guilds.set(guild.id, guild)
+                })
+            })
+        }
+        async function checkVoicesCache() {
+            if (typeof client.options.guildsLifeTime !== 'number') return
+            if (client.options.guildsLifeTime < 1) return
+            if (typeof client.options.voicesLifeTime !== 'number') return
+            if (client.options.voicesLifeTime < 1) return
+            client.guilds.map(guild => {
+                guild.voicesStates.map(voice => {
+                    if (Date.now() < voice.expireAt) return
+                    else {
+                        guild.voicesStates.delete(voice.user?.id)
+                        let member = guild.members.get(voice.user?.id)
+                        if (member) {
+                            member.voice = null
+                            guild.members.set(voice.user?.id, member)
+                        }
+                    }
+                    client.emit('debug', `(${voice.user?.id}) Voice state removed from the cache`)
                     client.guilds.set(guild.id, guild)
                 })
             })

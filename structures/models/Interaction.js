@@ -42,6 +42,7 @@ module.exports = class Interaction {
         this.isCommand = this.type === 2
         this.isModal = this.type === 5
         this.isMessageComponent = this.type === 3
+        this.isAutoCompleteRequest = this.type === 4
         this.isButton = this.isMessageComponent && this.data.component_type === 2
         this.isActionRow = this.isMessageComponent && this.data.component_type === 1
         this.isStringSelect = this.isMessageComponent && this.data.component_type === 3
@@ -171,6 +172,27 @@ module.exports = class Interaction {
             this.client.rest.post(this.client._ENDPOINTS.INTERACTIONS(this.id, this.token), {
                 type: 5,
                 data: options
+            }).then(() => {
+                resolve(this)
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async sendAutoCompleteChoices(options = []) {
+        return new Promise(async (resolve, reject) => {
+            if (typeof options === "undefined") return reject(new TypeError("You must provid at least one option"))
+            if (!Array.isArray(options)) return reject(new TypeError("You must provid a array of options"))
+            if (options.length < 1) return reject(new TypeError("You must provid at least one option"))
+            if (options.filter(op => {
+                typeof op.name !== "string" || typeof op.value === "undefined"
+            }).length > 0) return reject(new TypeError("Invalid option(s) provided"))
+            this.client.rest.post(this.client._ENDPOINTS.INTERACTIONS(this.id, this.token), {
+                type: 8,
+                data: {
+                    choices: options
+                }
             }).then(() => {
                 resolve(this)
             }).catch(e => {
@@ -446,13 +468,13 @@ module.exports = class Interaction {
         }
     }
 
-    getTargetUser(){
-        if(!this.isUserContext) throw new TypeError("This function can be used on a user context only")
+    getTargetUser() {
+        if (!this.isUserContext) throw new TypeError("This function can be used on a user context only")
         return new User(this.client, this.data.resolved.users[this.data.target_id])
     }
 
-    getTargetMessage(){
-        if(!this.isMessageContext) throw new TypeError("This function can be used on a message context only")
-        return new Message(this.client, this.client.guilds.get(this.guildId)||this.guild, this.channel, this.data.resolved.messages[this.data.target_id])
+    getTargetMessage() {
+        if (!this.isMessageContext) throw new TypeError("This function can be used on a message context only")
+        return new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, this.data.resolved.messages[this.data.target_id])
     }
 }

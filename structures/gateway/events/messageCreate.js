@@ -1,5 +1,6 @@
 const Client = require('../../client/client')
 const { Guild, TextChannel, Message, DmChannel, User, Member, VoiceChannel, AnnouncementChannel, Thread, StageChannel, ForumChannel } = require('../../models')
+const MessageFlags = require('../../util/BitFieldManagement/MessageFlags')
 module.exports = {
     name: 'message',
     /**
@@ -9,7 +10,9 @@ module.exports = {
      */
     run: async (client, d) => {
         const data = d.d
-        let guild = client.guilds.get(data.guild_id) || await client.rest.get(client._ENDPOINTS.SERVERS(data.guild_id))
+        let guild = data.guild_id ? (client.guilds.get(data.guild_id) || await client.rest.get(client._ENDPOINTS.SERVERS(data.guild_id))) : undefined
+        let test = new MessageFlags(BigInt(data.flags??0))
+        if(test.has("LOADING")) return;
         if (!guild) {
             let channel = await client.rest.get(client._ENDPOINTS.CHANNEL(data.channel_id)).catch(e => { })
             if (!channel) return
