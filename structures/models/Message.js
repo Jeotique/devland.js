@@ -133,7 +133,7 @@ module.exports = class Message {
         return new Promise(async (resolve, reject) => {
             let data = {
                 content: undefined,
-                embeds: [],
+                embeds: this.embeds,
                 tts: false,
                 nonce: undefined,
                 allowed_mentions: undefined,
@@ -147,6 +147,7 @@ module.exports = class Message {
                     return reject(new Error(e))
                 })
             } else if (options instanceof Embed) {
+                data['embeds'] = []
                 data['embeds'].push(options.pack())
                 this.client.rest.patch(this.client._ENDPOINTS.MESSAGES(this.channelId, this.id), data).then(messageData => {
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
@@ -154,6 +155,7 @@ module.exports = class Message {
                     return reject(new Error(e))
                 })
             } else if (options instanceof ActionRow) {
+                data['components'] = []
                 data['components'].push(options.pack())
                 let toTestCustomId = []
                 let alrSeen = {}
@@ -169,8 +171,8 @@ module.exports = class Message {
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
-                if (typeof options['embeds'] === 'object') options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
-                data['embeds'] = options['embeds']
+                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
+                if (options['embeds'] === null) options['embeds'] = []
                 data['tts'] = options['tts']
                 data['nonce'] = options['nonce']
                 data['allowed_mentions'] = options['allowedMentions']
@@ -180,12 +182,8 @@ module.exports = class Message {
                         data['allowed_mentions'] = { parse: [...options['allowedMentions']] }
                     }
                 }
-                data['components'] = []
-                if (options['components'] && options['components']?.length > 0) options['components']?.map(comp => {
-                    if (comp instanceof ActionRow) data['components'].push(comp.pack())
-                    else return reject(new TypeError("Invalid component, must be a ActionRow instance"))
-                })
-                else data['components'] = this.components
+                if (Array.isArray(options['components'])) data['components'] = []
+                if (options['components'] === null) data['components'] = []
                 let toTestCustomId = []
                 let alrSeen = {}
                 data['components']?.map(ar => ar?.components.map(comp => toTestCustomId.push(comp)))

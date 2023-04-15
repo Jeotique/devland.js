@@ -8,13 +8,15 @@ module.exports = {
      * @param {*} d 
      */
     run: async (client, d) => {
-        const data = d.d
-        let guild = data.guild_id ? (client.guilds.get(data.guild_id) || await client.rest.get(client._ENDPOINTS.SERVERS(data.guild_id))) : undefined
-        if (guild && !(guild instanceof Guild)) guild = new Guild(client, guild)
-        client.emit('voiceServerUpdate', {
-            guild: guild,
-            token: data.token,
-            endpoint: data.endpoint
-        })
+        try {
+            const data = d.d
+            let guild = data.guild_id ? (client.guilds.get(data.guild_id) || await client.rest.get(client._ENDPOINTS.SERVERS(data.guild_id))) : undefined
+            if (guild && !(guild instanceof Guild)) guild = new Guild(client, guild)
+            client.emit('voiceServerUpdate', {
+                guild: guild,
+                token: data.token,
+                endpoint: data.endpoint
+            })
+        } catch (err) { client.emit('errordev', d.t, err) }
     }
 }

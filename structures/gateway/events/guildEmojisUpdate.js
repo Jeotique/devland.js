@@ -9,11 +9,13 @@ module.exports = {
      * @param {*} d 
      */
     run: async (client, d) => {
-        const data = d.d
-        let guild = data.guild_id ? (client.guilds.get(data.guild_id) || await client.rest.get(client._ENDPOINTS.SERVERS(data.guild_id))) : undefined
-        if (!(guild instanceof Guild)) guild = new Guild(client, guild)
-        let collect = new Store()
-        data.emojis?.map(emo => collect.set(emo.id, new Emoji(client, guild, emo)))
-        client.emit('guildEmojisUpdate', guild, collect)
+        try {
+            const data = d.d
+            let guild = data.guild_id ? (client.guilds.get(data.guild_id) || await client.rest.get(client._ENDPOINTS.SERVERS(data.guild_id))) : undefined
+            if (!(guild instanceof Guild)) guild = new Guild(client, guild)
+            let collect = new Store()
+            data.emojis?.map(emo => collect.set(emo.id, new Emoji(client, guild, emo)))
+            client.emit('guildEmojisUpdate', guild, collect)
+        } catch (err) { client.emit('errordev', d.t, err) }
     }
 }

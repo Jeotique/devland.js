@@ -166,7 +166,7 @@ module.exports = class Client extends EventEmitter {
         }
 
         // don't use !
-        this.seq = 0
+        this.seq = -1
         // don't use !
         this.heartbeat = null
         // don't use !
@@ -264,6 +264,8 @@ module.exports = class Client extends EventEmitter {
          * @private
          */
         this.deletedmessages = new Store()
+
+        this.lastHeartbeatAcked = true
         if (this.options && this.options.connect == false) {
             return this;
         } else {
@@ -281,18 +283,38 @@ module.exports = class Client extends EventEmitter {
      * @param {string} token The discord bot token 
      */
     connect(token) {
+        this.emit('debug', `Connect attempt started`)
         if (token && typeof token === 'string') this.token = token;
         if(Array.isArray(this.options.intents)) this.options.intents = parseInt(new IntentFlags(this.options.intents).bitfield)
+        this.emit('debug', `Trying to attempt login`)
         const attemptLogin = require('../gateway/websocket');
         if (this.ws.connected) throw new Error(`The client is already connected to the gateway`);
-
+        this.emit('debug', "client attempt login created")
         attemptLogin(this);
         return this
     }
 
-    destroy(){
+    destroy(reopen = false){
+        this.emit('debug', reopen ? `Reopening a new session after a request`:`Destroying the current session`)
+        try{clearInterval(client.heartbeat)}catch(err){}
         if(!this.ws.connected) throw new TypeError("The bot is not connected to the gateway")
-        this.ws.socket.close(8888);
+        try{this.ws.socket.close(8888)}catch(err){}
+        this.readyAt = 0
+        this.ready = false
+        this.ws.connected = false
+        this.emit('debug', `All clients has been destroyed`)
+        if(reopen) {
+            this.connect()
+        }
+       /* this.users.clear()
+        this.guilds.clear()
+        this.textChannels.clear()
+        this.voiceChannels.clear()
+        this.announcementChannels.clear()
+        this.categoryChannels.clear()
+        this.threadChannels.clear()
+        this.stageChannels.clear()
+        this.forumChannels.clear()*/
     }
 
     toJSON() {

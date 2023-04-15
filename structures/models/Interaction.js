@@ -86,7 +86,7 @@ module.exports = class Interaction {
                 tts: false,
                 nonce: undefined,
                 allowed_mentions: undefined,
-                components: this.components
+                components: []
             }
             if (typeof options === 'string') {
                 data['content'] = options
@@ -209,7 +209,7 @@ module.exports = class Interaction {
                 tts: false,
                 nonce: undefined,
                 allowed_mentions: undefined,
-                components: this.components,
+                components: [],
                 flags: undefined,
             }
             if (typeof options === 'string') {
@@ -271,6 +271,7 @@ module.exports = class Interaction {
                 data['flags'] = options['ephemeral'] ? 1 << 6 : undefined
                 this.client.rest.post(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token), data).then((a) => {
                     this.followUpMessageId = a.id
+                    this.followUpMessage = a
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
                     return reject(new Error(e))
@@ -283,11 +284,11 @@ module.exports = class Interaction {
         return new Promise(async (resolve, reject) => {
             let data = {
                 content: undefined,
-                embeds: [],
+                embeds: this.followUpMessage?.embeds || [],
                 tts: false,
                 nonce: undefined,
                 allowed_mentions: undefined,
-                components: this.components,
+                components: this.followUpMessage?.components || [],
                 flags: undefined,
             }
             if (typeof options === 'string') {
@@ -298,6 +299,7 @@ module.exports = class Interaction {
                     return reject(new Error(e))
                 })
             } else if (options instanceof Embed) {
+                data['embeds'] = []
                 data['embeds'].push(options.pack())
                 this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + this.followUpMessageId, data).then((a) => {
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
@@ -305,6 +307,7 @@ module.exports = class Interaction {
                     return reject(new Error(e))
                 })
             } else if (options instanceof ActionRow) {
+                data['components'] = []
                 data['components'].push(options.pack())
                 let toTestCustomId = []
                 let alrSeen = {}
@@ -321,6 +324,8 @@ module.exports = class Interaction {
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
                 if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
+                if (Array.isArray(options['embeds']) && options['embeds'].length < 1) data['embeds'] = []
+                if (options['embeds'] === null) data['embeds'] = []
                 data['tts'] = options['tts']
                 data['nonce'] = options['nonce']
                 data['allowed_mentions'] = options['allowedMentions']
@@ -330,7 +335,8 @@ module.exports = class Interaction {
                         data['allowed_mentions'] = { parse: [...options['allowedMentions']] }
                     }
                 }
-                data['components'] = []
+                if (Array.isArray(options['components'])) data['components'] = []
+                if (options['components'] === null) data['components'] = []
                 options['components']?.map(comp => {
                     if (comp instanceof ActionRow) data['components'].push(comp.pack())
                     else return reject(new TypeError("Invalid component, must be a ActionRow instance"))

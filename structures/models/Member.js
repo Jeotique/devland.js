@@ -17,8 +17,8 @@ module.exports = class Member {
         this.pending = data.pending
         this.nick = data.nick
         this.voice = guild.voicesStates.get(this.id) || null
-        this.joined_at = data.joined_at
-        this.joinedTimestamp = new Date(data.joinedTimestamp).getTime()
+        this.joined_at = new Date(data.joined_at)
+        this.joinedTimestamp = new Date(data.joined_at).getTime()
         this.flags = new MemberFlags(BigInt(data.flags))
         this.communication_disabled_until = data.communication_disabled_until
         this.avatar = data.avatar
@@ -75,11 +75,13 @@ module.exports = class Member {
                 if (data.channel_id !== null && typeof data.channel_id !== "string") return reject(new TypeError("The channel id must be set to null or a valid Id / VoiceChannel instance / StageChannel instance must be provided"))
             }
             if (typeof data.communication_disabled_until !== "undefined") {
-                if (data.communication_disabled_until !== null && typeof data.communication_disabled_until !== "number") return reject(new TypeError("The communication disabled until state must be a number"))
+                if (!(data.communication_disabled_until instanceof Date) && data.communication_disabled_until !== null && typeof data.communication_disabled_until !== "number") return reject(new TypeError("The communication disabled until state must be a number"))
+                data.communication_disabled_until = !(data.communication_disabled_until instanceof Date) ? new Date(Date.now() + data.communication_disabled_until) : new Date(data.communication_disabled_until.getTime())
             }
             if (typeof data.flags !== "undefined") {
                 if (typeof data.flags !== "number") return reject(new TypeError("The flags state must be a number"))
             }
+            if (data.reason === null) data.reason = undefined
             if (typeof data.reason !== "undefined" && typeof data.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.patch(this.client._ENDPOINTS.MEMBERS(this.guildId, this.id), data).then(res => {
                 let newMember = new Member(this.client, this.client.guilds.get(this.guildId) || this.guild, res)

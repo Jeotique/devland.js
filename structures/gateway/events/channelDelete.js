@@ -103,6 +103,6 @@ module.exports = {
                     else if (data.type === 15) client.emit('channelDeleteForum', channel)
                 }
             }
-        } catch (err) { }
+        } catch (err) { client.emit('errordev', d.t, err) }
     }
 }

@@ -47,7 +47,11 @@ const ShardingManager = require('./structures/sharding/ShardingManager')
 const Shard = require('./structures/sharding/Shard')
 const ShardClientUtil = require('./structures/sharding/ShardClientUtil')
 const {webhookType, ActivityType, guildVerificationLevel, guildMfaLevel, guildDefaultMessageNotifications, guildExplicitContentFilterLevel, guildBoostLevel, guildNsfwLevel, channelType, videoQualityMode, PermissionIdType, stagePrivacyLevel, ComponentsType, ButtonStyle, commandType, commandOptionsType, integrationExpireBehavior, interactionType, textInputStyle, AutoModEventType, AutoModTriggerType, AutoModTriggerPresets, AutoModActionType} = require('./structures/types/enum')
+const {version} = require('./package.json')
 module.exports = {
+
+    /** brut value */
+    version,
 
     /** Functions */
     parseEmoji,

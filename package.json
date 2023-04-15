@@ -9,7 +9,11 @@
     "ws": "^8.5.0"
   },
   "name": "devland.js",
+<<<<<<< Updated upstream
   "version": "1.1.41",
+=======
+  "version": "1.1.56",
+>>>>>>> Stashed changes
   "description": "A powerful API wrapper for the Discord API designed for modern bots",
   "main": "index.js",
   "types": "./structures/types/index.d.ts",

@@ -87,7 +87,7 @@ module.exports.fetchRecommendedShards = async (token, guildsPerShard = 1000) => 
         let t = await res.json();
         return resolve(t.shards * (1000 / guildsPerShard))
       }
-    }).catch(e => { console.log(e) });
+    }).catch(e => { console.error(e) });
   })
 }
 

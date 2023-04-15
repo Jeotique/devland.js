@@ -186,6 +186,10 @@ declare module 'devland.js' {
         added_members: Store<String, Member>;
         removed_members?: string[];
     }
+    type rawData = {
+        eventName: string,
+        data: object|any;
+    }
     interface ClientEvents {
         debug: [data: string];
         ready: [client: Client];
@@ -279,6 +283,9 @@ declare module 'devland.js' {
         autoModRuleUpdate: [rule: AutoModRule];
         autoModRuleDelete: [rule: AutoModRule];
         autoModRuleExecution: [data: AutoModExec];
+        raw: [data: rawData];
+        error: [info: string];
+        rateLimit: [info: string];
     }
     type AutoModExec = {
         guild_id: string,
@@ -508,6 +515,26 @@ declare module 'devland.js' {
         fetchAutoModRules(): Promise<Store<String, AutoModRule>>;
         fetchAutoModRule(rule_id: string|AutoModRule): Promise<AutoModRule>;
         createAutoModRule(options: createAutoModRuleOptions): Promise<AutoModRule>;
+        createChannel(options: channelCreateOptions, reason?: string): Promise<TextChannel|VoiceChannel|AnnouncementChannel|CategoryChannel|Thread|StageChannel|ForumChannel>;
+    }
+    type channelCreateOptions = {
+        name: string,
+        type?: channelType,
+        position?: number,
+        topic?: string,
+        nsfw?: boolean,
+        rate_limit_per_user?: number,
+        bitrate?: number,
+        user_limit?: number,
+        parent_id?: CategoryChannel | string,
+        permission_overwrites?: PermissionOverwritesResolvable[],
+        rtc_region?: string,
+        video_quality_mode?: videoQualityMode,
+        available_tags?: ForumTag[] | object,
+        default_reaction_emoji?: APIEmoji | string,
+        default_thread_rate_limit_per_user?: number,
+        default_sort_order?: number,
+        default_forum_layout?: number,
     }
     type createAutoModRuleOptions = {
         name: string,
