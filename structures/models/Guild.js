@@ -1070,7 +1070,7 @@ module.exports = class Guild {
             if (options.name.length > 100) return reject(new TypeError("The channel name must have less then 100 characters"))
             if (typeof options.type !== "undefined") {
                 if (typeof options.type !== "number") return reject(new TypeError("The channel type must be a number"))
-                if (options.type === 1 || channel.type === 3 || channel.type === 14 || channel.type < 0 || channel.type > 15) return reject(new TypeError("Invalid channel type"))
+                if (options.type === 1 || options.type === 3 || options.type === 14 || options.type < 0 || options.type > 15) return reject(new TypeError("Invalid channel type"))
             }
             if (typeof options.position !== "undefined") {
                 if (typeof options.position !== "number") return reject(new TypeError("The channel position must be a number"))
@@ -1183,6 +1183,7 @@ module.exports = class Guild {
                 else if (channel.type === 10 || channel.type === 11 || channel.type === 12) channel = new Thread(this.client, this.client.guilds.get(this.id) || this, channel)
                 else if (channel.type === 13) channel = new StageChannel(this.client, this.client.guilds.get(this.id) || this, channel)
                 else if (channel.type === 15) channel = new ForumChannel(this.client, this.client.guilds.get(this.id) || this, channel)
+                return resolve(channel)
             }).catch(e => {
                 return reject(new Error(e))
             })
