@@ -16,7 +16,8 @@ module.exports = async (client) => {
         if (!event) return
         eventFiles.set(event.name, event)
     }
-    const socket = new ws(`${gatewayUrl}/?v=7&encoding=json`);
+    var socket;
+    socket = new ws(`${client.ws.gateway.resume_gateway_url ? client.ws.gateway.resume_gateway_url : gatewayUrl}/?v=7&encoding=json`);
     client.ws.socket = socket;
     var heartbeat_interval = null
     socket.on('open', () => {
@@ -47,6 +48,9 @@ module.exports = async (client) => {
                 case 8888:
                     return;
                     break;
+                case 1006:
+                    throw new Error("Connection lost... Check your connection and retry. All clients has been destroyed and all sessions has been closed.")
+                break;
             }
             if (code === 8888) return client.emit('debug', `Client destroyed by the bot owner`)
             //client.emit("error", "Something went wrong with the gateway, trying to reconnect... (code : " + code + ")")
@@ -63,12 +67,12 @@ module.exports = async (client) => {
         if (d.s) client.seq = d.s > client.seq ? d.s : client.seq
         switch (d.op) {
             case 10:
+                if (client.heartbeat) clearInterval(client.heartbeat)
                 client.ws.gateway.heartbeat = {
                     interval: d.d.heartbeat_interval,
                     last: null,
                     recieved: true
                 };
-                require('./heartbeat')(client);
                 if (!client.sessionID) socket.send(JSON.stringify({
                     op: 2,
                     d: {
@@ -98,6 +102,8 @@ module.exports = async (client) => {
                         seq: client.seq
                     }
                 }))
+
+                require('./heartbeat')(client);
                 break;
             case 11:
                 client.emit('debug', `Heartbeat Ack received from the discord gateway, shard : ${client.options.shardId}`)
@@ -113,10 +119,13 @@ module.exports = async (client) => {
                     client.lastHeartbeatAcked = true
                     require('./heartbeat')(client, true)
                     client.readyAt = Date.now();
+                    client.emit('debug', `Session ready with succes, shard : ${client.options.shardId}`)
                 }
                 if (d.t == 'RESUMED') {
                     client.lastHeartbeatAcked = true
                     require('./heartbeat')(client, true)
+                    if(d.d && d.d.session_id) client.sessionID = d.d.session_id
+                    client.emit('debug', `Session resumed with succes, shard : ${client.options.shardId}`)
                 }
                 client.emit('raw', {
                     eventName: d.t,
@@ -130,6 +139,7 @@ module.exports = async (client) => {
                 break;
             case 7:
                 client.emit('debug', `Trying to resume session after discord request. Shard : ${client.options.shardId}`)
+                return socket = new ws(`${client.ws.gateway.resume_gateway_url ? client.ws.gateway.resume_gateway_url : gatewayUrl}/?v=7&encoding=json`)
                 return socket.send(JSON.stringify({
                     op: 6,
                     d: {
@@ -143,6 +153,7 @@ module.exports = async (client) => {
                 if (!d.d) client.sessionID = null
                 //client.emit("error", "Session invalidated. Shard : "+client.options.shardId)
                 client.emit("debug", "Session invalidated. Shard : " + client.options.shardId)
+                return socket = new ws(`${client.ws.gateway.resume_gateway_url ? client.ws.gateway.resume_gateway_url : gatewayUrl}/?v=7&encoding=json`)
                 if (client.sessionID) {
                     client.emit('debug', `Invalid session, trying to resume the connection`)
                     client.emit('debug', `Trying to resume session`)

@@ -52,6 +52,11 @@ module.exports = class AnnouncementChannel {
             })
         })
     }
+
+    toString(){
+        return `<#${this.id}>`
+    }
+
     /**
      * @typedef {object} MessageOptions
      * @property {string} content

@@ -53,6 +53,11 @@ module.exports = class TextChannel {
             })
         })
     }
+
+    toString(){
+        return `<#${this.id}>`
+    }
+
     /**
      * @typedef {object} MessageOptions
      * @property {string} content
@@ -525,10 +530,13 @@ module.exports = class TextChannel {
             }
             let identifier = Date.now()
             this.client.collectorCache[identifier] = new Collector(this.client, this.client.guilds.get(this.guildId) || this.guild, null, this, options)
+            var resolved = false
             this.client.collectorCache[identifier]?.on('end', () => {
+                if(!resolved) resolve(null)
                 delete this.client.collectorCache[identifier]
             })
             this.client.collectorCache[identifier]?.on('collected', collected => {
+                resolved = true
                 resolve(collected)
                 delete this.client.collectorCache[identifier]
             })

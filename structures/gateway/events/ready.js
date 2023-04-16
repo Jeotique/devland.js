@@ -10,6 +10,7 @@ module.exports = {
     run: async (client, d) => {
         try {
             const data = d.d
+            
             data.user.tag = data.user.username + '#' + data.user.discriminator
             client.user = new Models.ClientUser(client, data.user)
             client.sessionID = data.session_id

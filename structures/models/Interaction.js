@@ -216,6 +216,7 @@ module.exports = class Interaction {
                 data['content'] = options
                 this.client.rest.post(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token), data).then((a) => {
                     this.followUpMessageId = a.id
+                    this.followUpMessage = a
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
                     return reject(new Error(e))
@@ -224,6 +225,7 @@ module.exports = class Interaction {
                 data['embeds'].push(options.pack())
                 this.client.rest.post(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token), data).then((a) => {
                     this.followUpMessageId = a.id
+                    this.followUpMessage = a
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
                     return reject(new Error(e))
@@ -239,6 +241,7 @@ module.exports = class Interaction {
                 })
                 this.client.rest.post(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token), data).then((a) => {
                     this.followUpMessageId = a.id
+                    this.followUpMessage = a
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
                     return reject(new Error(e))
@@ -294,6 +297,7 @@ module.exports = class Interaction {
             if (typeof options === 'string') {
                 data['content'] = options
                 this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + this.followUpMessageId, data).then((a) => {
+                    this.followUpMessage = a
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
                     return reject(new Error(e))
@@ -302,6 +306,7 @@ module.exports = class Interaction {
                 data['embeds'] = []
                 data['embeds'].push(options.pack())
                 this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + this.followUpMessageId, data).then((a) => {
+                    this.followUpMessage = a
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
                     return reject(new Error(e))
@@ -317,12 +322,14 @@ module.exports = class Interaction {
                     else alrSeen[test.custom_id] = true
                 })
                 this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + this.followUpMessageId, data).then((a) => {
+                    this.followUpMessage = a
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
                     return reject(new Error(e))
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
+                if (Array.isArray(options['embeds'])) data['embeds'] = []
                 if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
                 if (Array.isArray(options['embeds']) && options['embeds'].length < 1) data['embeds'] = []
                 if (options['embeds'] === null) data['embeds'] = []
@@ -351,6 +358,7 @@ module.exports = class Interaction {
                 })
                 data['flags'] = options['ephemeral'] ? 1 << 6 : undefined
                 this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + this.followUpMessageId, data).then((a) => {
+                    this.followUpMessage = a
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
                     return reject(new Error(e))

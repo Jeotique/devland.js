@@ -30,6 +30,10 @@ module.exports = class Emoji {
         this.user = data.user ? new User(client, data.user) : null
     }
 
+    toString(){
+        return this.id ? `<${this.animated?'a':''}:${this.name}:${this.id}>` : `${this.name}`
+    }
+
     pack(){
         return {
             name: this.name,

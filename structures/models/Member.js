@@ -32,6 +32,10 @@ module.exports = class Member {
         this.presence = guild.presences.get(this.id) || null
     }
 
+    toString(){
+        return `<@${this.id}>`
+    }
+
     async send(options) {
         return new Promise(async (resolve, reject) => {
             this.user.send(options).then(res => resolve(res)).catch(e => reject(new Error(e)))

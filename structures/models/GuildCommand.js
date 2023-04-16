@@ -15,6 +15,10 @@ module.exports = class GuildCommand {
         this.guild_id = options?.guild_id
     }
 
+    toString(){
+        return `${this.name}`
+    }
+
     pack() {
         if (!this.type || typeof this.type !== "number") this.type = 1
         if (!this.name) throw new TypeError("A name must be provided")

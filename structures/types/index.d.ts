@@ -74,7 +74,7 @@ declare module 'devland.js' {
         constructor(options: clientOptions);
         readonly ready: boolean;
         private _ENDPOINTS: object;
-        readonly token: string;
+        private readonly token: string;
         readonly readyAt: number;
         readonly ws: wsClientData;
         readonly sessionID: string;
@@ -96,10 +96,27 @@ declare module 'devland.js' {
         private readonly collectorCache: Store<number, Collector>;
         private readonly deletedmessages: Store<string, Message>;
         readonly version: string;
+        readonly uptime: number;
+        /**
+         * Connect the client to the token
+         * @param token 
+         */
         connect(token?: string): Client;
         toJSON(): JSON;
+        /**
+         * Return all guilds where the bot is in
+         * @param max the maximum of the store size (how many guilds you want)
+         */
         fetchGuilds(max?: number): Promise<Store<string, Guild>>;
+        /**
+         * Return a specific guild
+         * @param guildId the guild Id
+         */
         fetchGuild(guildId: string | Guild): Promise<Guild>;
+        /**
+         * Fetch a user from the discord api
+         * @param userId the user Id
+         */
         fetchUser(userId: string | User): Promise<User>;
 
         public on<K extends keyof ClientEvents>(event: K, listener: (...args: ClientEvents[K]) => Awaitable<void>): this;
@@ -330,8 +347,20 @@ declare module 'devland.js' {
             readonly bot: boolean;
             readonly avatar: string;
             readonly tag: string;
+            /**
+             * Change the status and the activity of the bot
+             * @param presence all is optionnal
+             */
             setPresence(presence: presenceOptions);
+            /**
+             * Change the bot username
+             * @param name new username
+             */
             setName(name: string): Promise<ClientUser>;
+            /**
+             * Change the bot avatar
+             * @param avatar local path or link
+             */
             setAvatar(avatar: string|Buffer): Promise<ClientUser>;
             private _patch(data: any);
             private _parse(data: object);
@@ -481,40 +510,173 @@ declare module 'devland.js' {
         readonly data_is_available: boolean;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
+        /**
+         * Return the vanity url data, including 'code' and 'uses'
+         */
         fetchVanity(): Promise<guildVanityData>;
+        /**
+         * Return the utils channels of the guild, like the system channel, afk channel and the afk timeout, etc
+         */
         fetchUtilsChannels(): Promise<utilsChannels>;
+        /**
+         * Register new GuildCommand on the guild
+         * @param commands the list of GuildCommand
+         */
         setCommands(...commands: GuildCommand[]): Promise<boolean>;
+        /**
+         * Fetch all current commands on the guild
+         */
         getCommands(): Promise<GuildCommand[]>;
+        /**
+         * Delete a GuildCommand on this guild
+         * @param command the GuildCommand to delete
+         */
         deleteCommand(command: GuildCommand | object): Promise<boolean>;
+        /**
+         * Return all emojis of the guild
+         * @param emoji_id provid a emoji Id if you want only this one
+         */
         fetchEmojis(emoji_id?: string | Emoji): Promise<Store<String, Emoji> | Emoji>;
+        /**
+         * Create a new emoji on the guild
+         * @param options the emoji data
+         */
         createEmoji(options: createEmojiOptions): Promise<Emoji>;
+        /**
+         * Update guild settings
+         * @param options the new guild data
+         * @param reason the reason of the update
+         */
         edit(options: editGuildOptions, reason?: string): Promise<Guild>;
+        /**
+         * Delete the guild, the bot must be the owner of the guild
+         */
         delete(): Promise<void>;
+        /**
+         * Return all channels of the guild
+         */
         fetchChannels(): Promise<guildChannels>;
+        /**
+         * Fetch a specific channel with the discord api
+         * @param channel_id the channel Id
+         */
+        fetchChannel(channel_id: string): Promise<TextChannel|VoiceChannel|AnnouncementChannel|CategoryChannel|StageChannel|ForumChannel>;
+        /**
+         * Return all text channels of the guild
+         */
         fetchTextChannels(): Promise<Store<String, TextChannel>>;
+        /**
+         * Return all voice channels of the guild
+         */
         fetchVoiceChannels(): Promise<Store<String, VoiceChannel>>;
+        /**
+         * Return all category channels of the guld
+         */
         fetchCategoryChannels(): Promise<Store<String, CategoryChannel>>;
+        /**
+         * Return all announcement channels of the guild
+         */
         fetchAnnouncementChannels(): Promise<Store<String, AnnouncementChannel>>;
+        /**
+         * Return all stage channels of the guild
+         */
         fetchStageChannels(): Promise<Store<String, StageChannel>>;
+        /**
+         * Return all forum channels of the guild
+         */
         fetchForumChannels(): Promise<Store<String, ForumChannel>>;
+        /**
+         * Fetch a member from the discord api
+         * @param user the user Id or a User instance
+         */
         fetchMember(user: User | Member | string): Promise<Member>;
+        /**
+         * Return all members from the guild (max 1000)
+         * @param options fetch options
+         */
         fetchMembers(options: fetchMembersOptions): Promise<Store<String, Member>>;
+        /**
+         * Return all roles from the guild
+         */
         fetchRoles(): Promise<Store<String, Role>>;
+        /**
+         * Create a new role
+         * @param options role data
+         */
         createRole(options?: createRoleOptions): Promise<Role>;
+        /**
+         * Return a audit logs with all logs matching with your fetch options
+         * @param options fetch options
+         */
         fetchLogs(options: fetchLogsOptions): Promise<AuditLogs>;
+        /**
+         * Leave the guild, use .delete() if bot owner
+         */
         leave(): Promise<void>;
+        /**
+         * Kick a user from the guild
+         * @param user the user Id or a User instance
+         * @param reason the reason of the kick
+         */
         kickMember(user: string | User | Member, reason?: string): Promise<Member|undefined>;
+        /**
+         * Ban a user from the guild
+         * @param user the user Id or a User instance
+         * @param delete_message_seconds provid if you want for the bot to delete last messages of the user
+         * @param reason the reason of the ban
+         */
         banMember(user: string | User | Member, delete_message_seconds?: number, reason?: string): Promise<Member|undefined>;
+        /**
+         * Unban a user from the guild
+         * @param user the user Id or a User instance
+         * @param reason the reason of the unban
+         */
         unbanMember(user: string | User | Member, reason?: string): Promise<boolean>;
+        /**
+         * Return all bans of the guild
+         */
         fetchBans(): Promise<Store<String, Ban>>;
+        /**
+         * Fetch a ban from the guild, if error the user is not banned
+         * @param user the user Id or a User instance
+         */
         fetchBan(user: string | User | Member): Promise<Ban>;
+        /**
+         * Prune inactive members from the guild
+         * @param options prune options
+         */
         prune(options: pruneOptions): Promise<Guild>;
+        /**
+         * Return all invites of the guild
+         */
         fetchInvite(): Promise<Store<String, Invite>>;
+        /**
+         * Return all webhooks of the guild
+         */
         fetchWebhooks(): Promise<Store<String, Webhook>>;
+        /**
+         * Return all integrations of the guild
+         */
         fetchIntegrations(): Promise<Store<String, Integration>>;
+        /**
+         * Return all auto moderation rules of the guild
+         */
         fetchAutoModRules(): Promise<Store<String, AutoModRule>>;
+        /**
+         * Return a specific auto moderation rule of the guild
+         * @param rule_id the automod Id
+         */
         fetchAutoModRule(rule_id: string|AutoModRule): Promise<AutoModRule>;
+        /**
+         * Create a new auto moderation rule on the guild
+         * @param options automod rule data
+         */
         createAutoModRule(options: createAutoModRuleOptions): Promise<AutoModRule>;
+        /**
+         * Create a new channel on the guild
+         * @param options the channel data
+         * @param reason the reason of the creation
+         */
         createChannel(options: channelCreateOptions, reason?: string): Promise<TextChannel|VoiceChannel|AnnouncementChannel|CategoryChannel|Thread|StageChannel|ForumChannel>;
     }
     type channelCreateOptions = {

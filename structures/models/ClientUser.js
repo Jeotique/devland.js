@@ -33,7 +33,7 @@ module.exports = class ClientUser {
     /**
      * @type {number}
      */
-    this.flags = new UserFlags(BigInt(data.flags??0))
+    this.flags = new UserFlags(BigInt(data.flags ?? 0))
     /**
      * @type {string}
      */
@@ -55,9 +55,13 @@ module.exports = class ClientUser {
      */
     this.tag = data.tag
 
-    if(this.avatar){
+    if (this.avatar) {
       this.avatar = `https://cdn.discordapp.com/avatars/${this.id}/${this.avatar}${this.avatar.startsWith('a_') ? '.gif' : '.png'}?size=512`
+    }
   }
+
+  toString() {
+    return `<@${this.id}>`
   }
 
   setPresence(presence) {
@@ -70,22 +74,22 @@ module.exports = class ClientUser {
 
   setName(name) {
     return new Promise(async (resolve, reject) => {
-      if(typeof name !== "string") return reject(new TypeError("Invalid name"))
+      if (typeof name !== "string") return reject(new TypeError("Invalid name"))
       this.client.rest.patch(this.client._ENDPOINTS.ME, {
         username: name
       }).then(res => {
         let newClientUser = new ClientUser(this.client, res)
         resolve(newClientUser)
         Object.keys(newClientUser).map(k => this[k] = newClientUser[k])
-      }).catch(e=>{
+      }).catch(e => {
         return reject(new Error(e))
       })
     })
   }
 
-  setAvatar(avatar){
-    return new Promise(async(resolve, reject) => {
-      if(typeof avatar === "undefined") return reject(new TypeError("You need to provid me a avatar"))
+  setAvatar(avatar) {
+    return new Promise(async (resolve, reject) => {
+      if (typeof avatar === "undefined") return reject(new TypeError("You need to provid me a avatar"))
       avatar = await DataResolver.resolveImage(avatar)
       this.client.rest.patch(this.client._ENDPOINTS.ME, {
         avatar: avatar
@@ -93,7 +97,7 @@ module.exports = class ClientUser {
         let newClientUser = new ClientUser(this.client, res)
         resolve(newClientUser)
         Object.keys(newClientUser).map(k => this[k] = newClientUser[k])
-      }).catch(e=>{
+      }).catch(e => {
         return reject(new Error(e))
       })
     })

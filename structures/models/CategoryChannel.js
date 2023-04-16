@@ -48,6 +48,10 @@ module.exports = class CategoryChannel {
         })
     }
 
+    toString(){
+        return `<#${this.id}>`
+    }
+    
     async edit(options = {}, reason) {
         return new Promise(async (resolve, reject) => {
             if (typeof options !== "object") return reject(new TypeError("Invalid options object provided"))

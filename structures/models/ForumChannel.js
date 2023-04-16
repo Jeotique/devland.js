@@ -59,6 +59,11 @@ module.exports = class ForumChannel {
             this.available_tags.push(new ForumTag(tag))
         })
     }
+
+    toString(){
+        return `<#${this.id}>`
+    }
+    
     /**
      * @typedef {object} MessageOptions
      * @property {string} content

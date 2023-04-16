@@ -43,6 +43,11 @@ module.exports = class Thread {
         this.thread_metadata = data.thread_metadata
         this.data_is_available = true
     }
+
+    toString(){
+        return `<#${this.id}>`
+    }
+
     /**
      * @typedef {object} MessageOptions
      * @property {string} content

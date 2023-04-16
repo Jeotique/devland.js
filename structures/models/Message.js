@@ -48,8 +48,8 @@ module.exports = class Message {
          */
         this.embeds = []
         this.memberMentions = new Store()
-        this.roleMentions = new Store()
-        this.channelMentions = new Store()
+        this.roleMentions = data.roleMentions || new Store()
+        this.channelMentions = data.channelMentions || new Store()
         this.pinned = data.pinned
         this.mentionEveryone = data.mention_everyone
         this.tts = data.tts
@@ -78,7 +78,7 @@ module.exports = class Message {
                 this.memberMentions.set(m.id, new User(this.client, m))
             }
         })
-        if(data.mention_roles) data.mention_roles.map(async r_id => {
+        if(data.mention_roles && !data.roleMentions) data.mention_roles.map(async r_id => {
             if(this.guild.roles.get(r_id)) this.roleMentions.set(r_id, this.guild.roles.get(r_id))
             else {
                 let res = await this.client.rest.get(this.client._ENDPOINTS.ROLES(this.guildId)).catch(e=>{})
@@ -88,7 +88,7 @@ module.exports = class Message {
                 this.roleMentions.set(r_id, new Role(this.client, this.client.guilds.get(this.guildId)||this.guild, role))
             }
         })
-        if(data.mention_channels) data.mention_channels.map(async channelraw => {
+        if(data.mention_channels && !data.channelMentions) data.mention_channels.map(async channelraw => {
             if(this.client.textChannels.get(channelraw.id)) this.channelMentions.set(channelraw.id, this.textChannels.get(channelraw.id))
             else {
                 let res = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(channelraw.id)).catch(e=>{})
@@ -137,7 +137,8 @@ module.exports = class Message {
                 tts: false,
                 nonce: undefined,
                 allowed_mentions: undefined,
-                components: this.components
+                components: this.components,
+                files: null
             }
             if (typeof options === 'string') {
                 data['content'] = options
@@ -171,7 +172,9 @@ module.exports = class Message {
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
+                if (Array.isArray(options['embeds'])) data['embeds'] = []
                 if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
+                if (Array.isArray(options['embeds']) && options['embeds'].length < 1) data['embeds'] = []
                 if (options['embeds'] === null) options['embeds'] = []
                 data['tts'] = options['tts']
                 data['nonce'] = options['nonce']
@@ -241,6 +244,7 @@ module.exports = class Message {
                 nonce: undefined,
                 allowed_mentions: undefined,
                 components: [],
+                files: null,
                 message_reference: {
                     channel_id: this.channelId,
                     guild_id: this.guildId,

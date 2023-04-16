@@ -53,6 +53,11 @@ module.exports = class VoiceChannel {
             })
         })
     }
+
+    toString(){
+        return `<#${this.id}>`
+    }
+
     /**
      * @typedef {object} MessageOptions
      * @property {string} content

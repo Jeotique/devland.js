@@ -28,6 +28,10 @@ module.exports = class Role {
         this.data_is_available = true
     }
 
+    toString(){
+        return `<&${this.id}>`
+    }
+
     edit(options = {}) {
         return new Promise(async (resolve, reject) => {
             if (typeof options !== "object") return reject(new TypeError("Edit role options must be a object"))

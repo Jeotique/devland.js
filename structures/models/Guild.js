@@ -74,6 +74,11 @@ module.exports = class Guild {
             this.icon = `https://cdn.discordapp.com/icons/${this.id}/${this.icon}${this.icon.startsWith('a_') ? '.gif' : '.png'}?size=512`
         }
     }
+
+    toString() {
+        return `${this.name}`
+    }
+
     /**
      * @typedef {Object} guildVanityData
      * @property {string|null} code
@@ -158,12 +163,13 @@ module.exports = class Guild {
                         } else if (typeof command == "object") {
                             command = new GuildCommand(command).pack()
                         } else return reject(new TypeError("Invalid command format"))
-                        this.client.rest.post(this.client._ENDPOINTS.COMMANDS(this.id), command).then(() => {
-                            return resolve(true)
-                        }).catch(e => {
-                            return reject(new Error(e))
-                        })
+
                     })
+                })
+                this.client.rest.put(this.client._ENDPOINTS.COMMANDS(this.id), body).then(() => {
+                    return resolve(true)
+                }).catch(e => {
+                    return reject(new Error(e))
                 })
             } else {
                 var all = []
@@ -184,12 +190,10 @@ module.exports = class Guild {
                         } else return reject(new TypeError("Invalid command format"))
                     }
                 })
-                all.map(data => {
-                    this.client.rest.post(this.client._ENDPOINTS.COMMANDS(this.id), data).then(() => {
-                        return resolve(true)
-                    }).catch(e => {
-                        return reject(new Error(e))
-                    })
+                this.client.rest.put(this.client._ENDPOINTS.COMMANDS(this.id), all).then(() => {
+                    return resolve(true)
+                }).catch(e => {
+                    return reject(new Error(e))
                 })
             }
         })
@@ -553,6 +557,74 @@ module.exports = class Guild {
                     }
                 })
                 return resolve(toSend)
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async fetchChannel(channel_id) {
+        return new Promise(async (resolve, reject) => {
+            if (typeof channel_id !== "string") return reject(new TypeError("The channel Id must be a string"))
+            this.client.rest.get(this.client._ENDPOINTS.CHANNEL(channel_id)).then(channel => {
+                switch (channel.type) {
+                    case 0:
+                        let text = new TextChannel(this.client, this.client.guilds.get(this.id) || this, channel)
+                        resolve(text)
+                        if (typeof this.client.options.channelsLifeTime === "number" && this.client.options.channelsLifeTime > 0) {
+                            text.cachedAt = Date.now()
+                            text.expireAt = Date.now() + this.client.options.channelsLifeTime
+                            this.client.textChannels.set(text.id, text)
+                        }
+                        break;
+                    case 2:
+                        let voice = new VoiceChannel(this.client, this.client.guilds.get(this.id) || this, channel)
+                        resolve(voice)
+                        if (typeof this.client.options.channelsLifeTime === "number" && this.client.options.channelsLifeTime > 0) {
+                            voice.cachedAt = Date.now()
+                            voice.expireAt = Date.now() + this.client.options.channelsLifeTime
+                            this.client.voiceChannels.set(voice.id, voice)
+                        }
+                        break;
+                    case 4:
+                        let category = new CategoryChannel(this.client, this.client.guilds.get(this.id) || this, channel)
+                        category.childrens = []
+                        res.filter(child => child.parent_id === category.id || child.parentId === category.id).map(child => category.childrens.push(child.id))
+                        resolve(category)
+                        if (typeof this.client.options.channelsLifeTime === "number" && this.client.options.channelsLifeTime > 0) {
+                            category.cachedAt = Date.now()
+                            category.expireAt = Date.now() + this.client.options.channelsLifeTime
+                            this.client.categoryChannels.set(category.id, category)
+                        }
+                        break;
+                    case 5:
+                        let announcement = new AnnouncementChannel(this.client, this.client.guilds.get(this.id) || this, channel)
+                        resolve(announcement)
+                        if (typeof this.client.options.channelsLifeTime === "number" && this.client.options.channelsLifeTime > 0) {
+                            announcement.cachedAt = Date.now()
+                            announcement.expireAt = Date.now() + this.client.options.channelsLifeTime
+                            this.client.announcementChannels.set(announcement.id, announcement)
+                        }
+                        break;
+                    case 13:
+                        let stage = new StageChannel(this.client, this.client.guilds.get(this.id) || this, channel)
+                        resolve(stage)
+                        if (typeof this.client.options.channelsLifeTime === "number" && this.client.options.channelsLifeTime > 0) {
+                            stage.cachedAt = Date.now()
+                            stage.expireAt = Date.now() + this.client.options.channelsLifeTime
+                            this.client.stageChannels.set(stage.id, stage)
+                        }
+                        break;
+                    case 15:
+                        let forum = new ForumChannel(this.client, this.client.guilds.get(this.id) || this, channel)
+                        resolve(forum)
+                        if (typeof this.client.options.channelsLifeTime === "number" && this.client.options.channelsLifeTime > 0) {
+                            forum.cachedAt = Date.now()
+                            forum.expireAt = Date.now() + this.client.options.channelsLifeTime
+                            this.client.forumChannels.set(forum.id, forum)
+                        }
+                        break;
+                }
             }).catch(e => {
                 return reject(new Error(e))
             })

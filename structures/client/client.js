@@ -277,7 +277,7 @@ module.exports = class Client extends EventEmitter {
         return this.readyAt ? Date.now()-this.readyAt : 0
     }
 
-    static get version() { return '1.0.0' }
+    static get version() { return require('../../package.json').version }
     /**
      * Connect your bot to the discord gateway
      * @param {string} token The discord bot token 
@@ -299,8 +299,8 @@ module.exports = class Client extends EventEmitter {
         try{clearInterval(client.heartbeat)}catch(err){}
         if(!this.ws.connected) throw new TypeError("The bot is not connected to the gateway")
         try{this.ws.socket.close(8888)}catch(err){}
-        this.readyAt = 0
-        this.ready = false
+        if(!reopen) this.readyAt = 0
+        if(!reopen) this.ready = false
         this.ws.connected = false
         this.emit('debug', `All clients has been destroyed`)
         if(reopen) {

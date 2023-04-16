@@ -57,6 +57,13 @@ module.exports = class Embed {
 
     pack() {
         let packed = {}
+        if(typeof this.title !== "undefined" && this.title.length > 256) throw new TypeError("Embed title max length of 256")
+        if(typeof this.description !== "undefined" && this.description.length > 4096) throw new TypeError("Embed description max length of 4096")
+        if(typeof this.fields !== "undefined" && this.fields.length > 25) throw new TypeError("Embed fields max length of 25")
+        if(Array.isArray(this.fields) && this.fields.find(f => f.name.length > 256)) throw new TypeError("Embed field name max length of 256")
+        if(Array.isArray(this.fields) && this.fields.find(f => f.value.length > 1024)) throw new TypeError("Embed field value max length of 1024")
+        if(typeof this.footer === "object" && this.footer.text.length > 2048) throw new TypeError("Embed footer text max length of 2048")
+        if(typeof this.author === "object" && this.author.name.length > 256) throw new TypeError("Embed author name max length of 256")
         if(typeof this.color !== "undefined") this.color = Utils.resolveColor(this.color)
         if(typeof this.image === 'string') this.image = {url: this.image}
         if(typeof this.thumbnail === 'string') this.thumbnail = {url: this.thumbnail}
