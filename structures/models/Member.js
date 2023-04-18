@@ -115,7 +115,7 @@ module.exports = class Member {
             if (typeof role === "undefined") return reject(new TypeError("Invalid roles provided"))
             if (typeof role === "string") data.push(role)
             else if (role instanceof Role) data.push(role.id)
-            else if (typeof role === "object") role.map(r => {
+            else if (typeof role === "object" || role instanceof Store) role.map(r => {
                 if (typeof r === "string") data.push(r)
                 else if (r instanceof Role) data.push(r.id)
                 else return reject(new TypeError("Invalid role provided"))
