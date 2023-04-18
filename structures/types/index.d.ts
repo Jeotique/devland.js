@@ -507,6 +507,7 @@ declare module 'devland.js' {
         readonly voicesStates: Store<String, VoiceState>;
         readonly premiumSubscriberRole: Role | null;
         readonly everyoneRole: Role | null;
+        readonly highestRole: Role | null;
         readonly data_is_available: boolean;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
@@ -731,6 +732,7 @@ declare module 'devland.js' {
         readonly roles: string[];
         readonly permissions: Permissions;
         readonly presence: Presence | null;
+        readonly highestRole: Role | null;
         readonly data_is_available: boolean;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
@@ -1331,7 +1333,7 @@ declare module 'devland.js' {
         value: string,
         description?: string,
         emoji?: APIEmoji | Emoji | string,
-        default?: string
+        default?: boolean
     }
     export class StringSelect {
         constructor(string_select_data?: stringData | undefined);
@@ -1691,7 +1693,7 @@ declare module 'devland.js' {
         private client: Client;
         readonly entries: Store<String, Log>;
     }
-    type logsType = "GUILD_UPDATE" | "CHANNEL_CREATE" | "CHANNEL_UPDATE" | "CHANNEL_DELETE" | "CHANNEL_OVERWRITE_CREATE" | "CHANNEL_OVERWRITE_UPDATE" | "CHANNEL_OVERWRITE_DELETE" | "MEMBER_KICK" | "MEMBER_PRUNE" | "MEMBER_BAN_ADD" | "MEMBER_BAN_REMOVE" | "MEMBER_UPDATE" | "MEMBER_ROLE_UPDATE" | "MEMBER_MOVE" | "MEMBER_DISCONNECT" | "BOT_ADD" | "ROLE_CREATE" | "ROLE_UPDATE" | "ROLE_DELETE" | "INVITE_CREATE" | "INVITE_UPDATE" | "INVITE_DELETE" | "WEBHOOK_CREATE" | "WEBHOOK_UPDATE" | "WEBHOOK_DELETE" | "EMOJI_CREATE" | "EMOJI_UPDATE" | "EMOJI_DELETE" | "MESSAGE_DELETE" | "MESSAGE_BULK_DELETE" | "MESSAGE_PIN" | "MESSAGE_UNPIN" | "INTEGRATION_CREATE" | "INTEGRATION_UPDATE" | "INTEGRATION_DELETE" | "STAGE_INSTANCE_CREATE" | "STAGE_INSTANCE_UPDATE" | "STAGE_INSTANCE_DELETE" | "STICKER_CREATE" | "STICKER_UPDATE" | "STICKER_DELETE" | "GUILD_SCHEDULED_EVENT_CREATE" | "GUILD_SCHEDULED_EVENT_UPDATE" | "GUILD_SCHEDULED_EVENT_DELETE" | "THREAD_CREATE" | "THREAD_UPDATE" | "THREAD_DELETE";
+    type logsType = "GUILD_UPDATE" | "CHANNEL_CREATE" | "CHANNEL_UPDATE" | "CHANNEL_DELETE" | "CHANNEL_OVERWRITE_CREATE" | "CHANNEL_OVERWRITE_UPDATE" | "CHANNEL_OVERWRITE_DELETE" | "MEMBER_KICK" | "MEMBER_PRUNE" | "MEMBER_BAN_ADD" | "MEMBER_BAN_REMOVE" | "MEMBER_UPDATE" | "MEMBER_ROLE_UPDATE" | "MEMBER_MOVE" | "MEMBER_DISCONNECT" | "BOT_ADD" | "ROLE_CREATE" | "ROLE_UPDATE" | "ROLE_DELETE" | "INVITE_CREATE" | "INVITE_UPDATE" | "INVITE_DELETE" | "WEBHOOK_CREATE" | "WEBHOOK_UPDATE" | "WEBHOOK_DELETE" | "EMOJI_CREATE" | "EMOJI_UPDATE" | "EMOJI_DELETE" | "MESSAGE_DELETE" | "MESSAGE_BULK_DELETE" | "MESSAGE_PIN" | "MESSAGE_UNPIN" | "INTEGRATION_CREATE" | "INTEGRATION_UPDATE" | "INTEGRATION_DELETE" | "STAGE_INSTANCE_CREATE" | "STAGE_INSTANCE_UPDATE" | "STAGE_INSTANCE_DELETE" | "STICKER_CREATE" | "STICKER_UPDATE" | "STICKER_DELETE" | "GUILD_SCHEDULED_EVENT_CREATE" | "GUILD_SCHEDULED_EVENT_UPDATE" | "GUILD_SCHEDULED_EVENT_DELETE" | "THREAD_CREATE" | "THREAD_UPDATE" | "THREAD_DELETE" | "APPLICATION_COMMAND_PERMISSION_UPDATE" | "AUTO_MODERATION_RULE_CREATE" | "AUTO_MODERATION_RULE_UPDATE" | "AUTO_MODERATION_RULE_DELETE" | "AUTO_MODERATION_BLOCK_MESSAGE" | "AUTO_MODERATION_FLAG_TO_CHANNEL" | "AUTO_MODERATION_USER_COMMUNICATION_DISABLED";
     export class Log {
         constructor(client: Client, data: any);
         private client: Client;
@@ -1872,6 +1874,7 @@ declare module 'devland.js' {
         nonce: number | string,
         allowed_mentions: string[],
         ephemeral: boolean,
+        files: string[]|filesObject[]|Buffer[],
     }
     export class Interaction {
         constructor(client: Client, data: any);
@@ -2307,8 +2310,8 @@ declare module 'devland.js' {
         createShard(id?: 0): Shard;
         spawn(amount?: number|string, delay?: number, waitForReady?: boolean): Promise<Store<number, Shard>>;
         broadcast(message: any): Promise<Shard[]>;
-        broadcastEval(script: string): Promise<Array<*>>;
-        fetchClientValues(prop: string): Promise<Array<*>>;
+        broadcastEval(script: string): Promise<Array<any>>;
+        fetchClientValues(prop: string): Promise<Array<any>>;
         respawnAll(shardDelay?: number, respawnDelay?: number, waitForReady?: boolean): Promise<Store<number, Shard>>;
         public on<K extends keyof ShardingManagerEvents>(event: K, listener: (...args: ShardingManagerEvents[K]) => Awaitable<void>): this;
         public on<S extends string | symbol>(
@@ -2333,22 +2336,22 @@ declare module 'devland.js' {
     interface ShardingManagerEvents {
         shardCreate: [shard: Shard];
     }
-    import {childProcess} from 'child_process';
+    import {ChildProcess} from 'child_process';
     export class Shard extends EventEmitter {
         constructor(manager: ShardingManager, id: number);
         readonly manager: ShardingManager;
         readonly id: number;
         readonly args: string[];
-        readonly execArgv: ?string[];
+        readonly execArgv: string[]|null;
         readonly env: object;
         readonly ready: boolean;
-        readonly process: childProcess;
-        private readonly _evals: Map<string, Promise>;
-        private readonly _fetches: Map<string, Promise>;
+        readonly process: ChildProcess;
+        private readonly _evals: Map<string, Promise<any>>;
+        private readonly _fetches: Map<string, Promise<any>>;
         private readonly _exitListener: Function;
-        spawn(waitForReady?: boolean): Promise<childProcess>;
+        spawn(waitForReady?: boolean): Promise<ChildProcess>;
         kill();
-        respawn(delay?: number, waitForReady?: boolean): Promise<childProcess>;
+        respawn(delay?: number, waitForReady?: boolean): Promise<ChildProcess>;
         send(message: any): Promise<Shard>;
         fetchClientValue(prop: string): Promise<any>;
         eval(script: string|Function): Promise<any>;
@@ -2379,9 +2382,9 @@ declare module 'devland.js' {
         disconnect: [];
         reconnecting: [];
         message: [message: any];
-        death: [process: childProcess];
+        death: [process: ChildProcess];
         error: [error: any];
-        spawn: [process: childProcess];
+        spawn: [process: ChildProcess];
     }
     export class ShardClientUtil {
         constructor(client: Client);
@@ -2389,9 +2392,9 @@ declare module 'devland.js' {
         readonly id: number;
         readonly count: number;
         send(message: any): Promise<void>;
-        fetchClientValues(prop: string): Promise<Array<*>>;
-        broadcastEval(script: string|Function): Promise<Array<*>>;
-        respawnAll(shardDelay?: number, respawnDelay: 500, waitForReady?: boolean): Promise<void>;
+        fetchClientValues(prop: string): Promise<Array<any>>;
+        broadcastEval(script: string|Function): Promise<Array<any>>;
+        respawnAll(shardDelay?: number, respawnDelay?: 500, waitForReady?: boolean): Promise<void>;
         private _handleMessage(message: any);
         private _respond(type: string, message: any);
         singleton(client: Client): Promise<ShardClientUtil>;

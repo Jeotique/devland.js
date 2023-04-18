@@ -36,6 +36,12 @@ module.exports = class Member {
         return `<@${this.id}>`
     }
 
+    get highestRole() {
+        let all = this.guild.roles.toJSON()
+        all = all.filter(r => this.roles.includes(r.id))
+        return all.reduce((prev, role) => (role.comparePositions(prev) > 0 ? role : prev), this.guild.roles.first())
+    }
+
     async send(options) {
         return new Promise(async (resolve, reject) => {
             this.user.send(options).then(res => resolve(res)).catch(e => reject(new Error(e)))
@@ -143,7 +149,7 @@ module.exports = class Member {
             if (typeof role === "undefined") return reject(new TypeError("Invalid roles provided"))
             if (typeof role === "string") data.push(role)
             else if (role instanceof Role) data.push(role.id)
-            else if (typeof role === "object") role.map(r => {
+            else if (typeof role === "object" || role instanceof Store) role.map(r => {
                 if (typeof r === "string") data.push(r)
                 else if (r instanceof Role) data.push(r.id)
                 else return reject(new TypeError("Invalid role provided"))
@@ -174,6 +180,7 @@ module.exports = class Member {
     async fetchRoles() {
         return new Promise(async (resolve, reject) => {
             let collect = new Store()
+            if (this.roles.length < 1) return resolve(collect)
             if (this.guild.roles.size > 0) {
                 this.roles.map(async (r_id, n) => {
                     if (this.guild.roles.get(r_id)) collect.set(r_id, this.guild.roles.get(r_id))
@@ -210,6 +217,7 @@ module.exports = class Member {
 
     async ban(delete_message_seconds, reason) {
         return new Promise(async (resolve, reject) => {
+            if(delete_message_seconds === null) delete_message_seconds = undefined
             if (typeof delete_message_seconds !== "undefined" && typeof delete_message_seconds !== "number") return reject(new TypeError("delete_message_seconds must be a number"))
             if (reason === null) reason = undefined
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))

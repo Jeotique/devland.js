@@ -26,6 +26,7 @@ module.exports = async (client) => {
     socket.on('close', async (code) => {
         try {
             if (client.heartbeat) clearInterval(client.heartbeat)
+            client.ws.connected = false
             switch (code) {
                 case 4000:
                     console.error("Something went wrong, reconnecting...")

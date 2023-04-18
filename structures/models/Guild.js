@@ -298,9 +298,7 @@ module.exports = class Guild {
                 if (options.explicit_content_filter < 0 || options.explicit_content_filter > 2) return reject(new TypeError("The guild explicit content filter is invalid"))
             }
             if (typeof options.afk_channel_id !== "undefined") {
-                /*
-                    if(options.afk_channel_id instanceof VoiceChannel) options.afk_channel_id = options.afk_channel_id.id
-                */
+                if (typeof options.afk_channel_id === "object" && options.afk_channel_id instanceof VoiceChannel) options.afk_channel_id = options.afk_channel_id.id
                 if (options.afk_channel_id !== null && typeof options.afk_channel_id !== "string") return reject(new TypeError("The guild afk channel id must be a string or a VoiceChannel instance"))
             }
             if (typeof options.afk_timeout !== "undefined") {
@@ -705,7 +703,7 @@ module.exports = class Guild {
                 if (options.name.length > 100) return reject(new TypeError("Create role options must be less than 100 caracters"))
             }
             if (typeof options.permissions !== "undefined") {
-                if (options.permissions instanceof Permissions) options.permissions = options.permissions.bitfield.toString()
+                if (typeof options.permissions === "object" && options.permissions instanceof Permissions) options.permissions = options.permissions.bitfield.toString()
                 else options.permissions = new Permissions(options.permissions).bitfield.toString()
             }
             if (typeof options.color !== "undefined") {
@@ -716,28 +714,57 @@ module.exports = class Guild {
                 if (typeof options.hoist !== "boolean") return reject(new TypeError("Create role options hoist must be a boolean"))
             }
             if (typeof options.unicode_emoji !== "undefined") {
-                if (options.unicode_emoji instanceof Emoji) {
-                    options.unicode_emoji = options.unicode_emoji.pack()
-                    options.unicode_emoji = options.unicode_emoji.id ? `${options.unicode_emoji.name}` : `<${options.unicode_emoji.animated ? "a" : ""}:${options.unicode_emoji.name}:${options.unicode_emoji.id}>`
+                if (options.unicode_emoji !== null) {
+                    if (typeof options.unicode_emoji === "object" && options.unicode_emoji instanceof Emoji) {
+                        options.unicode_emoji = options.unicode_emoji.pack()
+                        options.unicode_emoji = options.unicode_emoji.id ? `${options.unicode_emoji.name}` : `<${options.unicode_emoji.animated ? "a" : ""}:${options.unicode_emoji.name}:${options.unicode_emoji.id}>`
+                        if (typeof options.unicode_emoji !== "string") return reject(new TypeError("Create role options unicode_emoji must be a string"))
+                        if (!this.features.includes("ROLE_ICONS")) options.unicode_emoji = undefined
+                    }
                 }
-                if (typeof options.unicode_emoji !== "string") return reject(new TypeError("Create role options unicode_emoji must be a string"))
-                if (!this.features.has("ROLE_ICONS")) options.unicode_emoji = undefined
             }
             if (typeof options.mentionable !== "undefined") {
                 if (typeof options.mentionable !== "boolean") return reject(new TypeError("Create role options mentionable must be a boolean"))
             }
-            if (typeof options.icon !== "undefined") options.icon = await DataResolver.resolveImage(options.icon)
-            if (!this.features.has("ROLE_ICONS")) options.icon = undefined
+            if (typeof options.icon !== "undefined" && options.icon !== null) options.icon = await DataResolver.resolveImage(options.icon)
+            if (!this.features.includes("ROLE_ICONS")) options.icon = undefined
             if (options.reason === null) options.reason = undefined
             if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.post(this.client._ENDPOINTS.ROLES(this.id), options).then(res => {
-                let role = new Role(this.client, this.client.guilds.get(this.id) || this, res)
-                resolve(role)
-                if (typeof this.client.options.rolesLifeTime === "number" && this.client.options.rolesLifeTime > 0) {
-                    role.cachedAt = Date.now()
-                    role.expireAt = Date.now() + this.client.options.rolesLifeTime
-                    this.roles.set(role.id, role)
+                if (typeof options.position === "number") {
+                    this.client.rest.patch(this.client._ENDPOINTS.ROLES(this.id), {
+                        reason: options.reason,
+                        id: res.id,
+                        position: options.position
+                    }).then(allRoles => {
+                        let goodRole = allRoles.find(r => r.id === res.id)
+                        if (!goodRole) return reject(new Error("Can't find the role after his creation"))
+                        let role = new Role(this.client, this.client.guilds.get(this.id) || this, goodRoles)
+                        resolve(role)
+                        if (typeof this.client.options.rolesLifeTime === "number" && this.client.options.rolesLifeTime > 0) {
+                            role.cachedAt = Date.now()
+                            role.expireAt = Date.now() + this.client.options.rolesLifeTime
+                            this.roles.set(role.id, role)
+                        }
+                    }).catch(e => {
+                        let role = new Role(this.client, this.client.guilds.get(this.id) || this, res)
+                        resolve(role)
+                        if (typeof this.client.options.rolesLifeTime === "number" && this.client.options.rolesLifeTime > 0) {
+                            role.cachedAt = Date.now()
+                            role.expireAt = Date.now() + this.client.options.rolesLifeTime
+                            this.roles.set(role.id, role)
+                        }
+                    })
+                } else {
+                    let role = new Role(this.client, this.client.guilds.get(this.id) || this, res)
+                    resolve(role)
+                    if (typeof this.client.options.rolesLifeTime === "number" && this.client.options.rolesLifeTime > 0) {
+                        role.cachedAt = Date.now()
+                        role.expireAt = Date.now() + this.client.options.rolesLifeTime
+                        this.roles.set(role.id, role)
+                    }
                 }
+
             }).catch(e => {
                 return reject(new Error(e))
             })
@@ -820,6 +847,7 @@ module.exports = class Guild {
             if (reason === null) reason = undefined
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             let member = this.members.get(user) || null
+            if (delete_message_seconds === null) delete_message_seconds = undefined
             if (typeof delete_message_seconds !== "undefined" && typeof delete_message_seconds !== "number") return reject(new TypeError("delete_message_seconds must be a number"))
             this.client.rest.put(this.client._ENDPOINTS.BANS(this.id, user), {
                 delete_message_seconds: delete_message_seconds,
@@ -1107,7 +1135,7 @@ module.exports = class Guild {
                 else if (options.user_limit > 10000 && options.type === 13) return reject(new TypeError("The channel user limit must be less than 10000"))
             }
             if (typeof options.parent_id !== "undefined") {
-                if (options.parent_id instanceof CategoryChannel) {
+                if (typeof options.parent_id === "object" && options.parent_id instanceof CategoryChannel) {
                     options.parent_id = options.parent_id.id
                 }
                 if (options.parent_id !== null && typeof options.parent_id !== "string") return reject(new TypeError("The channel parent id must be a string"))
@@ -1136,7 +1164,7 @@ module.exports = class Guild {
                 if (options.video_quality_mode < 1 || options.video_quality_mode > 2) return reject(new TypeError("The channel video quality mode must be set to 1 or 2"))
             }
             if (typeof options.available_tags !== "undefined") {
-                if (options.available_tags instanceof ForumTag) {
+                if (typeof options.available_tags === "object" && options.available_tags instanceof ForumTag) {
                     options.available_tags = [options.available_tags.pack()]
                 } else if (typeof options.available_tags === "object") {
                     let res = []

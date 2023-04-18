@@ -34,6 +34,8 @@ module.exports = {
                     if (data.type === 0) { // text channel
                         let text = new TextChannel(client, guild, data)
                         if (client.textChannels.has(text.id)) oldChannel = client.textChannels.get(text.id)
+                        if (client.announcementChannels.has(text.id)) oldChannel = client.announcementChannels.get(text.id)
+                        if (client.announcementChannels.has(text.id)) client.announcementChannels.delete(text.id)
                         /**
                         * Emitted whenever a channel is stage
                         * @event client#channelUpdate
@@ -105,6 +107,8 @@ module.exports = {
                     } else if (data.type === 5) { // announcement channel
                         let announcement = new AnnouncementChannel(client, guild, data)
                         if (client.announcementChannels.has(announcement.id)) oldChannel = client.announcementChannels.get(announcement.id)
+                        if (client.textChannels.has(text.id)) oldChannel = client.textChannels.get(text.id)
+                        if (client.textChannels.has(text.id)) client.textChannels.delete(text.id)
                         /**
                         * Emitted whenever a channel is stage
                         * @event client#channelUpdate

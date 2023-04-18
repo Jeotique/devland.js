@@ -29,6 +29,6 @@ module.exports = async (client, no_interval = false) => {
                 }));
                 client.emit('debug', `Heartbeat sended to the gateway (from the normal timer), Shard : ${client.options.shardId}`)
             }
-        }, client.ws.gateway.heartbeat.interval);
+        }, client.ws.gateway.heartbeat.interval-1000);
     }
 }

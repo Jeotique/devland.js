@@ -249,7 +249,7 @@ module.exports = class VoiceChannel {
                 else if (options.user_limit > 10000 && this.type === 13) return reject(new TypeError("The channel user limit must be less than 10000"))
             }
             if (typeof options.parent_id !== "undefined") {
-                if (options.parent_id instanceof CategoryChannel) {
+                if (typeof options.parent_id === "object" && options.parent_id instanceof CategoryChannel) {
                     options.parent_id = options.parent_id.id
                 }
                 if (options.parent_id !== null && typeof options.parent_id !== "string") return reject(new TypeError("The channel parent id must be a string"))
@@ -278,7 +278,7 @@ module.exports = class VoiceChannel {
                 if (options.video_quality_mode < 1 || options.video_quality_mode > 2) return reject(new TypeError("The channel video quality mode must be set to 1 or 2"))
             }
             if (typeof options.available_tags !== "undefined") {
-                if (options.available_tags instanceof ForumTag) {
+                if (typeof options.available_tags === "object" && options.available_tags instanceof ForumTag) {
                     options.available_tags = [options.available_tags.pack()]
                 } else if (typeof options.available_tags === "object") {
                     let res = []
