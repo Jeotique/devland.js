@@ -9,7 +9,7 @@
     "ws": "^8.5.0"
   },
   "name": "devland.js",
-  "version": "1.1.94",
+  "version": "1.1.97",
   "description": "A powerful API wrapper for the Discord API designed for modern bots",
   "main": "index.js",
   "types": "./structures/types/index.d.ts",

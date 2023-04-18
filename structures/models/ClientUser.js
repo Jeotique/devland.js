@@ -68,7 +68,7 @@ module.exports = class ClientUser {
     if (typeof presence !== "object") throw new TypeError("The presence data must be a object")
     let packed = this._parse(presence)
     this._patch(packed)
-    this.client.ws.socket.send(JSON.stringify({ op: 3, d: packed }))
+    this.client.ws.sendWS(3, packed)
     this.client.options.presence = packed
   }
 

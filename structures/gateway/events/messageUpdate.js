@@ -1,5 +1,5 @@
 const Client = require('../../client/client')
-const { Guild, TextChannel, Message, DmChannel, Member, User, VoiceChannel, AnnouncementChannel, Thread, StageChannel, ForumChannel } = require('../../models')
+const { Guild, TextChannel, Message, DmChannel, Member, User, VoiceChannel, AnnouncementChannel, Thread, StageChannel, ForumChannel, Role } = require('../../models')
 const MessageFlags = require('../../util/BitFieldManagement/MessageFlags')
 const { Store } = require('../../util/Store/Store')
 module.exports = {

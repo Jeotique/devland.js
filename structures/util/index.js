@@ -47,6 +47,9 @@ module.exports.createDefaultOptions = () => {
     shardId: 0,
     shardCount: 0,
     token: null,
+    connectionTimeout: 30000,
+    maxReconnectAttempts: Infinity,
+    maxResumeAttempts: 10
   }
 }
 

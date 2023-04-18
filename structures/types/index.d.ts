@@ -2,12 +2,12 @@ import EventEmitter from "events"
 import ws from 'ws'
 import Store from '../util/Store/Store'
 declare module 'devland.js' {
-    
+
     type clientOptions = {
         connect: boolean;
         ws: wsOptions;
         presence: presenceOptions;
-        intents: IntentFlagString[]|number;
+        intents: IntentFlagString[] | number;
         token: string;
         messagesLifeTime: number;
         guildsLifeTime: number;
@@ -52,23 +52,23 @@ declare module 'devland.js' {
         Custom = 4,
         Competing = 5
     }
-    type wsClientData = {
+    /*type wsClientData = {
         socket: ws,
         connected: boolean,
         gateway: gatewayClientData,
         ping: number|null,
-    }
-    type gatewayClientData = {
+    }*/
+    /*type gatewayClientData = {
         url: string,
         obtainedAt: number,
         heartbeat: heartbeatClientData,
-    }
-    type heartbeatClientData = {
+    }*/
+    /*type heartbeatClientData = {
         interval: number,
         last: number,
         recieved: boolean,
         seq: any,
-    }
+    }*/
     export type Awaitable<T> = T | PromiseLike<T>;
     export class Client extends EventEmitter {
         constructor(options: clientOptions);
@@ -76,8 +76,7 @@ declare module 'devland.js' {
         private _ENDPOINTS: object;
         private readonly token: string;
         readonly readyAt: number;
-        readonly ws: wsClientData;
-        readonly sessionID: string;
+        readonly ws: clientWebSocket;
         private rest: RESTHandler;
         private readonly guildsIds: [string];
         readonly user: Client.ClientUser;
@@ -91,7 +90,7 @@ declare module 'devland.js' {
         readonly users: Store<string, User>;
         readonly stageChannels: Store<string, StageChannel>;
         readonly forumChannels: Store<string, ForumChannel>;
-        readonly shard: ShardClientUtil|null;
+        readonly shard: ShardClientUtil | null;
         private readonly dmChannels: Store<string, DmChannel>;
         private readonly collectorCache: Store<number, Collector>;
         private readonly deletedmessages: Store<string, Message>;
@@ -102,6 +101,7 @@ declare module 'devland.js' {
          * @param token 
          */
         connect(token?: string): Client;
+        disconnect(reopen?: boolean): Client;
         toJSON(): JSON;
         /**
          * Return all guilds where the bot is in
@@ -205,7 +205,7 @@ declare module 'devland.js' {
     }
     type rawData = {
         eventName: string,
-        data: object|any;
+        data: object | any;
     }
     interface ClientEvents {
         debug: [data: string];
@@ -268,7 +268,7 @@ declare module 'devland.js' {
         integrationCreate: [integration: Integration];
         integrationUpdate: [integration: Integration];
         integrationDelete: [guild: Guild, application_id?: string];
-        messageBulkDelete: [guild: Guild|undefined, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, messages: Store<String, Message>, messageIds: string[]];
+        messageBulkDelete: [guild: Guild | undefined, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, messages: Store<String, Message>, messageIds: string[]];
         messageReactionAdd: [data: {
             guild?: Guild,
             channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel,
@@ -284,11 +284,11 @@ declare module 'devland.js' {
             user?: User,
             emoji: Emoji
         }];
-        messageReactionAllRemove: [guild: Guild|undefined, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, message: Message|undefined];
-        messageReactionRemoveEmoji: [guild: Guild|undefined, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, message: Message|undefined, emoji: Emoji];
+        messageReactionAllRemove: [guild: Guild | undefined, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, message: Message | undefined];
+        messageReactionRemoveEmoji: [guild: Guild | undefined, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, message: Message | undefined, emoji: Emoji];
         presenceUpdate: [old_presence: Presence | invalid_Presence, presence: Presence];
         webhooksUpdate: [channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel];
-        userTypingStart: [guild: Guild|undefined, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, user: User, member: Member|undefined, timestamp: number];
+        userTypingStart: [guild: Guild | undefined, channel: TextChannel | AnnouncementChannel | ForumChannel | VoiceChannel | Thread | StageChannel | DmChannel, user: User, member: Member | undefined, timestamp: number];
         voiceStateUpdate: [old_voice_state: VoiceState | invalid_VoiceState, voice_state: VoiceState];
         voiceServerUpdate: [voice_server: {
             guild: Guild,
@@ -317,7 +317,68 @@ declare module 'devland.js' {
         matched_keyword?: string,
         matched_content?: string
     }
-    class RESTHandler {
+    export class clientWebSocket extends EventEmitter {
+        constructor(client: Client);
+        client: Client;
+        connectAttempts: number;
+        connecting: boolean;
+        connectTimeout: NodeJS.Timeout | null;
+        discordServerTrace?: string[];
+        heartbeatInterval: NodeJS.Timeout | null;
+        lastHeartbeatAck: boolean;
+        lastHeartbeatReceived: number | null;
+        lastHeartbeatSent: number | null;
+        latency: number;
+        preReady: boolean;
+        ready: boolean;
+        reconnectInterval: number;
+        resumeURL: string | null;
+        seq: number;
+        sessionID: string | null;
+        status: "connecting" | "disconnected" | "handshaking" | "identifying" | "ready" | "resuming";
+        ws: ws | null;
+        connect(): void;
+        disconnect(options?: { reconnect?: boolean | "auto" }, error?: Error): void;
+        hardReset(): void;
+        reset(): void;
+        heartbeat(normal?: boolean): void;
+        identify(): void;
+        initializeWS(): void;
+        onPacket(packet: RawPacket): void;
+        resume(): void;
+        sendWS(op: number, _data: Record<string, unknown>, priority?: boolean): void;
+        toJSON(): JSON;
+
+        public on<K extends keyof clientWebSocketEvents>(event: K, listener: (...args: clientWebSocketEvents[K]) => Awaitable<void>): this;
+        public on<S extends string | symbol>(
+            event: Exclude<S, keyof clientWebSocketEvents>,
+            listener: (...args: any[]) => Awaitable<void>,
+        ): this;
+        public once<K extends keyof clientWebSocketEvents>(event: K, listener: (...args: clientWebSocketEvents[K]) => Awaitable<void>): this;
+        public once<S extends string | symbol>(
+            event: Exclude<S, keyof clientWebSocketEvents>,
+            listener: (...args: any[]) => Awaitable<void>,
+        ): this;
+        public emit<K extends keyof clientWebSocketEvents>(event: K, ...args: clientWebSocketEvents[K]): boolean;
+        public emit<S extends string | symbol>(event: Exclude<S, keyof clientWebSocketEvents>, ...args: unknown[]): boolean;
+        public off<K extends keyof clientWebSocketEvents>(event: K, listener: (...args: clientWebSocketEvents[K]) => Awaitable<void>): this;
+        public off<S extends string | symbol>(
+            event: Exclude<S, keyof clientWebSocketEvents>,
+            listener: (...args: any[]) => Awaitable<void>,
+        ): this;
+        public removeAllListeners<K extends keyof clientWebSocketEvents>(event?: K): this;
+        public removeAllListeners<S extends string | symbol>(event?: Exclude<S, keyof clientWebSocketEvents>): this;
+    }
+    interface clientWebSocketEvents {
+        error: [error: Error, shardId?: number];
+        warn: [message: string, shardId?: number];
+        debug: [message: string, shardId?: number];
+        hello: [trace?: string[], shardId?: number];
+        unknow: [packet: any, shardId?: number];
+        connect: [shardId: number];
+        disconnect: [error?: Error];
+    }
+    export class RESTHandler {
         private constructor(client: Client);
         readonly handling: boolean;
         readonly _ratelimits: [];
@@ -332,7 +393,7 @@ declare module 'devland.js' {
         patch(endpoint: string, body: any, options?: object): Promise<any>;
         delete(endpoint: string, options?: object): Promise<any>;
     }
-    export {Store} from '../util/Store/Store';
+    export { Store } from '../util/Store/Store';
     namespace Client {
         export class ClientUser {
             private constructor(client: Client, data: object);
@@ -361,7 +422,7 @@ declare module 'devland.js' {
              * Change the bot avatar
              * @param avatar local path or link
              */
-            setAvatar(avatar: string|Buffer): Promise<ClientUser>;
+            setAvatar(avatar: string | Buffer): Promise<ClientUser>;
             private _patch(data: any);
             private _parse(data: object);
         }
@@ -417,7 +478,7 @@ declare module 'devland.js' {
     type createEmojiOptions = {
         name: string,
         roles?: string[],
-        image: string|Buffer,
+        image: string | Buffer,
         reason?: string,
     }
     type editGuildOptions = {
@@ -427,7 +488,7 @@ declare module 'devland.js' {
         explicit_content_filter?: guildExplicitContentFilterLevel,
         afk_channel_id?: string | VoiceChannel,
         afk_timeout?: number,
-        icon?: string|Buffer,
+        icon?: string | Buffer,
         owner_id?: User | string,
         splash?: any,
         discovery_splash?: any,
@@ -561,7 +622,7 @@ declare module 'devland.js' {
          * Fetch a specific channel with the discord api
          * @param channel_id the channel Id
          */
-        fetchChannel(channel_id: string): Promise<TextChannel|VoiceChannel|AnnouncementChannel|CategoryChannel|StageChannel|ForumChannel>;
+        fetchChannel(channel_id: string): Promise<TextChannel | VoiceChannel | AnnouncementChannel | CategoryChannel | StageChannel | ForumChannel>;
         /**
          * Return all text channels of the guild
          */
@@ -619,14 +680,14 @@ declare module 'devland.js' {
          * @param user the user Id or a User instance
          * @param reason the reason of the kick
          */
-        kickMember(user: string | User | Member, reason?: string): Promise<Member|undefined>;
+        kickMember(user: string | User | Member, reason?: string): Promise<Member | undefined>;
         /**
          * Ban a user from the guild
          * @param user the user Id or a User instance
          * @param delete_message_seconds provid if you want for the bot to delete last messages of the user
          * @param reason the reason of the ban
          */
-        banMember(user: string | User | Member, delete_message_seconds?: number, reason?: string): Promise<Member|undefined>;
+        banMember(user: string | User | Member, delete_message_seconds?: number, reason?: string): Promise<Member | undefined>;
         /**
          * Unban a user from the guild
          * @param user the user Id or a User instance
@@ -667,7 +728,7 @@ declare module 'devland.js' {
          * Return a specific auto moderation rule of the guild
          * @param rule_id the automod Id
          */
-        fetchAutoModRule(rule_id: string|AutoModRule): Promise<AutoModRule>;
+        fetchAutoModRule(rule_id: string | AutoModRule): Promise<AutoModRule>;
         /**
          * Create a new auto moderation rule on the guild
          * @param options automod rule data
@@ -678,7 +739,7 @@ declare module 'devland.js' {
          * @param options the channel data
          * @param reason the reason of the creation
          */
-        createChannel(options: channelCreateOptions, reason?: string): Promise<TextChannel|VoiceChannel|AnnouncementChannel|CategoryChannel|Thread|StageChannel|ForumChannel>;
+        createChannel(options: channelCreateOptions, reason?: string): Promise<TextChannel | VoiceChannel | AnnouncementChannel | CategoryChannel | Thread | StageChannel | ForumChannel>;
     }
     type channelCreateOptions = {
         name: string,
@@ -741,8 +802,8 @@ declare module 'devland.js' {
         addRoles(roles: Role | Role[] | string | string[], reason?: string): Promise<Member>;
         removeRoles(roles: Role | Role[] | string | string[], reason?: string): Promise<Member>;
         hasPermissions(permission: string | PermissionResolvable): boolean;
-        kick(reason?: string): Promise<Member|undefined>;
-        ban(delete_message_seconds?: number, reason?: string): Promise<Member|undefined>;
+        kick(reason?: string): Promise<Member | undefined>;
+        ban(delete_message_seconds?: number, reason?: string): Promise<Member | undefined>;
         fetchRoles(): Promise<Store<String, Role>>;
     }
     type editMemberOptions = {
@@ -776,7 +837,7 @@ declare module 'devland.js' {
         tts: boolean,
         nonce: number | string,
         allowedMentions: allowedMentionsList[],
-        files: string[]|filesObject[]|Buffer[],
+        files: string[] | filesObject[] | Buffer[],
     }
     type filesObject = {
         attachment: string,
@@ -824,7 +885,7 @@ declare module 'devland.js' {
     }
     type createWebhookOptions = {
         name: string,
-        avatar?: string|Buffer,
+        avatar?: string | Buffer,
         reason?: string,
     }
     type createInviteOptions = {
@@ -914,7 +975,7 @@ declare module 'devland.js' {
         readonly default_reaction_emoji: APIEmoji | Emoji | string;
         readonly default_sort_order: number;
         readonly default_forum_layout: number;
-        readonly default_auto_archive_duration: 60|1440|4320|10080;
+        readonly default_auto_archive_duration: 60 | 1440 | 4320 | 10080;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
         send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
@@ -1150,7 +1211,7 @@ declare module 'devland.js' {
         readonly channelId: string;
         readonly attachments: Store<String, Attachment>;
         readonly embeds: Embed[];
-        readonly memberMentions: Store<String, Member|User>;
+        readonly memberMentions: Store<String, Member | User>;
         readonly roleMentions: Store<String, Role>;
         readonly channelMentions: Store<String, TextChannel>;
         readonly pinned: boolean;
@@ -1430,7 +1491,7 @@ declare module 'devland.js' {
         private pack();
     }
     export function parseEmoji(text: string): APIEmoji;
-    export function resolveEmoji(color: string|number): number;
+    export function resolveEmoji(color: string | number): number;
     export type PermissionString =
         | 'CREATE_INSTANT_INVITE'
         | 'KICK_MEMBERS'
@@ -1655,7 +1716,7 @@ declare module 'devland.js' {
         color?: string | number,
         hoist?: boolean,
         unicode_emoji?: Emoji | string,
-        icon?: string|Buffer,
+        icon?: string | Buffer,
         mentionable?: boolean,
         position?: number,
         reason?: string,
@@ -1751,7 +1812,7 @@ declare module 'devland.js' {
     }
     type editWebhookOptions = {
         name: string,
-        avatar?: string|Buffer,
+        avatar?: string | Buffer,
         channel_id?: string | TextChannel | AnnouncementChannel | ForumChannel,
         reason?: string,
     }
@@ -1874,7 +1935,7 @@ declare module 'devland.js' {
         nonce: number | string,
         allowed_mentions: string[],
         ephemeral: boolean,
-        files: string[]|filesObject[]|Buffer[],
+        files: string[] | filesObject[] | Buffer[],
     }
     export class Interaction {
         constructor(client: Client, data: any);
@@ -1917,7 +1978,7 @@ declare module 'devland.js' {
         readonly createdTimestamp: number;
         readonly createdAt: Date;
         private readonly deleted: boolean;
-        private readonly followUpMessageId: string|null;
+        private readonly followUpMessageId: string | null;
         deferUpdate(options?: { ephemeral: boolean }): Promise<Interaction>;
         reply(options: MessageInteractionOptions | string | Embed | ActionRow): Promise<Interaction>;
         deferReply(options?: { ephemeral: boolean }): Promise<Interaction>;
@@ -1965,7 +2026,7 @@ declare module 'devland.js' {
         private pack(): object;
     }
     type collectorOptions = {
-        type: "message"|"component",
+        type: "message" | "component",
         count: number,
         time: number,
         componentType: ComponentsType,
@@ -2002,9 +2063,9 @@ declare module 'devland.js' {
         public removeAllListeners<S extends string | symbol>(event?: Exclude<S, keyof CollectorEvents>): this;
     }
     interface CollectorEvents {
-        collected: [collect: Message|Interaction];
+        collected: [collect: Message | Interaction];
         end: [];
-        totalCollected: [collect: Store<string, Message|Interaction>];
+        totalCollected: [collect: Store<string, Message | Interaction>];
     }
     export enum Colors {
         DEFAULT = 0x000000,
@@ -2037,27 +2098,27 @@ declare module 'devland.js' {
         GREYPLE = 0x99aab5,
         DARK_BUT_NOT_BLACK = 0x2c2f33,
         NOT_QUITE_BLACK = 0x23272a,
-      }
-      export class Presence {
+    }
+    export class Presence {
         constructor(client: Client, guild: Guild, data: any);
         private readonly client: Client;
         readonly guild?: Guild;
         readonly guildId?: string;
         readonly user: User;
         readonly userId: string;
-        readonly status: "idle"|"dnd"|"online"|"offline";
+        readonly status: "idle" | "dnd" | "online" | "offline";
         readonly activities: Activities[];
         readonly client_status: clientStatus;
         readonly data_is_available: boolean;
         private readonly cachedAt: number | undefined;
-        private readonly expireAt: number | undefined; 
-      }
-      type clientStatus = {
+        private readonly expireAt: number | undefined;
+    }
+    type clientStatus = {
         desktop?: string,
         mobile?: string,
         web?: string
-      }
-      type Activities = {
+    }
+    type Activities = {
         name: string,
         id?: string,
         type: ActivityType,
@@ -2074,31 +2135,31 @@ declare module 'devland.js' {
         instance?: boolean,
         flags?: ActivityFlags,
         buttons?: ActivityButton[],
-      }
-      type timestampActivity = {
+    }
+    type timestampActivity = {
         start?: number,
         end?: number
-      }
-      type activityParty = {
+    }
+    type activityParty = {
         id?: string,
         size?: [current_size: number, max_size: number]
-      }
-      type activityAssets = {
+    }
+    type activityAssets = {
         large_image?: string,
         large_text?: string,
         small_image?: string,
         small_text?: string
-      }
-      type activitySecrets = {
+    }
+    type activitySecrets = {
         join?: string,
         spectate?: string,
         match?: string
-      }
-      type ActivityButton = {
+    }
+    type ActivityButton = {
         label: string,
         url: string
-      }
-      export type ActivityFlagString =
+    }
+    export type ActivityFlagString =
         | 'INSTANCE'
         | 'JOIN'
         | 'SPECTATE'
@@ -2266,7 +2327,7 @@ declare module 'devland.js' {
     }
     type AutoModTriggerMetadata = {
         keyword_filter: string[],
-        regex_patterns:  string[],
+        regex_patterns: string[],
         presets: AutoModTriggerPresets[],
         allow_list: string[],
         mention_total_limit: number,
@@ -2291,7 +2352,7 @@ declare module 'devland.js' {
         custom_message?: string
     }
     type shardOptions = {
-        totalShards: string|number,
+        totalShards: string | number,
         respawn: boolean,
         shardArgs: string[],
         execArgv: string[],
@@ -2301,15 +2362,15 @@ declare module 'devland.js' {
     export class ShardingManager extends EventEmitter {
         constructor(file: string, options: shardOptions);
         file: string;
-        totalShards: string|number;
+        totalShards: string | number;
         respawn: boolean;
         shardArgs: string[];
         execArgv: string[];
-        token: string|null;
+        token: string | null;
         autospawn: boolean;
         shards: Store<number, Shard>;
         createShard(id?: 0): Shard;
-        spawn(amount?: number|string, delay?: number, waitForReady?: boolean): Promise<Store<number, Shard>>;
+        spawn(amount?: number | string, delay?: number, waitForReady?: boolean): Promise<Store<number, Shard>>;
         broadcast(message: any): Promise<Shard[]>;
         broadcastEval(script: string): Promise<Array<any>>;
         fetchClientValues(prop: string): Promise<Array<any>>;
@@ -2337,13 +2398,13 @@ declare module 'devland.js' {
     interface ShardingManagerEvents {
         shardCreate: [shard: Shard];
     }
-    import {ChildProcess} from 'child_process';
+    import { ChildProcess } from 'child_process';
     export class Shard extends EventEmitter {
         constructor(manager: ShardingManager, id: number);
         readonly manager: ShardingManager;
         readonly id: number;
         readonly args: string[];
-        readonly execArgv: string[]|null;
+        readonly execArgv: string[] | null;
         readonly env: object;
         readonly ready: boolean;
         readonly process: ChildProcess;
@@ -2355,7 +2416,7 @@ declare module 'devland.js' {
         respawn(delay?: number, waitForReady?: boolean): Promise<ChildProcess>;
         send(message: any): Promise<Shard>;
         fetchClientValue(prop: string): Promise<any>;
-        eval(script: string|Function): Promise<any>;
+        eval(script: string | Function): Promise<any>;
         private _handleMessage(message: any);
         private _handleExit(respawn?: boolean);
         public on<K extends keyof ShardEvents>(event: K, listener: (...args: ShardEvents[K]) => Awaitable<void>): this;
@@ -2394,7 +2455,7 @@ declare module 'devland.js' {
         readonly count: number;
         send(message: any): Promise<void>;
         fetchClientValues(prop: string): Promise<Array<any>>;
-        broadcastEval(script: string|Function): Promise<Array<any>>;
+        broadcastEval(script: string | Function): Promise<Array<any>>;
         respawnAll(shardDelay?: number, respawnDelay?: 500, waitForReady?: boolean): Promise<void>;
         private _handleMessage(message: any);
         private _respond(type: string, message: any);

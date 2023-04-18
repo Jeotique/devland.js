@@ -13,8 +13,6 @@ module.exports = {
             
             data.user.tag = data.user.username + '#' + data.user.discriminator
             client.user = new Models.ClientUser(client, data.user)
-            client.sessionID = data.session_id
-            client.ws.gateway.resume_gateway_url = data.resume_gateway_url
             for (const [obj] in data.guilds) {
                 client.guildsIds.push(data.guilds[obj].id)
                 if (typeof client.options.guildsLifeTime === "number" && client.options.guildsLifeTime > 0) {
@@ -33,9 +31,9 @@ module.exports = {
                         client.emit('ready', client)
                     } else {
                         if (client.guilds.filter(g => g.ready === true).size < client.guilds.size) return
-                        if (client.options.waitCacheBeforeReady && client.options.membersLifeTime && client.guilds.filter(g => g.members.size < g.member_count).size > 0) return
-                        if (client.options.waitCacheBeforeReady && client.options.presencesLifeTime && client.guilds.filter(g => g.presences.size < g.member_count).size > 0) return
-                        if (client.options.waitCacheBeforeReady && client.options.voicesLifeTime && client.guilds.filter(g => g.voicesStates.size < g.member_count).size > 0) return
+                        if (client.options.waitCacheBeforeReady && client.options.membersLifeTime && client.guilds.filter(g => g.members.size < g.totalMembersCount).size > 0) return
+                        if (client.options.waitCacheBeforeReady && client.options.presencesLifeTime && client.guilds.filter(g => g.presences.size < g.totalMembersCount).size > 0) return
+                        if (client.options.waitCacheBeforeReady && client.options.voicesLifeTime && client.guilds.filter(g => g.voicesStates.size < g.totalMembersCount).size > 0) return
                         clearInterval(checkGuilds)
                         client.ready = true
                         /**

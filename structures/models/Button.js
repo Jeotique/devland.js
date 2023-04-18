@@ -25,6 +25,7 @@ module.exports = class Button {
         if(this.emoji instanceof Emoji) this.emoji = this.emoji.pack()
         if(this.emoji && typeof this.emoji === "string") testemoji = parseEmoji(this.emoji)
         if(this.emoji && typeof this.emoji !== "object" && !testemoji || typeof testemoji !== 'object') throw new TypeError("Invalid button emoji")
+        if(!testemoji && this.emoji && typeof this.emoji === "object" && this.emoji.name) testemoji = this.emoji
         return {
             type: 2,
             label: this.label,

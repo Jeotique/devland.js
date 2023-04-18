@@ -269,10 +269,9 @@ module.exports = class AnnouncementChannel {
                     options.permission_overwrites = res
                 }
             }
-            delete options.rtc_region
-            /*if (typeof options.rtc_region !== "undefined") {
-                if (typeof options.rtc_region !== "string") return reject(new TypeError("The channel rtc region must be a string"))
-            }*/
+            if (typeof options.rtc_region !== "undefined") {
+                if (options.rtc_region !== null && typeof options.rtc_region !== "string") return reject(new TypeError("The channel rtc region must be a string"))
+            }
             if (typeof options.video_quality_mode !== "undefined") {
                 if (typeof options.video_quality_mode !== "number") return reject(new TypeError("The channel video quality mode must be a number (1 = auto, 2 = 720p)"))
                 if (options.video_quality_mode < 1 || options.video_quality_mode > 2) return reject(new TypeError("The channel video quality mode must be set to 1 or 2"))
