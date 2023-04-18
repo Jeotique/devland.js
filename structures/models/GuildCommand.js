@@ -16,7 +16,7 @@ module.exports = class GuildCommand {
     }
 
     toString(){
-        return `${this.name}`
+        return this.id ? `</${this.name}:${this.id}>` : `${this.name}`
     }
 
     pack() {

@@ -1913,6 +1913,7 @@ declare module 'devland.js' {
         readonly isSlashCommand: boolean;
         readonly isUserContext: boolean;
         readonly isMessageContext: boolean;
+        readonly isAutoCompleteRequest: boolean;
         readonly createdTimestamp: number;
         readonly createdAt: Date;
         private readonly deleted: boolean;
