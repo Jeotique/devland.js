@@ -39,16 +39,21 @@ module.exports = class RESTHandler {
                 } else {
                     if (res.status === 429 || res.statusCode === 429) {
                         this._ratelimits.unshift(res.req);
-                        setTimeout(() => resolve(), (res.headers["retry_after"] || res.headers["Retry-After"])*1000);
+                        setTimeout(() => resolve(), (res.headers["retry_after"] || res.headers["Retry-After"] || res.headers['retry-after'])*1000);
                         try {
-                            this.client.emit('debug',
+                            this.client.emit('rateLimit',
                                 `Rate limit hit
                         Message : ${res?.body?.message || res.headers["message"]}
                         Global : ${res?.body?.global || res.headers["global"]}
                         Method : ${req.method}
                         Path : ${req.endpoint}
-                        Retry in : ${res.headers["retry_after"]||res.headers["Retry-After"]}s
-                        Code : ${res?.body?.code || res.headers["code"]}`)
+                        Retry in : ${res.headers["retry_after"]||res.headers["Retry-After"]||res.headers['retry-after']}s
+                        Code : ${res.status||res.statusCode}
+                        x-ratelimit-limit : ${res.headers['x-ratelimit-limit']}
+                        x-ratelimit-remaining : ${res.headers['x-ratelimit-remaining']}
+                        x-ratelimit-reset : ${res.headers['x-ratelimit-reset']}ms
+                        x-ratelimit-reset-after : ${res.headers['x-ratelimit-reset-after']}s
+                        x-ratelimit-scope : ${res.headers['x-ratelimit-scope']}`)
                         } catch (err) { }
                         return;
                     }

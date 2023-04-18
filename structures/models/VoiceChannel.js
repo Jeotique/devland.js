@@ -53,6 +53,11 @@ module.exports = class VoiceChannel {
             })
         })
     }
+
+    toString() {
+        return `<#${this.id}>`
+    }
+
     /**
      * @typedef {object} MessageOptions
      * @property {string} content
@@ -244,7 +249,7 @@ module.exports = class VoiceChannel {
                 else if (options.user_limit > 10000 && this.type === 13) return reject(new TypeError("The channel user limit must be less than 10000"))
             }
             if (typeof options.parent_id !== "undefined") {
-                if (options.parent_id instanceof CategoryChannel) {
+                if (typeof options.parent_id === "object" && options.parent_id instanceof CategoryChannel) {
                     options.parent_id = options.parent_id.id
                 }
                 if (options.parent_id !== null && typeof options.parent_id !== "string") return reject(new TypeError("The channel parent id must be a string"))
@@ -266,14 +271,14 @@ module.exports = class VoiceChannel {
                 }
             }
             if (typeof options.rtc_region !== "undefined") {
-                if (typeof options.rtc_region !== "string") return reject(new TypeError("The channel rtc region must be a string"))
+                if (options.rtc_region !== null && typeof options.rtc_region !== "string") return reject(new TypeError("The channel rtc region must be a string"))
             }
             if (typeof options.video_quality_mode !== "undefined") {
                 if (typeof options.video_quality_mode !== "number") return reject(new TypeError("The channel video quality mode must be a number (1 = auto, 2 = 720p)"))
                 if (options.video_quality_mode < 1 || options.video_quality_mode > 2) return reject(new TypeError("The channel video quality mode must be set to 1 or 2"))
             }
             if (typeof options.available_tags !== "undefined") {
-                if (options.available_tags instanceof ForumTag) {
+                if (typeof options.available_tags === "object" && options.available_tags instanceof ForumTag) {
                     options.available_tags = [options.available_tags.pack()]
                 } else if (typeof options.available_tags === "object") {
                     let res = []
@@ -374,7 +379,7 @@ module.exports = class VoiceChannel {
                     nsfw: this.nsfw,
                     rtc_region: this.rtc_region,
                     video_quality_mode: this.video_quality_mode,
-                    
+
                 }
                 if (reason) data['reason'] = reason
                 this.client.rest.post(this.client._ENDPOINTS.SERVER_CHANNEL(this.guildId), data).then(newChannel => {
@@ -444,52 +449,46 @@ module.exports = class VoiceChannel {
         if (typeof deaf === "undefined") deaf = false
         if (typeof mute !== "boolean") throw new TypeError("Mute state must be a boolean")
         if (typeof deaf !== "boolean") throw new TypeError("Deaf state must be a boolean")
-        this.client.ws.socket.send(JSON.stringify({
-            op: 4,
-            d: {
-                guild_id: this.guildId,
-                channel_id: this.id,
-                self_mute: mute,
-                self_deaf: deaf
-            }
-        }))
+        this.client.ws.sendWS(4, {
+            guild_id: this.guildId,
+            channel_id: this.id,
+            self_mute: mute,
+            self_deaf: deaf
+        })
     }
     leave() {
-        this.client.ws.socket.send(JSON.stringify({
-            op: 4,
-            d: {
-                guild_id: this.guildId,
-                channel_id: null,
-            }
-        }))
+        this.client.ws.sendWS(4, {
+            guild_id: this.guildId,
+            channel_id: null,
+        })
     }
 
-    createCollector(options = {}){
-        if(typeof options !== "object") throw new TypeError("You must provide options for the collector")
-        if(typeof options.count !== "undefined"){
-            if(typeof options.count !== "number") throw new TypeError("The count must be a number")
+    createCollector(options = {}) {
+        if (typeof options !== "object") throw new TypeError("You must provide options for the collector")
+        if (typeof options.count !== "undefined") {
+            if (typeof options.count !== "number") throw new TypeError("The count must be a number")
         }
-        if(typeof options.type !== "undefined"){
-            if(typeof options.type !== "string") throw new TypeError("The type must be a string")
+        if (typeof options.type !== "undefined") {
+            if (typeof options.type !== "string") throw new TypeError("The type must be a string")
             options.type = options.type.toLowerCase()
-            if(!["message", "component"].includes(options.type)) throw new TypeError("Invalid collector type (message or component)")
+            if (!["message", "component"].includes(options.type)) throw new TypeError("Invalid collector type (message or component)")
         }
-        if(typeof options.time !== "undefined"){
-            if(typeof options.time !== "number") throw new TypeError("The time must be a number")
+        if (typeof options.time !== "undefined") {
+            if (typeof options.time !== "number") throw new TypeError("The time must be a number")
         }
-        if(typeof options.componentType !== "undefined"){
-            if(typeof options.componentType !== "number") throw new TypeError("The componentType must be a number")
-            if(options.componentType < 1 || options.componentType > 8) throw new TypeError("Invalid componentType for the collector")
+        if (typeof options.componentType !== "undefined") {
+            if (typeof options.componentType !== "number") throw new TypeError("The componentType must be a number")
+            if (options.componentType < 1 || options.componentType > 8) throw new TypeError("Invalid componentType for the collector")
         }
-        if(typeof options.filter !== "undefined"){
-            if(typeof options.filter !== "function") throw new TypeError("The filter must be a filter function for the collector, example : 'filter: (collected) => collected.author.id === message.author.id'")
+        if (typeof options.filter !== "undefined") {
+            if (typeof options.filter !== "function") throw new TypeError("The filter must be a filter function for the collector, example : 'filter: (collected) => collected.author.id === message.author.id'")
         }
         let identifier = Date.now()
-        this.client.collectorCache[identifier] = new Collector(this.client, this.client.guilds.get(this.guildId)||this.guild, null, this.channel, options)
+        this.client.collectorCache[identifier] = new Collector(this.client, this.client.guilds.get(this.guildId) || this.guild, null, this.channel, options)
         this.client.collectorCache[identifier]?.on('end', () => {
             delete this.client.collectorCache[identifier]
         })
-        return this.client.collectorCache[identifier]    
+        return this.client.collectorCache[identifier]
     }
 
     awaitMessages(options = {}) {
@@ -522,27 +521,27 @@ module.exports = class VoiceChannel {
     }
 
     async createInvite(options = {}) {
-        return new Promise(async(resolve, reject) => {
-            if(typeof options !== 'object') return reject(new TypeError("Create invite options must be object"))
-            if(typeof options.max_age !== "undefined"){
-                if(typeof options.max_age !== "number") return reject(new TypeError("Create invite options max_age must be a number"))
-                if(options.max_age < 0 || options.max_age > 604800) return reject(new TypeError("Create invite options max_age must be between 0 and 604800"))
+        return new Promise(async (resolve, reject) => {
+            if (typeof options !== 'object') return reject(new TypeError("Create invite options must be object"))
+            if (typeof options.max_age !== "undefined") {
+                if (typeof options.max_age !== "number") return reject(new TypeError("Create invite options max_age must be a number"))
+                if (options.max_age < 0 || options.max_age > 604800) return reject(new TypeError("Create invite options max_age must be between 0 and 604800"))
             }
-            if(typeof options.max_uses !== "undefined"){
-                if(typeof options.max_uses !== "number") return reject(new TypeError("Create invite options max_uses must be a number"))
-                if(options.max_uses < 0 || options.max_uses > 100) return reject(new TypeError("Create invite options max_uses must be between 0 and 100"))
+            if (typeof options.max_uses !== "undefined") {
+                if (typeof options.max_uses !== "number") return reject(new TypeError("Create invite options max_uses must be a number"))
+                if (options.max_uses < 0 || options.max_uses > 100) return reject(new TypeError("Create invite options max_uses must be between 0 and 100"))
             }
-            if(typeof options.temporary !== "undefined"){
-                if(typeof options.temporary !== "boolean") return reject(new TypeError("Create invite options temporary must be a boolean"))
+            if (typeof options.temporary !== "undefined") {
+                if (typeof options.temporary !== "boolean") return reject(new TypeError("Create invite options temporary must be a boolean"))
             }
-            if(typeof options.unique !== "undefined"){
-                if(typeof options.unique !== "boolean") return reject(new TypeError("Create invite options unique must be a boolean"))
+            if (typeof options.unique !== "undefined") {
+                if (typeof options.unique !== "boolean") return reject(new TypeError("Create invite options unique must be a boolean"))
             }
             if (options.reason === null) options.reason = undefined
             if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.post(`${this.client._ENDPOINTS.CHANNEL(this.id)}/invites`, options).then(res => {
-                return resolve(new Invite(this.client, this.client.guilds.get(this.guildId)||this.guild, res, this))
-            }).catch(e=>{
+                return resolve(new Invite(this.client, this.client.guilds.get(this.guildId) || this.guild, res, this))
+            }).catch(e => {
                 return reject(new Error(e))
             })
         })

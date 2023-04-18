@@ -47,6 +47,9 @@ module.exports.createDefaultOptions = () => {
     shardId: 0,
     shardCount: 0,
     token: null,
+    connectionTimeout: 30000,
+    maxReconnectAttempts: Infinity,
+    maxResumeAttempts: 10
   }
 }
 
@@ -87,7 +90,7 @@ module.exports.fetchRecommendedShards = async (token, guildsPerShard = 1000) => 
         let t = await res.json();
         return resolve(t.shards * (1000 / guildsPerShard))
       }
-    }).catch(e => { console.log(e) });
+    }).catch(e => { console.error(e) });
   })
 }
 

@@ -3,7 +3,8 @@ const Client = require('../client/client')
 const Permissions = require('../util/BitFieldManagement/Permissions')
 const Utils = require('../util/index')
 const DataResolver = require('../util/DateResolver')
-const {Store} = require('../util/Store/Store')
+const { Store } = require('../util/Store/Store')
+const Emoji = require('./Emoji')
 module.exports = class Role {
     constructor(client, guild, data) {
         Object.defineProperty(this, 'client', { value: client })
@@ -17,15 +18,19 @@ module.exports = class Role {
         this.permissions_new = new Permissions(data.permissions_new)
         this.permissions = new Permissions(data.permissions.toString())
         this.name = data.name
-        this.mentionable = data.mentionable
-        this.managed = data.managed
+        this.mentionable = data.mentionable || false
+        this.managed = data.managed || false
         this.icon = data.icon
-        this.hoist = data.hoist
+        this.hoist = data.hoist || false
         //this.flags = data.flags
-        this.color = data.color
+        this.color = data.color || 0
         this.createdTimestamp = Utils.getTimestampFrom(data.id)
         this.createdAt = new Date(this.createdTimestamp)
         this.data_is_available = true
+    }
+
+    toString() {
+        return `<&${this.id}>`
     }
 
     edit(options = {}) {
@@ -36,7 +41,7 @@ module.exports = class Role {
                 if (options.name.length > 100) return reject(new TypeError("Edit role options must be less than 100 caracters"))
             }
             if (typeof options.permissions !== "undefined") {
-                if (options.permissions instanceof Permissions) options.permissions = options.permissions.bitfield.toString()
+                if (typeof options.permissions === "object" && options.permissions instanceof Permissions) options.permissions = options.permissions.bitfield.toString()
                 else options.permissions = new Permissions(options.permissions).bitfield.toString()
             }
             if (typeof options.color !== "undefined") {
@@ -47,12 +52,14 @@ module.exports = class Role {
                 if (typeof options.hoist !== "boolean") return reject(new TypeError("Edit role options hoist must be a boolean"))
             }
             if (typeof options.unicode_emoji !== "undefined") {
-                if (options.unicode_emoji instanceof Emoji) {
-                    options.unicode_emoji = options.unicode_emoji.pack()
-                    options.unicode_emoji = options.unicode_emoji.id ? `${options.unicode_emoji.name}` : `<${options.unicode_emoji.animated ? "a" : ""}:${options.unicode_emoji.name}:${options.unicode_emoji.id}>`
+                if (options.unicode_emoji !== null) {
+                    if (typeof options.unicode_emoji === "object" && options.unicode_emoji instanceof Emoji) {
+                        options.unicode_emoji = options.unicode_emoji.pack()
+                        options.unicode_emoji = options.unicode_emoji.id ? `${options.unicode_emoji.name}` : `<${options.unicode_emoji.animated ? "a" : ""}:${options.unicode_emoji.name}:${options.unicode_emoji.id}>`
+                        if (typeof options.unicode_emoji !== "string") return reject(new TypeError("Edit role options unicode_emoji must be a string"))
+                        if (!this.guild.features.includes("ROLE_ICONS")) options.unicode_emoji = undefined
+                    }
                 }
-                if (typeof options.unicode_emoji !== "string") return reject(new TypeError("Edit role options unicode_emoji must be a string"))
-                if (!this.guild.features.has("ROLE_ICONS")) options.unicode_emoji = undefined
             }
             if (typeof options.mentionable !== "undefined") {
                 if (typeof options.mentionable !== "boolean") return reject(new TypeError("Edit role options mentionable must be a boolean"))
@@ -60,8 +67,8 @@ module.exports = class Role {
             if (typeof options.position !== "undefined") {
                 if (typeof options.position !== "number") return reject(new TypeError("Edit role options position must be a number"))
             }
-            if (typeof options.icon !== "undefined") options.icon = await DataResolver.resolveImage(options.icon)
-            if (!this.guild.features.has("ROLE_ICONS")) options.icon = undefined
+            if (typeof options.icon !== "undefined" && options.icon !== null) options.icon = await DataResolver.resolveImage(options.icon)
+            if (!this.guild.features.includes("ROLE_ICONS")) options.icon = undefined
             if (options.reason === null) options.reason = undefined
             if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.patch(this.client._ENDPOINTS.ROLES(this.guildId, this.id), options).then(res => {
@@ -78,8 +85,9 @@ module.exports = class Role {
                         id: this.id,
                         position: options.position,
                         reason: options.reason
-                    }).then(res => {
-                        let role = new Role(this.client, this.client.guilds.get(this.id) || this, res)
+                    }).then(ress => {
+                        ress = ress.find(r => r.id === res.id)
+                        let role = new Role(this.client, this.client.guilds.get(this.id) || this, ress)
                         Object.keys(role).map(k => this[k] = role[k])
                         if (typeof this.client.options.rolesLifeTime === "number" && this.client.options.rolesLifeTime > 0) {
                             role.cachedAt = Date.now()

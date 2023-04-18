@@ -37,6 +37,10 @@ module.exports = class User {
         }
     }
 
+    toString(){
+        return `<@${this.id}>`
+    }
+
     /**
      * @typedef {object} MessageOptions
      * @property {string} content
@@ -59,7 +63,8 @@ module.exports = class User {
                 tts: false,
                 nonce: undefined,
                 allowed_mentions: undefined,
-                components: []
+                components: [],
+                files: null,
             }
             if (typeof options === 'string') {
                 data['content'] = options
@@ -208,7 +213,7 @@ module.exports = class User {
             if (typeof size !== "number") size = 1024
             let user = await this.client.rest.get(this.client._ENDPOINTS.USER(this.id)).catch(e => { return reject(new Error(e)) })
             if (!user.banner) return resolve(null)
-            else return resolve(`https://cdn.discordapp.com/banners/${this.id}/${user.banner}${banner.startsWith('a_') ? '.gif' : '.png'}?size=${size}`)
+            else return resolve(`https://cdn.discordapp.com/banners/${this.id}/${user.banner}${user.banner.startsWith('a_') ? '.gif' : '.png'}?size=${size}`)
         })
     }
 }

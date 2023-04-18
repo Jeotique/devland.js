@@ -53,18 +53,6 @@ module.exports = class Request {
             callOptions.headers = this._setHeaders();
             callOptions.retries = 2;
             callOptions.use_x_forwarded_for = true;
-            /*console.log(this.data)
-            console.log(this.options)
-            
-            if (!(this.data?.files)) {
-                if (this.data) callOptions.body = this.data;
-                callOptions.json = true;
-                callOptions.headers['content-type'] = 'application/json';
-            } else if (this.data?.files.length) {
-                if (this.data) callOptions.body = JSON.stringify(this.data);
-                callOptions.headers['content-type'] = `multipart/form-data; boundary=----------------------------devland`;
-            }*/
-
             let body;
             if (this.data) {
                 if (this.data?.files?.length) {
@@ -84,9 +72,9 @@ module.exports = class Request {
                     callOptions.headers['content-type'] = 'application/json';
                 }
             }
-            this.client.emit('debug', '~~~~sending~~~~');
+            this.client.emit('debug', '~~~~sending a request~~~~');
             got(this.endpoint, callOptions).then(result => {
-                this.client.emit('debug', '~~~~sent~~~~');
+                this.client.emit('debug', '~~~~request sent~~~~');
                 result.promise = this.promise
                 result.req = this
                 res(result)

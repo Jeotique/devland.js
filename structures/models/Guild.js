@@ -74,6 +74,11 @@ module.exports = class Guild {
             this.icon = `https://cdn.discordapp.com/icons/${this.id}/${this.icon}${this.icon.startsWith('a_') ? '.gif' : '.png'}?size=512`
         }
     }
+
+    toString() {
+        return `${this.name}`
+    }
+
     /**
      * @typedef {Object} guildVanityData
      * @property {string|null} code
@@ -158,12 +163,13 @@ module.exports = class Guild {
                         } else if (typeof command == "object") {
                             command = new GuildCommand(command).pack()
                         } else return reject(new TypeError("Invalid command format"))
-                        this.client.rest.post(this.client._ENDPOINTS.COMMANDS(this.id), command).then(() => {
-                            return resolve(true)
-                        }).catch(e => {
-                            return reject(new Error(e))
-                        })
+
                     })
+                })
+                this.client.rest.put(this.client._ENDPOINTS.COMMANDS(this.id), body).then(() => {
+                    return resolve(true)
+                }).catch(e => {
+                    return reject(new Error(e))
                 })
             } else {
                 var all = []
@@ -184,12 +190,10 @@ module.exports = class Guild {
                         } else return reject(new TypeError("Invalid command format"))
                     }
                 })
-                all.map(data => {
-                    this.client.rest.post(this.client._ENDPOINTS.COMMANDS(this.id), data).then(() => {
-                        return resolve(true)
-                    }).catch(e => {
-                        return reject(new Error(e))
-                    })
+                this.client.rest.put(this.client._ENDPOINTS.COMMANDS(this.id), all).then(() => {
+                    return resolve(true)
+                }).catch(e => {
+                    return reject(new Error(e))
                 })
             }
         })
@@ -256,7 +260,7 @@ module.exports = class Guild {
             if (options.roles.find(value => typeof value !== "string")) return reject(new TypeError("Create emoji options roles must contains only roles Id"))
             if (typeof options.image === "undefined") return reject(new TypeError("Create emoji options image cannot be undefined"))
             options.image = await DataResolver.resolveImage(options.image)
-            if(options.reason === null) options.reason = undefined
+            if (options.reason === null) options.reason = undefined
             if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("Create emoji options reason must be string or a undefined value"))
             this.client.rest.post(this.client._ENDPOINTS.EMOJI(this.id), {
                 name: options.name,
@@ -294,9 +298,7 @@ module.exports = class Guild {
                 if (options.explicit_content_filter < 0 || options.explicit_content_filter > 2) return reject(new TypeError("The guild explicit content filter is invalid"))
             }
             if (typeof options.afk_channel_id !== "undefined") {
-                /*
-                    if(options.afk_channel_id instanceof VoiceChannel) options.afk_channel_id = options.afk_channel_id.id
-                */
+                if (typeof options.afk_channel_id === "object" && options.afk_channel_id instanceof VoiceChannel) options.afk_channel_id = options.afk_channel_id.id
                 if (options.afk_channel_id !== null && typeof options.afk_channel_id !== "string") return reject(new TypeError("The guild afk channel id must be a string or a VoiceChannel instance"))
             }
             if (typeof options.afk_timeout !== "undefined") {
@@ -559,6 +561,74 @@ module.exports = class Guild {
         })
     }
 
+    async fetchChannel(channel_id) {
+        return new Promise(async (resolve, reject) => {
+            if (typeof channel_id !== "string") return reject(new TypeError("The channel Id must be a string"))
+            this.client.rest.get(this.client._ENDPOINTS.CHANNEL(channel_id)).then(channel => {
+                switch (channel.type) {
+                    case 0:
+                        let text = new TextChannel(this.client, this.client.guilds.get(this.id) || this, channel)
+                        resolve(text)
+                        if (typeof this.client.options.channelsLifeTime === "number" && this.client.options.channelsLifeTime > 0) {
+                            text.cachedAt = Date.now()
+                            text.expireAt = Date.now() + this.client.options.channelsLifeTime
+                            this.client.textChannels.set(text.id, text)
+                        }
+                        break;
+                    case 2:
+                        let voice = new VoiceChannel(this.client, this.client.guilds.get(this.id) || this, channel)
+                        resolve(voice)
+                        if (typeof this.client.options.channelsLifeTime === "number" && this.client.options.channelsLifeTime > 0) {
+                            voice.cachedAt = Date.now()
+                            voice.expireAt = Date.now() + this.client.options.channelsLifeTime
+                            this.client.voiceChannels.set(voice.id, voice)
+                        }
+                        break;
+                    case 4:
+                        let category = new CategoryChannel(this.client, this.client.guilds.get(this.id) || this, channel)
+                        category.childrens = []
+                        res.filter(child => child.parent_id === category.id || child.parentId === category.id).map(child => category.childrens.push(child.id))
+                        resolve(category)
+                        if (typeof this.client.options.channelsLifeTime === "number" && this.client.options.channelsLifeTime > 0) {
+                            category.cachedAt = Date.now()
+                            category.expireAt = Date.now() + this.client.options.channelsLifeTime
+                            this.client.categoryChannels.set(category.id, category)
+                        }
+                        break;
+                    case 5:
+                        let announcement = new AnnouncementChannel(this.client, this.client.guilds.get(this.id) || this, channel)
+                        resolve(announcement)
+                        if (typeof this.client.options.channelsLifeTime === "number" && this.client.options.channelsLifeTime > 0) {
+                            announcement.cachedAt = Date.now()
+                            announcement.expireAt = Date.now() + this.client.options.channelsLifeTime
+                            this.client.announcementChannels.set(announcement.id, announcement)
+                        }
+                        break;
+                    case 13:
+                        let stage = new StageChannel(this.client, this.client.guilds.get(this.id) || this, channel)
+                        resolve(stage)
+                        if (typeof this.client.options.channelsLifeTime === "number" && this.client.options.channelsLifeTime > 0) {
+                            stage.cachedAt = Date.now()
+                            stage.expireAt = Date.now() + this.client.options.channelsLifeTime
+                            this.client.stageChannels.set(stage.id, stage)
+                        }
+                        break;
+                    case 15:
+                        let forum = new ForumChannel(this.client, this.client.guilds.get(this.id) || this, channel)
+                        resolve(forum)
+                        if (typeof this.client.options.channelsLifeTime === "number" && this.client.options.channelsLifeTime > 0) {
+                            forum.cachedAt = Date.now()
+                            forum.expireAt = Date.now() + this.client.options.channelsLifeTime
+                            this.client.forumChannels.set(forum.id, forum)
+                        }
+                        break;
+                }
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
     async fetchMember(user) {
         return new Promise(async (resolve, reject) => {
             if (user instanceof User) user = user.id
@@ -633,7 +703,7 @@ module.exports = class Guild {
                 if (options.name.length > 100) return reject(new TypeError("Create role options must be less than 100 caracters"))
             }
             if (typeof options.permissions !== "undefined") {
-                if (options.permissions instanceof Permissions) options.permissions = options.permissions.bitfield.toString()
+                if (typeof options.permissions === "object" && options.permissions instanceof Permissions) options.permissions = options.permissions.bitfield.toString()
                 else options.permissions = new Permissions(options.permissions).bitfield.toString()
             }
             if (typeof options.color !== "undefined") {
@@ -644,28 +714,57 @@ module.exports = class Guild {
                 if (typeof options.hoist !== "boolean") return reject(new TypeError("Create role options hoist must be a boolean"))
             }
             if (typeof options.unicode_emoji !== "undefined") {
-                if (options.unicode_emoji instanceof Emoji) {
-                    options.unicode_emoji = options.unicode_emoji.pack()
-                    options.unicode_emoji = options.unicode_emoji.id ? `${options.unicode_emoji.name}` : `<${options.unicode_emoji.animated ? "a" : ""}:${options.unicode_emoji.name}:${options.unicode_emoji.id}>`
+                if (options.unicode_emoji !== null) {
+                    if (typeof options.unicode_emoji === "object" && options.unicode_emoji instanceof Emoji) {
+                        options.unicode_emoji = options.unicode_emoji.pack()
+                        options.unicode_emoji = options.unicode_emoji.id ? `${options.unicode_emoji.name}` : `<${options.unicode_emoji.animated ? "a" : ""}:${options.unicode_emoji.name}:${options.unicode_emoji.id}>`
+                        if (typeof options.unicode_emoji !== "string") return reject(new TypeError("Create role options unicode_emoji must be a string"))
+                        if (!this.features.includes("ROLE_ICONS")) options.unicode_emoji = undefined
+                    }
                 }
-                if (typeof options.unicode_emoji !== "string") return reject(new TypeError("Create role options unicode_emoji must be a string"))
-                if (!this.features.has("ROLE_ICONS")) options.unicode_emoji = undefined
             }
             if (typeof options.mentionable !== "undefined") {
                 if (typeof options.mentionable !== "boolean") return reject(new TypeError("Create role options mentionable must be a boolean"))
             }
-            if (typeof options.icon !== "undefined") options.icon = await DataResolver.resolveImage(options.icon)
-            if (!this.features.has("ROLE_ICONS")) options.icon = undefined
+            if (typeof options.icon !== "undefined" && options.icon !== null) options.icon = await DataResolver.resolveImage(options.icon)
+            if (!this.features.includes("ROLE_ICONS")) options.icon = undefined
             if (options.reason === null) options.reason = undefined
             if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.post(this.client._ENDPOINTS.ROLES(this.id), options).then(res => {
-                let role = new Role(this.client, this.client.guilds.get(this.id) || this, res)
-                resolve(role)
-                if (typeof this.client.options.rolesLifeTime === "number" && this.client.options.rolesLifeTime > 0) {
-                    role.cachedAt = Date.now()
-                    role.expireAt = Date.now() + this.client.options.rolesLifeTime
-                    this.roles.set(role.id, role)
+                if (typeof options.position === "number") {
+                    this.client.rest.patch(this.client._ENDPOINTS.ROLES(this.id), {
+                        reason: options.reason,
+                        id: res.id,
+                        position: options.position
+                    }).then(allRoles => {
+                        let goodRole = allRoles.find(r => r.id === res.id)
+                        if (!goodRole) return reject(new Error("Can't find the role after his creation"))
+                        let role = new Role(this.client, this.client.guilds.get(this.id) || this, goodRoles)
+                        resolve(role)
+                        if (typeof this.client.options.rolesLifeTime === "number" && this.client.options.rolesLifeTime > 0) {
+                            role.cachedAt = Date.now()
+                            role.expireAt = Date.now() + this.client.options.rolesLifeTime
+                            this.roles.set(role.id, role)
+                        }
+                    }).catch(e => {
+                        let role = new Role(this.client, this.client.guilds.get(this.id) || this, res)
+                        resolve(role)
+                        if (typeof this.client.options.rolesLifeTime === "number" && this.client.options.rolesLifeTime > 0) {
+                            role.cachedAt = Date.now()
+                            role.expireAt = Date.now() + this.client.options.rolesLifeTime
+                            this.roles.set(role.id, role)
+                        }
+                    })
+                } else {
+                    let role = new Role(this.client, this.client.guilds.get(this.id) || this, res)
+                    resolve(role)
+                    if (typeof this.client.options.rolesLifeTime === "number" && this.client.options.rolesLifeTime > 0) {
+                        role.cachedAt = Date.now()
+                        role.expireAt = Date.now() + this.client.options.rolesLifeTime
+                        this.roles.set(role.id, role)
+                    }
                 }
+
             }).catch(e => {
                 return reject(new Error(e))
             })
@@ -748,6 +847,7 @@ module.exports = class Guild {
             if (reason === null) reason = undefined
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             let member = this.members.get(user) || null
+            if (delete_message_seconds === null) delete_message_seconds = undefined
             if (typeof delete_message_seconds !== "undefined" && typeof delete_message_seconds !== "number") return reject(new TypeError("delete_message_seconds must be a number"))
             this.client.rest.put(this.client._ENDPOINTS.BANS(this.id, user), {
                 delete_message_seconds: delete_message_seconds,
@@ -882,108 +982,237 @@ module.exports = class Guild {
         })
     }
 
-    async fetchAutoModRules(){
-        return new Promise(async(resolve, reject) => {
+    async fetchAutoModRules() {
+        return new Promise(async (resolve, reject) => {
             this.client.rest.get(this.client._ENDPOINTS.AUTOMOD(this.id)).then(res => {
                 let collect = new Store()
-                if(res.length < 1) return resolve(collect)
-                res.map(async(value) => {
-                    value.creator = this.client.users.get(value.creator_id) || await this.client.rest.get(this.client._ENDPOINTS.USER(value.creator_id)).catch(e=>{})
-                    if(value.creator && !(value.creator instanceof User)) value.creator = new User(this.client, value.creator)
-                    let rules = new AutoModRule(this.client, this.client.guilds.get(this.id)||this, value)
+                if (res.length < 1) return resolve(collect)
+                res.map(async (value) => {
+                    value.creator = this.client.users.get(value.creator_id) || await this.client.rest.get(this.client._ENDPOINTS.USER(value.creator_id)).catch(e => { })
+                    if (value.creator && !(value.creator instanceof User)) value.creator = new User(this.client, value.creator)
+                    let rules = new AutoModRule(this.client, this.client.guilds.get(this.id) || this, value)
                     collect.set(rules.id, rules)
-                    if(collect.size === res.length) return resolve(collect)
+                    if (collect.size === res.length) return resolve(collect)
                 })
-            }).catch(e=>{
+            }).catch(e => {
                 return reject(new Error(e))
             })
         })
     }
 
-    async fetchAutoModRule(rule_id){
-        return new Promise(async(resolve, reject) => {
-            if(rule_id instanceof AutoModRules) rule_id = rule_id.id
-            if(typeof rule_id !== "string") return reject(new TypeError("The rule Id must be a string"))
+    async fetchAutoModRule(rule_id) {
+        return new Promise(async (resolve, reject) => {
+            if (rule_id instanceof AutoModRules) rule_id = rule_id.id
+            if (typeof rule_id !== "string") return reject(new TypeError("The rule Id must be a string"))
             this.client.rest.get(this.client._ENDPOINTS.AUTOMOD(this.id, rule_id)).then(async res => {
-                res.creator = this.client.users.get(res.creator_id) || await this.client.rest.get(this.client._ENDPOINTS.USER(res.creator_id)).catch(e=>{})
-                if(res.creator && !(res.creator instanceof User)) res.creator = new User(this.client, res.creator)
-                return resolve(new AutoModRule(this.client, this.client.guilds.get(this.id)||this, res))
-            }).catch(e=>{
+                res.creator = this.client.users.get(res.creator_id) || await this.client.rest.get(this.client._ENDPOINTS.USER(res.creator_id)).catch(e => { })
+                if (res.creator && !(res.creator instanceof User)) res.creator = new User(this.client, res.creator)
+                return resolve(new AutoModRule(this.client, this.client.guilds.get(this.id) || this, res))
+            }).catch(e => {
                 return reject(new Error(e))
             })
         })
     }
 
-    async createAutoModRule(options = {}){
-        return new Promise(async(resolve, reject) => {
-            if(typeof options !== "object") return reject(new TypeError("Create automod rules options must be a object"))
-            if(typeof options.name !== "string") return reject(new TypeError("Create automod rules options name must be a string"))
-            if(typeof options.event_type !== "number") return reject(new TypeError("Create automod rules options event type must be a number"))
-            if(options.event_type !== 1) return reject(new TypeError("Create automod rules options event type is valid, only type 1 is supported"))
-            if(typeof options.trigger_type !== "number") return reject(new TypeError("Create automod rules options trigger type must be a number"))
-            if(options.trigger_type < 1 || options.trigger_type === 2 || options.trigger_type > 5) return reject(new TypeError("Create automod rules options trigger type invalid"))
-            if(typeof options.trigger_metadata !== "undefined"){
-                if(typeof options.trigger_metadata !== "object") return reject(new TypeError("Create automod rules options trigger metadata must be a object"))
-                if(typeof options.trigger_metadata.keyword_filter !== "undefined"){
-                    if(!Array.isArray(options.trigger_metadata.keyword_filter)) return reject(new TypeError("Create automod rules options trigger metadata keyword filter must be a array"))
-                    if(options.trigger_metadata.keyword_filter.find(k => typeof k !== "string")) return reject(new TypeError("Create automod rules options trigger metadata keyword filter can contains string only"))
-                    if(options.trigger_metadata.keyword_filter.length > 1000) return reject(new TypeError("Create automod rules options trigger metadata keyword filter maximum length of 1000"))
+    async createAutoModRule(options = {}) {
+        return new Promise(async (resolve, reject) => {
+            if (typeof options !== "object") return reject(new TypeError("Create automod rules options must be a object"))
+            if (typeof options.name !== "string") return reject(new TypeError("Create automod rules options name must be a string"))
+            if (typeof options.event_type !== "number") return reject(new TypeError("Create automod rules options event type must be a number"))
+            if (options.event_type !== 1) return reject(new TypeError("Create automod rules options event type is valid, only type 1 is supported"))
+            if (typeof options.trigger_type !== "number") return reject(new TypeError("Create automod rules options trigger type must be a number"))
+            if (options.trigger_type < 1 || options.trigger_type === 2 || options.trigger_type > 5) return reject(new TypeError("Create automod rules options trigger type invalid"))
+            if (typeof options.trigger_metadata !== "undefined") {
+                if (typeof options.trigger_metadata !== "object") return reject(new TypeError("Create automod rules options trigger metadata must be a object"))
+                if (typeof options.trigger_metadata.keyword_filter !== "undefined") {
+                    if (!Array.isArray(options.trigger_metadata.keyword_filter)) return reject(new TypeError("Create automod rules options trigger metadata keyword filter must be a array"))
+                    if (options.trigger_metadata.keyword_filter.find(k => typeof k !== "string")) return reject(new TypeError("Create automod rules options trigger metadata keyword filter can contains string only"))
+                    if (options.trigger_metadata.keyword_filter.length > 1000) return reject(new TypeError("Create automod rules options trigger metadata keyword filter maximum length of 1000"))
                 }
-                if(typeof options.trigger_metadata.regex_patterns !== "undefined"){
-                    if(!Array.isArray(options.trigger_metadata.regex_patterns)) return reject(new TypeError("Create automod rules options trigger metadata regex patterns must be a array"))
-                    if(options.trigger_metadata.regex_patterns.find(k => typeof k !== "string")) return reject(new TypeError("Create automod rules options trigger metadata regex patterns can contains string only"))
-                    if(options.trigger_metadata.regex_patterns.length > 1000) return reject(new TypeError("Create automod rules options trigger metadata regex patterns maximum length of 10"))
+                if (typeof options.trigger_metadata.regex_patterns !== "undefined") {
+                    if (!Array.isArray(options.trigger_metadata.regex_patterns)) return reject(new TypeError("Create automod rules options trigger metadata regex patterns must be a array"))
+                    if (options.trigger_metadata.regex_patterns.find(k => typeof k !== "string")) return reject(new TypeError("Create automod rules options trigger metadata regex patterns can contains string only"))
+                    if (options.trigger_metadata.regex_patterns.length > 1000) return reject(new TypeError("Create automod rules options trigger metadata regex patterns maximum length of 10"))
                 }
-                if(typeof options.trigger_metadata.presets !== "undefined"){
-                    if(!Array.isArray(options.trigger_metadata.presets)) return reject(new TypeError("Create automod rules options trigger metadata presets must be a array"))
-                    if(options.trigger_metadata.presets.find(k => typeof k !== "number")) return reject(new TypeError("Create automod rules options trigger metadata presets can contains number only"))
-                    if(options.trigger_metadata.presets.find(k => k < 1 || k > 3)) return reject(new TypeError("Create automod rules options trigger metadata presets invalid"))
+                if (typeof options.trigger_metadata.presets !== "undefined") {
+                    if (!Array.isArray(options.trigger_metadata.presets)) return reject(new TypeError("Create automod rules options trigger metadata presets must be a array"))
+                    if (options.trigger_metadata.presets.find(k => typeof k !== "number")) return reject(new TypeError("Create automod rules options trigger metadata presets can contains number only"))
+                    if (options.trigger_metadata.presets.find(k => k < 1 || k > 3)) return reject(new TypeError("Create automod rules options trigger metadata presets invalid"))
                 }
-                if(typeof options.trigger_metadata.allow_list !== "undefined"){
-                    if(!Array.isArray(options.trigger_metadata.allow_list)) return reject(new TypeError("Create automod rules options trigger metadata allow list must be a array"))
-                    if(options.trigger_metadata.allow_list.find(k => typeof k !== "string")) return reject(new TypeError("Create automod rules options trigger metadata allow list can contains string only"))
-                    if(options.trigger_metadata.allow_list.length > 100 && (!options.trigger_metadata.presets || options.trigger_metadata.presets?.length < 1)) return reject(new TypeError("Create automod rules options trigger metadata allow list maximum length of 100"))
-                    if(options.trigger_metadata.allow_list.length > 1000) return reject(new TypeError("Create automod rules options trigger metadata allow list maximum length of 1000"))
+                if (typeof options.trigger_metadata.allow_list !== "undefined") {
+                    if (!Array.isArray(options.trigger_metadata.allow_list)) return reject(new TypeError("Create automod rules options trigger metadata allow list must be a array"))
+                    if (options.trigger_metadata.allow_list.find(k => typeof k !== "string")) return reject(new TypeError("Create automod rules options trigger metadata allow list can contains string only"))
+                    if (options.trigger_metadata.allow_list.length > 100 && (!options.trigger_metadata.presets || options.trigger_metadata.presets?.length < 1)) return reject(new TypeError("Create automod rules options trigger metadata allow list maximum length of 100"))
+                    if (options.trigger_metadata.allow_list.length > 1000) return reject(new TypeError("Create automod rules options trigger metadata allow list maximum length of 1000"))
                 }
-                if(typeof options.trigger_metadata.mention_total_limit !== "undefined"){
-                    if(typeof options.trigger_metadata.mention_total_limit !== "number") return reject(new TypeError("Create automod rules options trigger metadata mention total limit must be a number"))
-                    if(options.trigger_metadata.mention_total_limit > 50) return reject(new TypeError("Create automod rules options trigger metadata mention total limit maximum of 50"))
+                if (typeof options.trigger_metadata.mention_total_limit !== "undefined") {
+                    if (typeof options.trigger_metadata.mention_total_limit !== "number") return reject(new TypeError("Create automod rules options trigger metadata mention total limit must be a number"))
+                    if (options.trigger_metadata.mention_total_limit > 50) return reject(new TypeError("Create automod rules options trigger metadata mention total limit maximum of 50"))
                 }
             }
-            if(typeof options.actions === "undefined") return reject(new TypeError("Create automod rules options actions must be a array"))
-            if(!Array.isArray(options.actions)) return reject(new TypeError("Create automod rules options actions must be a array"))
-            if(options.actions.length < 1) return reject(new TypeError("Create automod rules options actions you must provid at least one action"))
-            if(options.actions.find(a => typeof a.type !== "number")) return reject(new TypeError("Create automod rules options action type must be a number"))
-            if(options.actions.find(a => a.type < 1 || a.type > 3)) return reject(new TypeError("Create automod rules options action type invalid"))
+            if (typeof options.actions === "undefined") return reject(new TypeError("Create automod rules options actions must be a array"))
+            if (!Array.isArray(options.actions)) return reject(new TypeError("Create automod rules options actions must be a array"))
+            if (options.actions.length < 1) return reject(new TypeError("Create automod rules options actions you must provid at least one action"))
+            if (options.actions.find(a => typeof a.type !== "number")) return reject(new TypeError("Create automod rules options action type must be a number"))
+            if (options.actions.find(a => a.type < 1 || a.type > 3)) return reject(new TypeError("Create automod rules options action type invalid"))
             options.actions.map(action => {
-                if(typeof action.metadata !== "undefined"){
-                    if(typeof action.metadata !== "object") return reject(new TypeError("Create automod rules options action metadata must be a object"))
-                    if(typeof action.metadata.channel_id !== "undefined" && typeof action.metadata.channel_id !== "string") return reject(new TypeError("Create automod rules options action metadata channel Id must be a string"))
-                    if(typeof action.metadata.duration_seconds !== "undefined" && typeof action.metadata.duration_seconds !== "number") return reject(new TypeError("Create automod rules options action metadata duration seconds must be a number"))
-                    if(typeof action.metadata.duration_seconds !== "undefined" && action.metadata.duration_seconds > 2419200) return reject(new TypeError("Create automod rules options action metadata duration seconds maximum of 2419200 (4 weeks)"))
-                    if(typeof action.metadata.custom_message !== "undefined" && typeof action.metadata.custom_message !== "string") return reject(new TypeError("Create automod rules options action metadata custom message must be a string"))
-                    if(typeof action.metadata.custom_message !== "undefined" && action.metadata.custom_message.length > 150) return reject(new TypeError("Create automod rules options action metadata custom message length maximum of 150"))
+                if (typeof action.metadata !== "undefined") {
+                    if (typeof action.metadata !== "object") return reject(new TypeError("Create automod rules options action metadata must be a object"))
+                    if (typeof action.metadata.channel_id !== "undefined" && typeof action.metadata.channel_id !== "string") return reject(new TypeError("Create automod rules options action metadata channel Id must be a string"))
+                    if (typeof action.metadata.duration_seconds !== "undefined" && typeof action.metadata.duration_seconds !== "number") return reject(new TypeError("Create automod rules options action metadata duration seconds must be a number"))
+                    if (typeof action.metadata.duration_seconds !== "undefined" && action.metadata.duration_seconds > 2419200) return reject(new TypeError("Create automod rules options action metadata duration seconds maximum of 2419200 (4 weeks)"))
+                    if (typeof action.metadata.custom_message !== "undefined" && typeof action.metadata.custom_message !== "string") return reject(new TypeError("Create automod rules options action metadata custom message must be a string"))
+                    if (typeof action.metadata.custom_message !== "undefined" && action.metadata.custom_message.length > 150) return reject(new TypeError("Create automod rules options action metadata custom message length maximum of 150"))
                 }
             })
-            if(typeof options.enabled !== "undefined") {
-                if(typeof options.enabled !== "boolean") return reject(new TypeError("Create automod rules options enabled must be a boolean"))
+            if (typeof options.enabled !== "undefined") {
+                if (typeof options.enabled !== "boolean") return reject(new TypeError("Create automod rules options enabled must be a boolean"))
             }
-            if(typeof options.exempt_roles !== "undefined"){
-                if(!Array.isArray(options.exempt_roles)) return reject(new TypeError("Create automod rules options exempt roles must be a array"))
-                if(options.exempt_roles.find(a => typeof a !== "string")) return reject(new TypeError("Create automod rules options exempt roles can contains only string"))
-                if(options.exempt_roles.length > 20) return reject(new TypeError("Create automod rules options exempt roles maximum length of 20"))
+            if (typeof options.exempt_roles !== "undefined") {
+                if (!Array.isArray(options.exempt_roles)) return reject(new TypeError("Create automod rules options exempt roles must be a array"))
+                if (options.exempt_roles.find(a => typeof a !== "string")) return reject(new TypeError("Create automod rules options exempt roles can contains only string"))
+                if (options.exempt_roles.length > 20) return reject(new TypeError("Create automod rules options exempt roles maximum length of 20"))
             }
-            if(typeof options.exempt_channels !== "undefined"){
-                if(!Array.isArray(options.exempt_channels)) return reject(new TypeError("Create automod rules options exempt channels must be a array"))
-                if(options.exempt_channels.find(a => typeof a !== "string")) return reject(new TypeError("Create automod rules options exempt channels can contains only string"))
-                if(options.exempt_channels.length > 50) return reject(new TypeError("Create automod rules options exempt channels maximum length of 50"))
+            if (typeof options.exempt_channels !== "undefined") {
+                if (!Array.isArray(options.exempt_channels)) return reject(new TypeError("Create automod rules options exempt channels must be a array"))
+                if (options.exempt_channels.find(a => typeof a !== "string")) return reject(new TypeError("Create automod rules options exempt channels can contains only string"))
+                if (options.exempt_channels.length > 50) return reject(new TypeError("Create automod rules options exempt channels maximum length of 50"))
             }
-            if(options.reason === null) options.reason = undefined
+            if (options.reason === null) options.reason = undefined
             if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("Create automod rules options reason must be string or a undefined value"))
             this.client.rest.post(this.client._ENDPOINTS.AUTOMOD(this.id), options).then(res => {
                 res.creator = this.client.user
-                return resolve(new AutoModRule(this.client, this.client.guilds.get(this.id)||this, res))
-            }).catch(e=>{
+                return resolve(new AutoModRule(this.client, this.client.guilds.get(this.id) || this, res))
+            }).catch(e => {
+                return reject(new Error(e))
+            })
+        })
+    }
+
+    async createChannel(options = {}, reason) {
+        return new Promise(async (resolve, reject) => {
+            if (typeof options !== "object") return reject(new TypeError("Invalid options object provided"))
+            if (Object.keys(options).length < 1) return reject(new TypeError("You need to provide a minimum of one change"))
+            if (typeof options.name !== "string") return reject(new TypeError("The channel name must be a string"))
+            if (options.name.length < 1) return reject(new TypeError("The channel name must have more than 1 character"))
+            if (options.name.length > 100) return reject(new TypeError("The channel name must have less then 100 characters"))
+            if (typeof options.type !== "undefined") {
+                if (typeof options.type !== "number") return reject(new TypeError("The channel type must be a number"))
+                if (options.type === 1 || options.type === 3 || options.type === 14 || options.type < 0 || options.type > 15) return reject(new TypeError("Invalid channel type"))
+            }
+            if (typeof options.position !== "undefined") {
+                if (typeof options.position !== "number") return reject(new TypeError("The channel position must be a number"))
+                if (options.position < 0) return reject(new TypeError("The channel position must be more than 0 (or =0)"))
+            }
+            if (typeof options.topic !== "undefined") {
+                if (options.topic !== null) {
+                    if (typeof options.topic !== "string") return reject(new TypeError("The channel topic must be a string"))
+                    if (options.topic.length > 1024 && options.type !== 15) return reject(new TypeError("The channel topic must have less than 1024 characters (4096 for forum channel)"))
+                    else if (options.topic.length > 4096 && options.type === 15) return reject(new TypeError("The channel topic must have less than 4096 characters"))
+                }
+            }
+            if (typeof options.nsfw !== "undefined") {
+                if (typeof options.nsfw !== "boolean") return reject(new TypeError("Nsfw value must be a boolean"))
+            }
+            if (typeof options.rate_limit_per_user !== "undefined") {
+                if (options.rate_limit_per_user === null) options.rate_limit_per_user = 0
+                if (typeof options.rate_limit_per_user !== "number") return reject(new TypeError("The channel rate limit per user must be a number"))
+                if (options.rate_limit_per_user < 0) return reject(new TypeError("The channel rate limit per user must be more than 0"))
+                if (options.rate_limit_per_user > 21600) return reject(new TypeError("The channel rate limit per user must be less than 21600"))
+            }
+            if (typeof options.bitrate !== "undefined") {
+                if (typeof options.bitrate !== "number") return reject(new TypeError("The channel bitrate must be a number"))
+                if (options.bitrate < 8000) return reject(new TypeError("The channel bitrate must be more than 8000"))
+                if (options.bitrate > 128000 && this.boostLevel < 1) return reject(new TypeError("The channel bitrate is too much elevated for a guild with boost level <1"))
+                if (options.bitrate > 256000 && this.boostLevel < 2) return reject(new TypeError("The channel bitrate is too much elevated for a guild with boost level <2"))
+                if (options.bitrate > 384000 && this.boostLevel < 3 && !this.features.includes("VIP_REGIONS")) return reject(new TypeError("The channel bitrate is too much elevated for a guild with boost level <3"))
+            }
+            if (typeof options.user_limit !== "undefined") {
+                if (options.user_limit === null) options.user_limit = 0
+                if (typeof options.user_limit !== "number") return reject(new TypeError("The channel user limit must be a number"))
+                if (options.user_limit < 0) return reject(new TypeError("The channel user limit must be more than 0 (or =0)"))
+                if (options.user_limit > 99 && options.type !== 13) return reject(new TypeError("The channel user limit must be less than 99 (10000 for stage channel)"))
+                else if (options.user_limit > 10000 && options.type === 13) return reject(new TypeError("The channel user limit must be less than 10000"))
+            }
+            if (typeof options.parent_id !== "undefined") {
+                if (typeof options.parent_id === "object" && options.parent_id instanceof CategoryChannel) {
+                    options.parent_id = options.parent_id.id
+                }
+                if (options.parent_id !== null && typeof options.parent_id !== "string") return reject(new TypeError("The channel parent id must be a string"))
+            }
+            if (typeof options.permission_overwrites !== "undefined") {
+                if (options.permission_overwrites !== null) {
+                    if (typeof options.permission_overwrites !== "object") return reject(new TypeError("The channel permissions overwrites must an object"))
+                    let res = []
+                    options.permission_overwrites.map(async perm => {
+                        if (!perm.id) return reject(new TypeError("Id of the role/user is missing in the permissions array"))
+                        if (typeof perm.type !== "number") return reject(new TypeError("Type of the permission (0 = role, 1 = user) must be provided"))
+                        if (perm.type < 0 || perm.type > 1) return reject(new TypeError("The type is invalid (0 = role, 1 = user)"))
+                        if (!perm.allow && !perm.deny) return reject(new TypeError("You need to provide 'allow' or 'deny' permissions"))
+                        if (perm.allow) perm.allow = new Permissions(perm.allow).bitfield.toString()
+                        if (perm.deny) perm.deny = new Permissions(perm.deny).bitfield.toString()
+                        res.push(perm)
+                    })
+                    options.permission_overwrites = res
+                }
+            }
+            if (typeof options.rtc_region !== "undefined") {
+                if (options.rtc_region !== null && typeof options.rtc_region !== "string") return reject(new TypeError("The channel rtc region must be a string"))
+            }
+            if (typeof options.video_quality_mode !== "undefined") {
+                if (typeof options.video_quality_mode !== "number") return reject(new TypeError("The channel video quality mode must be a number (1 = auto, 2 = 720p)"))
+                if (options.video_quality_mode < 1 || options.video_quality_mode > 2) return reject(new TypeError("The channel video quality mode must be set to 1 or 2"))
+            }
+            if (typeof options.available_tags !== "undefined") {
+                if (typeof options.available_tags === "object" && options.available_tags instanceof ForumTag) {
+                    options.available_tags = [options.available_tags.pack()]
+                } else if (typeof options.available_tags === "object") {
+                    let res = []
+                    options.available_tags.map(tag => {
+                        if (tag instanceof ForumTag) tag = tag.pack()
+                        else if (typeof tag === "object") tag = new ForumTag(tag).pack()
+                        else return reject(new TypeError("The tag provided is invalid, must be an object or a ForumTag instance"))
+                        res.push(tag)
+                    })
+                    if (res.length > 20) return reject(new TypeError("You can set only 20 tags"))
+                    options.available_tags = res
+                } else return reject(new TypeError("Available tags must be an array or a ForumTag instance"))
+            }
+            if (typeof options.default_reaction_emoji !== "undefined") {
+                if (options.default_reaction_emoji !== null) {
+                    if (typeof options.default_reaction_emoji === "string") options.default_reaction_emoji = Utils.parseEmoji(options.default_reaction_emoji)
+                    if (typeof options.default_reaction_emoji !== "object") return reject(new TypeError("Invalid default reaction emoji"))
+                    if (!options.default_reaction_emoji.name) return reject(new TypeError("Invalid default reaction emoji"))
+                    options.default_reaction_emoji = {
+                        emoji_id: options.default_reaction_emoji.id,
+                        emoji_name: options.default_reaction_emoji.name
+                    }
+                }
+            }
+            if (typeof options.default_thread_rate_limit_per_user !== "undefined") {
+                if (options.default_thread_rate_limit_per_user === null) options.default_thread_rate_limit_per_user = 0
+                if (typeof options.default_thread_rate_limit_per_user !== "number") return reject(new TypeError("Default thread rate limit per user must be set to null or a number"))
+            }
+            if (typeof options.default_sort_order !== "undefined") {
+                if (options.default_sort_order === null) options.default_sort_order = 0
+                if (typeof options.default_sort_order !== "number") return reject(new TypeError("Default sort order must be set to null or a number"))
+            }
+            if (typeof options.default_forum_layout !== "undefined") {
+                if (options.default_forum_layout === null) options.default_forum_layout = 0
+                if (typeof options.default_forum_layout !== "number") return reject(new TypeError("Default forum layout must be set to null or a number"))
+            }
+            if (reason === null) reason = undefined
+            if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            options["reason"] = reason
+            this.client.rest.post(this.client._ENDPOINTS.SERVER_CHANNEL(this.id), options).then(channel => {
+                if (channel.type === 0) channel = new TextChannel(this.client, this.client.guilds.get(this.id) || this, channel)
+                else if (channel.type === 2) channel = new VoiceChannel(this.client, this.client.guilds.get(this.id) || this, channel)
+                else if (channel.type === 5) channel = new AnnouncementChannel(this.client, this.client.guilds.get(this.id) || this, channel)
+                else if (channel.type === 10 || channel.type === 11 || channel.type === 12) channel = new Thread(this.client, this.client.guilds.get(this.id) || this, channel)
+                else if (channel.type === 13) channel = new StageChannel(this.client, this.client.guilds.get(this.id) || this, channel)
+                else if (channel.type === 15) channel = new ForumChannel(this.client, this.client.guilds.get(this.id) || this, channel)
+                return resolve(channel)
+            }).catch(e => {
                 return reject(new Error(e))
             })
         })

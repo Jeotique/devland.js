@@ -53,6 +53,11 @@ module.exports = class TextChannel {
             })
         })
     }
+
+    toString() {
+        return `<#${this.id}>`
+    }
+
     /**
      * @typedef {object} MessageOptions
      * @property {string} content
@@ -247,7 +252,7 @@ module.exports = class TextChannel {
                 else if (options.user_limit > 10000 && this.type === 13) return reject(new TypeError("The channel user limit must be less than 10000"))
             }
             if (typeof options.parent_id !== "undefined") {
-                if (options.parent_id instanceof CategoryChannel) {
+                if (typeof options.parent_id === "object" && options.parent_id instanceof CategoryChannel) {
                     options.parent_id = options.parent_id.id
                 }
                 if (options.parent_id !== null && typeof options.parent_id !== "string") return reject(new TypeError("The channel parent id must be a string"))
@@ -269,14 +274,14 @@ module.exports = class TextChannel {
                 }
             }
             if (typeof options.rtc_region !== "undefined") {
-                if (typeof options.rtc_region !== "string") return reject(new TypeError("The channel rtc region must be a string"))
+                if (options.rtc_region !== null && typeof options.rtc_region !== "string") return reject(new TypeError("The channel rtc region must be a string"))
             }
             if (typeof options.video_quality_mode !== "undefined") {
                 if (typeof options.video_quality_mode !== "number") return reject(new TypeError("The channel video quality mode must be a number (1 = auto, 2 = 720p)"))
                 if (options.video_quality_mode < 1 || options.video_quality_mode > 2) return reject(new TypeError("The channel video quality mode must be set to 1 or 2"))
             }
             if (typeof options.available_tags !== "undefined") {
-                if (options.available_tags instanceof ForumTag) {
+                if (typeof options.available_tags === "object" && options.available_tags instanceof ForumTag) {
                     options.available_tags = [options.available_tags.pack()]
                 } else if (typeof options.available_tags === "object") {
                     let res = []
@@ -525,10 +530,13 @@ module.exports = class TextChannel {
             }
             let identifier = Date.now()
             this.client.collectorCache[identifier] = new Collector(this.client, this.client.guilds.get(this.guildId) || this.guild, null, this, options)
+            var resolved = false
             this.client.collectorCache[identifier]?.on('end', () => {
+                if (!resolved) resolve(null)
                 delete this.client.collectorCache[identifier]
             })
             this.client.collectorCache[identifier]?.on('collected', collected => {
+                resolved = true
                 resolve(collected)
                 delete this.client.collectorCache[identifier]
             })

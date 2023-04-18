@@ -8,8 +8,9 @@ module.exports = {
      * @param {*} d 
      */
     run: async (client, d) => {
-        const data = d.d
-
-        client.emit('autoModRuleExecution', data)
-    } 
+        try {
+            const data = d.d
+            client.emit('autoModRuleExecution', data)
+        } catch (err) { client.emit('errordev', d.t, err) }
+    }
 }

@@ -32,6 +32,11 @@ module.exports = class DmChannel {
         this.user = data.user
         this.data_is_available = true
     }
+
+    toString(){
+        return `<#${this.id}>`
+    }
+
     /**
      * @typedef {object} MessageOptions
      * @property {string} content

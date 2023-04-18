@@ -9,6 +9,7 @@ const Thread = require('../models/Thread')
 const ForumChannel = require('../models/ForumChannel')
 const IntentFlags = require('../util/BitFieldManagement/IntentFlags')
 const ShardClientUtil = require('../sharding/ShardClientUtil')
+const webSocket = require('../gateway/webSocket-new')
 /**
  * @extends {EventEmitter}
  */
@@ -47,6 +48,9 @@ module.exports = class Client extends EventEmitter {
      * @property {boolean} waitCacheBeforeReady
      * @property {number} shardId
      * @property {number} shardCount
+     * @property {number} connectionTimeout
+     * @property {number} maxReconnectAttempts
+     * @property {number} maxResumeAttempts
      */
     /**
      * The client options
@@ -121,52 +125,10 @@ module.exports = class Client extends EventEmitter {
         this.token = options?.token
         this.readyAt = 0;
         this.guildsIds = [];
-        this.ws = {
-            /**
-             * @type {ws}
-             */
-            socket: null,
-            /**
-             * @type {boolean}
-             */
-            connected: false,
-            /**
-             * @type {object}
-             */
-            gateway: {
-                /**
-             * @type {string}
-             */
-                url: null,
-                /**
-             * @type {number}
-             */
-                obtainedAt: null,
-                /**
-             * @type {object}
-             */
-                heartbeat: {
-                    /**
-             * @type {number}
-             */
-                    interval: null,
-                    /**
-             * @type {number}
-             */
-                    last: null,
-                    /**
-             * @type {boolean}
-             */
-                    recieved: false,
-                    seq: null,
-                },
-                resume_gateway_url: null
-            },
-            ping: -1
-        }
+        this.ws = new webSocket(this)
 
         // don't use !
-        this.seq = 0
+        this.seq = -1
         // don't use !
         this.heartbeat = null
         // don't use !
@@ -264,6 +226,8 @@ module.exports = class Client extends EventEmitter {
          * @private
          */
         this.deletedmessages = new Store()
+
+        this.lastHeartbeatAcked = true
         if (this.options && this.options.connect == false) {
             return this;
         } else {
@@ -275,24 +239,29 @@ module.exports = class Client extends EventEmitter {
         return this.readyAt ? Date.now()-this.readyAt : 0
     }
 
-    static get version() { return '1.0.0' }
+    static get version() { return require('../../package.json').version }
     /**
      * Connect your bot to the discord gateway
      * @param {string} token The discord bot token 
      */
     connect(token) {
+        this.emit('debug', `Connect attempt started`)
         if (token && typeof token === 'string') this.token = token;
         if(Array.isArray(this.options.intents)) this.options.intents = parseInt(new IntentFlags(this.options.intents).bitfield)
-        const attemptLogin = require('../gateway/websocket');
-        if (this.ws.connected) throw new Error(`The client is already connected to the gateway`);
-
-        attemptLogin(this);
+        this.emit('debug', `Trying to attempt login`)
+        this.ws._token = this.token
+        this.ws.connect()
         return this
     }
 
-    destroy(){
-        if(!this.ws.connected) throw new TypeError("The bot is not connected to the gateway")
-        this.ws.socket.close(8888);
+    destroy(reopen = false){
+        this.emit('debug', reopen ? `Reopening a new session after a request`:`Destroying the current session`)
+        if(!reopen) this.readyAt = 0
+        if(!reopen) this.ready = false
+        this.ws.disconnect({
+            reconnect: reopen ? "auto" : false
+        })
+        return this
     }
 
     toJSON() {

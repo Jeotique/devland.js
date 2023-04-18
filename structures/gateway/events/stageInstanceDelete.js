@@ -8,8 +8,9 @@ module.exports = {
      * @param {*} d 
      */
     run: async (client, d) => {
-        const data = d.d
-
-        client.emit('stageInstanceDelete', data)
+        try {
+            const data = d.d
+            client.emit('stageInstanceDelete', data)
+        } catch (err) { client.emit('errordev', d.t, err) }
     }
 }
