@@ -44,7 +44,7 @@ module.exports = class Member {
 
     async send(options) {
         return new Promise(async (resolve, reject) => {
-            this.user.send(options).then(res => resolve(res)).catch(e => reject(new Error(e)))
+            this.user.send(options).then(res => resolve(res)).catch(e => reject(e))
         })
     }
 
@@ -104,7 +104,7 @@ module.exports = class Member {
                     newMember.guild.members.set(newMember.id, newMember)
                 }
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -138,7 +138,7 @@ module.exports = class Member {
                     newMember.guild.members.set(newMember.id, newMember)
                 }
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -172,7 +172,7 @@ module.exports = class Member {
                     newMember.guild.members.set(newMember.id, newMember)
                 }
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -194,7 +194,7 @@ module.exports = class Member {
                     if (n + 1 === this.roles.length) return resolve(collect)
                 })
             } else {
-                let res = await this.client.rest.get(this.client._ENDPOINTS.ROLES(this.guildId)).catch(e => { return reject(new Error(e)) })
+                let res = await this.client.rest.get(this.client._ENDPOINTS.ROLES(this.guildId)).catch(e => { return reject(e) })
                 res.filter(r => this.roles.includes(r.id)).map(role => {
                     collect.set(role.id, new Role(this.client, this.client.guilds.get(this.guildId) || this.guild, role))
                 })
@@ -210,7 +210,7 @@ module.exports = class Member {
             this.guild.kickMember(this.id, reason).then(member => {
                 return resolve(member)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -224,7 +224,7 @@ module.exports = class Member {
             this.guild.banMember(this.id, delete_message_seconds, reason).then(member => {
                 return resolve(member)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }

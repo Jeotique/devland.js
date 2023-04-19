@@ -44,7 +44,7 @@ module.exports = class Webhook {
                 resolve(newweb)
                 Object.keys(newweb).map(k => this[k] = newweb[k])
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -58,7 +58,7 @@ module.exports = class Webhook {
             }).then(() => {
                 resolve()
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -92,14 +92,14 @@ module.exports = class Webhook {
                 this.client.rest.post(this.client._ENDPOINTS.WEBHOOKS(this.id) + '/' + this.token, data).then(messageData => {
                     return resolve(new Message(this.client, this.guild, this.channel, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (options instanceof Embed) {
                 data['embeds'].push(options.pack())
                 this.client.rest.post(this.client._ENDPOINTS.WEBHOOKS(this.id) + '/' + this.token, data).then(messageData => {
                     return resolve(new Message(this.client, this.guild, this.channel, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (options instanceof ActionRow) {
                 data['components'].push(options.pack())
@@ -113,7 +113,7 @@ module.exports = class Webhook {
                 this.client.rest.post(this.client._ENDPOINTS.WEBHOOKS(this.id) + '/' + this.token, data).then(messageData => {
                     return resolve(new Message(this.client, this.guild, this.channel, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
@@ -143,7 +143,7 @@ module.exports = class Webhook {
                 this.client.rest.post(this.client._ENDPOINTS.WEBHOOKS(this.id) + '/' + this.token, data).then(messageData => {
                     return resolve(new Message(this.client, this.guild, this.channel, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else return reject(new TypeError("Send without any options is not authorized"))
         })

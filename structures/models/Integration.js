@@ -36,9 +36,9 @@ module.exports = class Integration {
                 reason: reason
             }).then(() => {
                 resolve()
-            }).catch(e=>{
-                return reject(new Error(e))
-            })
+            }).catch(e => {
+                return reject(e)
+              })
         })
     }
 }

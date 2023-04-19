@@ -170,7 +170,7 @@ module.exports = class CategoryChannel {
                 Object.keys(newChannel).map(k => this[k] = newChannel[k])
                 return resolve(newChannel)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -191,7 +191,7 @@ module.exports = class CategoryChannel {
                     Object.keys(channel).map(k => this[k] = channel[k])
                     return resolve(channel)
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             }, time)
         })
@@ -223,7 +223,7 @@ module.exports = class CategoryChannel {
                     let channel = new CategoryChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, newChannel)
                     return resolve(channel)
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             }, time)
         })
@@ -239,7 +239,7 @@ module.exports = class CategoryChannel {
                 Object.keys(newChannel).map(k => this[k] = newChannel[k])
                 return resolve(newChannel)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -252,7 +252,7 @@ module.exports = class CategoryChannel {
                 res.map(channel => collect.set(channel.id, new TextChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, channel)))
                 return resolve(collect)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -265,7 +265,7 @@ module.exports = class CategoryChannel {
                 res.map(channel => collect.set(channel.id, new VoiceChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, channel)))
                 return resolve(collect)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -278,7 +278,7 @@ module.exports = class CategoryChannel {
                 res.map(channel => collect.set(channel.id, new AnnouncementChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, channel)))
                 return resolve(collect)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -291,7 +291,7 @@ module.exports = class CategoryChannel {
                 res.map(channel => collect.set(channel.id, new StageChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, channel)))
                 return resolve(collect)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -304,7 +304,7 @@ module.exports = class CategoryChannel {
                 res.map(channel => collect.set(channel.id, new ForumChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, channel)))
                 return resolve(collect)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }

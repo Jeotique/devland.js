@@ -175,7 +175,7 @@ module.exports = class StageChannel {
                 Object.keys(newChannel).map(k => this[k] = newChannel[k])
                 return resolve(newChannel)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -196,7 +196,7 @@ module.exports = class StageChannel {
                     Object.keys(channel).map(k => this[k] = channel[k])
                     return resolve(channel)
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             }, time)
         })
@@ -236,7 +236,7 @@ module.exports = class StageChannel {
                     let channel = new StageChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, newChannel)
                     return resolve(channel)
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             }, time)
         })
@@ -252,7 +252,7 @@ module.exports = class StageChannel {
                 Object.keys(newChannel).map(k => this[k] = newChannel[k])
                 return resolve(newChannel)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -272,7 +272,7 @@ module.exports = class StageChannel {
             this.client.rest.post(this.client._ENDPOINTS.STAGE(), options).then((res) => {
                 return resolve(res)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -282,7 +282,7 @@ module.exports = class StageChannel {
             this.client.rest.get(this.client._ENDPOINTS.STAGE()+'/'+this.id).then((res) => {
                 return resolve(res)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -300,7 +300,7 @@ module.exports = class StageChannel {
             this.client.rest.patch(this.client._ENDPOINTS.STAGE()+'/'+this.id, options).then((res) => {
                 return resolve(res)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -314,7 +314,7 @@ module.exports = class StageChannel {
             }).then(() => {
                 return resolve()
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -340,9 +340,9 @@ module.exports = class StageChannel {
             if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.post(`${this.client._ENDPOINTS.CHANNEL(this.id)}/invites`, options).then(res => {
                 return resolve(new Invite(this.client, this.client.guilds.get(this.guildId)||this.guild, res, this))
-            }).catch(e=>{
-                return reject(new Error(e))
-            })
+            }).catch(e => {
+                return reject(e)
+              })
         })
     }
 
@@ -376,14 +376,14 @@ module.exports = class StageChannel {
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id), data).then(messageData => {
                     return resolve(new Message(this.client, this.guild, this, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (options instanceof Embed) {
                 data['embeds'].push(options.pack())
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id), data).then(messageData => {
                     return resolve(new Message(this.client, this.guild, this, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (options instanceof ActionRow) {
                 data['components'].push(options.pack())
@@ -397,7 +397,7 @@ module.exports = class StageChannel {
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id), data).then(messageData => {
                     return resolve(new Message(this.client, this.guild, this, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
@@ -428,7 +428,7 @@ module.exports = class StageChannel {
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id), data).then(messageData => {
                     return resolve(new Message(this.client, this.guild, this, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else return reject(new TypeError("Send without any options is not authorized"))
         })
@@ -447,7 +447,7 @@ module.exports = class StageChannel {
                         this.client.messages.set(message.id, message)
                     }
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (typeof options === "object") {
                 if (options.limit && typeof options.limit !== "number") return reject(new TypeError("Limit must be a number"))
@@ -474,7 +474,7 @@ module.exports = class StageChannel {
                     })
                     return resolve(cache)
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (typeof options === "undefined") {
                 this.client.rest.get(this.client._ENDPOINTS.MESSAGES(this.id)).then(data => {
@@ -490,7 +490,7 @@ module.exports = class StageChannel {
                     })
                     return resolve(cache)
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else return reject(new TypeError("Invalid fetch messages options provided"))
         })

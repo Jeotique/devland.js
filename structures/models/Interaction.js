@@ -73,7 +73,7 @@ module.exports = class Interaction {
             }).then(() => {
                 resolve(this)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -96,7 +96,7 @@ module.exports = class Interaction {
                 }).then(() => {
                     return resolve(this)
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (options instanceof Embed) {
                 data['embeds'].push(options.pack())
@@ -106,7 +106,7 @@ module.exports = class Interaction {
                 }).then(() => {
                     return resolve(this)
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (options instanceof ActionRow) {
                 data['components'].push(options.pack())
@@ -123,7 +123,7 @@ module.exports = class Interaction {
                 }).then(() => {
                     return resolve(this)
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
@@ -157,7 +157,7 @@ module.exports = class Interaction {
                 }).then(() => {
                     return resolve(this)
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else return reject(new TypeError("Send without any options is not authorized"))
         })
@@ -175,7 +175,7 @@ module.exports = class Interaction {
             }).then(() => {
                 resolve(this)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -196,7 +196,7 @@ module.exports = class Interaction {
             }).then(() => {
                 resolve(this)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -219,7 +219,7 @@ module.exports = class Interaction {
                     this.followUpMessage = a
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (options instanceof Embed) {
                 data['embeds'].push(options.pack())
@@ -228,7 +228,7 @@ module.exports = class Interaction {
                     this.followUpMessage = a
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (options instanceof ActionRow) {
                 data['components'].push(options.pack())
@@ -244,7 +244,7 @@ module.exports = class Interaction {
                     this.followUpMessage = a
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
@@ -277,7 +277,7 @@ module.exports = class Interaction {
                     this.followUpMessage = a
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else return reject(new TypeError("Send without any options is not authorized"))
         })
@@ -307,7 +307,7 @@ module.exports = class Interaction {
                     if (IdMessageToEdit === this.followUpMessageId) this.followUpMessage = a
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (options instanceof Embed) {
                 data['embeds'] = []
@@ -316,7 +316,7 @@ module.exports = class Interaction {
                     if (IdMessageToEdit === this.followUpMessageId) this.followUpMessage = a
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (options instanceof ActionRow) {
                 data['components'] = []
@@ -332,7 +332,7 @@ module.exports = class Interaction {
                     if (IdMessageToEdit === this.followUpMessageId) this.followUpMessage = a
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
@@ -368,7 +368,7 @@ module.exports = class Interaction {
                     if (IdMessageToEdit === this.followUpMessageId) this.followUpMessage = a
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else return reject(new TypeError("Send without any options is not authorized"))
         })
@@ -396,7 +396,7 @@ module.exports = class Interaction {
                     }
                     return resolve(this)
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             }, options.delay)
         })
@@ -413,7 +413,7 @@ module.exports = class Interaction {
             }).then(() => {
                 resolve(this)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }

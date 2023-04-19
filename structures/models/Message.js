@@ -145,7 +145,7 @@ module.exports = class Message {
                 this.client.rest.patch(this.client._ENDPOINTS.MESSAGES(this.channelId, this.id), data).then(messageData => {
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (options instanceof Embed) {
                 data['embeds'] = []
@@ -153,7 +153,7 @@ module.exports = class Message {
                 this.client.rest.patch(this.client._ENDPOINTS.MESSAGES(this.channelId, this.id), data).then(messageData => {
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (options instanceof ActionRow) {
                 data['components'] = []
@@ -168,7 +168,7 @@ module.exports = class Message {
                 this.client.rest.patch(this.client._ENDPOINTS.MESSAGES(this.channelId, this.id), data).then(messageData => {
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
@@ -202,7 +202,7 @@ module.exports = class Message {
                 this.client.rest.patch(this.client._ENDPOINTS.MESSAGES(this.channelId, this.id), data).then(messageData => {
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else return reject(new TypeError("Send without any options is not authorized"))
         })
@@ -221,7 +221,7 @@ module.exports = class Message {
                     this.deleted = true
                     return resolve(this)
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             }, delay)
         })
@@ -262,14 +262,14 @@ module.exports = class Message {
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.channelId), data).then(messageData => {
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (options instanceof Embed) {
                 data['embeds'].push(options.pack())
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.channelId), data).then(messageData => {
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (options instanceof ActionRow) {
                 data['components'].push(options.pack())
@@ -283,7 +283,7 @@ module.exports = class Message {
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.channelId), data).then(messageData => {
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
@@ -313,7 +313,7 @@ module.exports = class Message {
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.channelId), data).then(messageData => {
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else return reject(new TypeError("Send without any options is not authorized"))
         })
@@ -327,7 +327,7 @@ module.exports = class Message {
                 Object.keys(message).map(k => this[k] = message[k])
                 return resolve(message)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -342,7 +342,7 @@ module.exports = class Message {
             }).then(() => {
                 return resolve()
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -357,7 +357,7 @@ module.exports = class Message {
             }).then(() => {
                 return resolve()
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -374,7 +374,7 @@ module.exports = class Message {
             this.client.rest.put(this.client._ENDPOINTS.REACTIONS(this.channelId, this.id, encoded, "@me")).then(() => {
                 return resolve()
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -394,13 +394,13 @@ module.exports = class Message {
                 this.client.rest.delete(this.client._ENDPOINTS.REACTIONS(this.channelId, this.id, encoded, user)).then(() => {
                     return resolve()
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else {
                 this.client.rest.delete(this.client._ENDPOINTS.REACTIONS(this.channelId, this.id, encoded, "@me")).then(() => {
                     return resolve()
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             }
         })
@@ -433,7 +433,7 @@ module.exports = class Message {
                 })
                 return resolve(collect)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -451,13 +451,13 @@ module.exports = class Message {
                 this.client.rest.delete(this.client._ENDPOINTS.REACTIONS(this.channelId, this.id, encoded)).then(() => {
                     return resolve()
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else {
                 this.client.rest.delete(this.client._ENDPOINTS.REACTIONS(this.channelId, this.id)).then(() => {
                     return resolve()
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             }
         })

@@ -281,7 +281,7 @@ module.exports = class Client extends EventEmitter {
              */
             let res = new Store()
             if (!max) for (let i of this.guildsIds) {
-                let result = await this.rest.get(this._ENDPOINTS.SERVERS(i)).catch(e => { return reject(new Error(e)) })
+                let result = await this.rest.get(this._ENDPOINTS.SERVERS(i)).catch(e => { return reject(e) })
                 if (!result) return reject(new TypeError("One guild has not result"))
                 let oldGuild = this.guilds.get(i)
                 let guild = new Guild(this, result)
@@ -295,7 +295,7 @@ module.exports = class Client extends EventEmitter {
                 if (res.size === this.guildsIds.length) return resolve(res)
             }
             else for (let i of this.guildsIds.slice(0, max)) {
-                let result = await this.rest.get(this._ENDPOINTS.SERVERS(i)).catch(e => { return reject(new Error(e)) })
+                let result = await this.rest.get(this._ENDPOINTS.SERVERS(i)).catch(e => { return reject(e) })
                 if (!result) return reject(new TypeError("One guild has not result"))
                 let oldGuild = this.guilds.get(i)
                 let guild = new Guild(this, result)
@@ -319,7 +319,7 @@ module.exports = class Client extends EventEmitter {
         return new Promise(async (resolve, reject) => {
             if (guildId instanceof Guild) guildId = guildId?.id
             if (typeof guildId !== "string") return reject(new TypeError("guildId must be a string or a valid guild reference"))
-            let result = await this.rest.get(this._ENDPOINTS.SERVERS(guildId)).catch(e => { reject(new Error(e)) })
+            let result = await this.rest.get(this._ENDPOINTS.SERVERS(guildId)).catch(e => { reject(e) })
             if (!result) return reject(new TypeError("Unknow guild"))
             let oldGuild = this.guilds.get(guildId)
             let guild = new Guild(this, result)
@@ -337,7 +337,7 @@ module.exports = class Client extends EventEmitter {
         return new Promise(async (resolve, reject) => {
             if (userId instanceof User) userId = userId?.id
             if (typeof userId !== "string") return reject(new TypeError("userId must be a User instance or User Id"))
-            let result = await this.rest.get(this._ENDPOINTS.USER(userId)).catch(e => { reject(new Error(e)) })
+            let result = await this.rest.get(this._ENDPOINTS.USER(userId)).catch(e => { reject(e) })
             if (!result) return reject(new TypeError("Unknow user"))
             let user = new User(this, result)
             if (typeof this.options.usersLifeTime && this.options.usersLifeTime > 0) {
