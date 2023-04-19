@@ -57,15 +57,17 @@ module.exports = class WebSocket extends EventEmitter {
             return this.disconnect(null, new Error("Token not specified"))
         }
         this.status = "connecting"
-        let {getGatewayBot} = require('../util/Gateway')
-        let gatewayURL = await getGatewayBot(this._token)
-        this.gatewayURL = gatewayURL
+        let { getGatewayBot } = require('../util/Gateway')
         if (this.sessionID) {
             if (!this.resumeURL) {
                 this.emit("warn", "Resume url is not currently present, Discord may disconnect you quicker", this.client.options.shardId)
-            }
-            this.ws = new ws(`${this.resumeURL || this.gatewayURL}/?v=9&encoding=json`, this.client.options.ws)
+                let gatewayURL = await getGatewayBot(this._token)
+                this.gatewayURL = gatewayURL
+                this.ws = new ws(`${this.gatewayURL}/?v=9&encoding=json`, this.client.options.ws)
+            } else this.ws = new ws(`${this.resumeURL}`, this.client.options.ws)
         } else {
+            let gatewayURL = await getGatewayBot(this._token)
+            this.gatewayURL = gatewayURL
             this.ws = new ws(`${this.gatewayURL}/?v=9&encoding=json`, this.client.options.ws)
         }
         this.ws.on("open", this._onWSOpen)

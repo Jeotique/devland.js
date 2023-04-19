@@ -22,6 +22,10 @@ declare module 'devland.js' {
         waitCacheBeforeReady: boolean;
         shardId: number;
         shardCount: number;
+        connectionTimeout: number;
+        maxReconnectAttempts: number;
+        maxResumeAttempts: number;
+        invalidCommandValueReturnNull: boolean;
     }
     type wsOptions = {
         large_threshold: number;
@@ -1937,6 +1941,10 @@ declare module 'devland.js' {
         ephemeral: boolean,
         files: string[] | filesObject[] | Buffer[],
     }
+    type deleteFollowUpOptions = {
+        delay?: number,
+        message_to_delete?: Message,
+    }
     export class Interaction {
         constructor(client: Client, data: any);
         private client: Client;
@@ -1983,8 +1991,8 @@ declare module 'devland.js' {
         reply(options: MessageInteractionOptions | string | Embed | ActionRow): Promise<Interaction>;
         deferReply(options?: { ephemeral: boolean }): Promise<Interaction>;
         followUp(options: MessageInteractionOptions | string | Embed | ActionRow): Promise<Message>;
-        editFollowUp(options: MessageInteractionOptions | string | Embed | ActionRow): Promise<Message>;
-        deleteFollowUp(delay?: number): Promise<Interaction>;
+        editFollowUp(options: MessageInteractionOptions | string | Embed | ActionRow, message_to_edit?: Message): Promise<Message>;
+        deleteFollowUp(options?: deleteFollowUpOptions): Promise<Interaction>;
         submitModal(modal: Modal | modalOptions): Promise<Interaction>;
         getModalValue(input_id: string): string | null;
         getSelectedUsers(): User[];

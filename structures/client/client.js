@@ -51,6 +51,7 @@ module.exports = class Client extends EventEmitter {
      * @property {number} connectionTimeout
      * @property {number} maxReconnectAttempts
      * @property {number} maxResumeAttempts
+     * @property {number} invalidCommandValueReturnNull
      */
     /**
      * The client options

@@ -49,7 +49,8 @@ module.exports.createDefaultOptions = () => {
     token: null,
     connectionTimeout: 30000,
     maxReconnectAttempts: Infinity,
-    maxResumeAttempts: 10
+    maxResumeAttempts: 10,
+    invalidCommandValueReturnNull: true,
   }
 }
 
