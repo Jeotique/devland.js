@@ -252,7 +252,6 @@ module.exports = class WebSocket extends EventEmitter {
         }
         switch (packet.op) {
             case 0: {
-                //console.log(packet)
                 const Events = require('../util/GatewayEvents');
 
                 if (packet.t === 'READY') {
@@ -266,7 +265,6 @@ module.exports = class WebSocket extends EventEmitter {
                     this.status = "ready"
                     this.client.readyAt = Date.now()
                     this.resumeURL = `${packet.d.resume_gateway_url}?v=9&encoding=json`
-                    //console.log(this.resumeURL)
                     if (packet.d._trace) {
                         this.discordServerTrace = packet.d._trace
                     }
@@ -276,6 +274,12 @@ module.exports = class WebSocket extends EventEmitter {
                     this.emit('debug', `Session ready with succes, shard : ${this.client.options.shardId}`)
                     this.lastHeartbeatAck = true
                     this.heartbeat()
+                    packet.d.guilds.map(g => {
+                        this.client.guildsIds.push(g.id)
+                        if (typeof this.client.options.guildsLifeTime === "number" && this.client.options.guildsLifeTime > 0) {
+                            this.client.guilds.set(g.id, { ready: false, id: g.id })
+                        }
+                    })
                 }
                 if (packet.t === 'RESUMED') {
                     this.connectAttempts = 0
@@ -303,10 +307,7 @@ module.exports = class WebSocket extends EventEmitter {
                 })
                 if (!Events.hasOwnProperty(packet.t)) return;
                 if (!this.eventFiles.has(Events[packet.t])) return
-                let event = this.eventFiles.get(Events[packet.t])
-                try {
-                    event.run(this.client, packet)
-                } catch (err) { }
+                this.checkClientReady(packet)
             }
                 break;
             case 1: {
@@ -331,7 +332,6 @@ module.exports = class WebSocket extends EventEmitter {
             }
                 break;
             case 10: {
-                //console.log(packet)
                 this.emit("hello", packet.d._trace, this.client.options.shardId)
                 if (packet.d.heartbeat_interval > 0) {
                     if (this.heartbeatInterval) clearInterval(this.heartbeatInterval)
@@ -363,6 +363,20 @@ module.exports = class WebSocket extends EventEmitter {
             }
                 break;
         }
+    }
+
+    async checkClientReady(packet) {
+        if (packet.t === "READY" && this.client.guildsIds?.length < packet.d?.guilds?.length) return setTimeout(async () => this.checkClientReady(packet), 1000)
+        else if (this.client.ready) return this.execEventFile(packet)
+        else if (packet.t === "GUILD_CREATE" || packet.t === "GUID_DELETE" || packet.t === "GUILD_UPDATE" || packet.t === "READY") return this.execEventFile(packet)
+        else return setTimeout(async () => this.checkClientReady(packet), 1000)
+    }
+    async execEventFile(packet) {
+        const Events = require('../util/GatewayEvents');
+        let event = this.eventFiles.get(Events[packet.t])
+        try {
+            event.run(this.client, packet)
+        } catch (err) { }
     }
 
     _onWSOpen() {

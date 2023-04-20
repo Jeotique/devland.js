@@ -13,12 +13,12 @@ module.exports = {
             
             data.user.tag = data.user.username + '#' + data.user.discriminator
             client.user = new Models.ClientUser(client, data.user)
-            for (const [obj] in data.guilds) {
+            /*for (const [obj] in data.guilds) {
                 client.guildsIds.push(data.guilds[obj].id)
                 if (typeof client.options.guildsLifeTime === "number" && client.options.guildsLifeTime > 0) {
                     client.guilds.set(data.guilds[obj].id, { ready: false, id: data.guilds[obj].id })
                 }
-            }
+            }*/
             if (typeof client.options.guildsLifeTime === "number" && client.options.guildsLifeTime > 0) {
                 var checkGuilds = setInterval(() => {
                     if (client.guilds.size < 1) {
@@ -30,12 +30,13 @@ module.exports = {
                         */
                         client.emit('ready', client)
                     } else {
-                        if (client.guilds.filter(g => g.ready === true).size < client.guilds.size) return
-                        if (client.options.waitCacheBeforeReady && client.options.membersLifeTime && client.guilds.filter(g => g.members.size < g.totalMembersCount).size > 0) return
-                        if (client.options.waitCacheBeforeReady && client.options.presencesLifeTime && client.guilds.filter(g => g.presences.size < g.totalMembersCount).size > 0) return
-                        if (client.options.waitCacheBeforeReady && client.options.voicesLifeTime && client.guilds.filter(g => g.voicesStates.size < g.totalMembersCount).size > 0) return
+                        if (client.guilds.filter(g => g.ready === true).size < client.guilds.size) return// console.log('waiting ready')
+                        if (client.options.waitCacheBeforeReady && client.options.membersLifeTime && client.guilds.filter(g => g.members.size < g.totalMembersCount-5).size > 0) return console.log(client.guilds.filter(g => g.members.size < g.totalMembersCount).map(g => `${g.totalMembersCount}/${g.members.size} ${g.name}`))
+                        if (client.options.waitCacheBeforeReady && client.options.presencesLifeTime && client.guilds.filter(g => g.presences.size < g.totalMembersCount-5).size > 0) return// console.log('waiting presences')
+                        if (client.options.waitCacheBeforeReady && client.options.voicesLifeTime && client.guilds.filter(g => g.voicesStates.size < g.totalMembersCount-5).size > 0) return //console.log('waiting voices')
                         clearInterval(checkGuilds)
                         client.ready = true
+                        //console.log('all guilds good')
                         /**
                         * @event client#ready
                         * @param {Client} client

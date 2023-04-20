@@ -461,7 +461,9 @@ module.exports = class Interaction {
     getCommandValue(name) {
         if (!this.isSlashCommand) throw new TypeError("This function can be used on a slash command only")
         if (typeof name !== "string") throw new TypeError("You didn't provide any option name")
-        let value = this.data.options.find(op => op.name === name)
+        if (!this.data) return this.client.options.invalidCommandValueReturnNull ? null : undefined
+        if (!this.data?.options || this.data?.options?.length < 1) return this.client.options.invalidCommandValueReturnNull ? null : undefined
+        let value = this.data?.options?.find(op => op?.name === name)
         if (!value) return this.client.options.invalidCommandValueReturnNull ? null : undefined
         switch (value.type) {
             case 3:
