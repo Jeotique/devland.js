@@ -348,7 +348,7 @@ declare module 'devland.js' {
         heartbeat(normal?: boolean): void;
         identify(): void;
         initializeWS(): void;
-        onPacket(packet: RawPacket): void;
+        onPacket(packet: object): void;
         resume(): void;
         sendWS(op: number, _data: Record<string, unknown>, priority?: boolean): void;
         toJSON(): JSON;
@@ -933,6 +933,7 @@ declare module 'devland.js' {
         createCollector(options?: collectorOptions): Collector;
         awaitMessages(options?: collectorOptions): Promise<Store<String, Message>>;
         createInvite(options?: createInviteOptions): Promise<Invite>;
+        startTyping(): Promise<void>;
     }
     export class DmChannel {
         private constructor(client: Client, guild: Guild, data: object)
@@ -955,6 +956,7 @@ declare module 'devland.js' {
         getPinnedMessages(): Promise<Store<String, Message>>;
         createCollector(options?: collectorOptions): Collector;
         awaitMessages(options?: collectorOptions): Promise<Store<String, Message>>;
+        startTyping(): Promise<void>;
     }
     export class ForumChannel {
         private constructor(client: Client, guild: Guild, data: object)
@@ -992,6 +994,7 @@ declare module 'devland.js' {
         createCollector(options?: collectorOptions): Collector;
         awaitMessages(options?: collectorOptions): Promise<Store<String, Message>>;
         createInvite(options?: createInviteOptions): Promise<Invite>;
+        startTyping(): Promise<void>;
     }
     export type voiceBitrate = 8000 | 128000 | 256000 | 384000;
     export class VoiceChannel {
@@ -1025,11 +1028,12 @@ declare module 'devland.js' {
         clone(reason?: string, time?: number): Promise<VoiceChannel>;
         setPosition(position: number): Promise<VoiceChannel>;
         bulkDelete(data: number | Message[] | string[]): Promise<void>;
-        join();
-        leave();
+        join(): void;
+        leave(): void;
         createCollector(options?: collectorOptions): Collector;
         awaitMessages(options?: collectorOptions): Promise<Store<String, Message>>;
         createInvite(options?: createInviteOptions): Promise<Invite>;
+        startTyping(): Promise<void>;
     }
     type stageStartOptions = {
         topic: string,
@@ -1091,6 +1095,8 @@ declare module 'devland.js' {
         fetchMessages(options?: fetchMessagesOptions | string): Promise<Store<String, Message>>;
         createCollector(options?: collectorOptions): Collector;
         awaitMessages(options?: collectorOptions): Promise<Store<String, Message>>;
+        createInvite(options?: createInviteOptions): Promise<Invite>;
+        startTyping(): Promise<void>;
     }
     export class CategoryChannel {
         private constructor(client: Client, guild: Guild, data: object)
@@ -1154,6 +1160,7 @@ declare module 'devland.js' {
         createCollector(options?: collectorOptions): Collector;
         awaitMessages(options?: collectorOptions): Promise<Store<String, Message>>;
         createInvite(options?: createInviteOptions): Promise<Invite>;
+        startTyping(): Promise<void>;
     }
     type ThreadMetadata = {
         archived: boolean,
@@ -1192,6 +1199,7 @@ declare module 'devland.js' {
         remove(member: User | Member | string): Promise<void>;
         createCollector(options?: collectorOptions): Collector;
         awaitMessages(options?: collectorOptions): Promise<Store<String, Message>>;
+        startTyping(): Promise<void>;
     }
     type webhookId = string;
     type getUsersFromReactionOptions = {
@@ -1361,7 +1369,7 @@ declare module 'devland.js' {
         readonly components: resolvableComponents[];
         private readonly type: number;
         private pack();
-        addComponents(...components: resolvableComponents[]);
+        addComponents(...components: resolvableComponents[]): void;
     }
     type buttonData = {
         label?: string,
@@ -1410,8 +1418,8 @@ declare module 'devland.js' {
         customId: string;
         options: selectOptions[];
         disabled?: boolean;
-        addOptions(...options: selectOptions[]);
-        setOptions(...options: selectOptions[]);
+        addOptions(...options: selectOptions[]): void;
+        setOptions(...options: selectOptions[]): void;
         private pack();
     }
     type roleData = {
@@ -2420,7 +2428,7 @@ declare module 'devland.js' {
         private readonly _fetches: Map<string, Promise<any>>;
         private readonly _exitListener: Function;
         spawn(waitForReady?: boolean): Promise<ChildProcess>;
-        kill();
+        kill(): void;
         respawn(delay?: number, waitForReady?: boolean): Promise<ChildProcess>;
         send(message: any): Promise<Shard>;
         fetchClientValue(prop: string): Promise<any>;

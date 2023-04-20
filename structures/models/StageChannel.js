@@ -552,4 +552,41 @@ module.exports = class StageChannel {
             })
         })
     }
+
+    async createInvite(options = {}) {
+        return new Promise(async(resolve, reject) => {
+            if(typeof options !== 'object') return reject(new TypeError("Create invite options must be object"))
+            if(typeof options.max_age !== "undefined"){
+                if(typeof options.max_age !== "number") return reject(new TypeError("Create invite options max_age must be a number"))
+                if(options.max_age < 0 || options.max_age > 604800) return reject(new TypeError("Create invite options max_age must be between 0 and 604800"))
+            }
+            if(typeof options.max_uses !== "undefined"){
+                if(typeof options.max_uses !== "number") return reject(new TypeError("Create invite options max_uses must be a number"))
+                if(options.max_uses < 0 || options.max_uses > 100) return reject(new TypeError("Create invite options max_uses must be between 0 and 100"))
+            }
+            if(typeof options.temporary !== "undefined"){
+                if(typeof options.temporary !== "boolean") return reject(new TypeError("Create invite options temporary must be a boolean"))
+            }
+            if(typeof options.unique !== "undefined"){
+                if(typeof options.unique !== "boolean") return reject(new TypeError("Create invite options unique must be a boolean"))
+            }
+            if (options.reason === null) options.reason = undefined
+            if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            this.client.rest.post(`${this.client._ENDPOINTS.CHANNEL(this.id)}/invites`, options).then(res => {
+                return resolve(new Invite(this.client, this.client.guilds.get(this.guildId)||this.guild, res, this))
+            }).catch(e => {
+                return reject(e)
+              })
+        })
+    }
+
+    async startTyping() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.post(this.client._ENDPOINTS.TYPING(this.id)).then(() => {
+                resolve()
+            }).catch(e => {
+                return reject(e)
+            })
+        })
+    }
 }

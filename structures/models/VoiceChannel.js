@@ -546,4 +546,14 @@ module.exports = class VoiceChannel {
             })
         })
     }
+
+    async startTyping() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.post(this.client._ENDPOINTS.TYPING(this.id)).then(() => {
+                resolve()
+            }).catch(e => {
+                return reject(e)
+            })
+        })
+    }
 }
