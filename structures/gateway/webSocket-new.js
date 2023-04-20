@@ -57,15 +57,20 @@ module.exports = class WebSocket extends EventEmitter {
             return this.disconnect(null, new Error("Token not specified"))
         }
         this.status = "connecting"
-        let {getGatewayBot} = require('../util/Gateway')
-        let gatewayURL = await getGatewayBot(this._token)
-        this.gatewayURL = gatewayURL
+        let { getGatewayBot } = require('../util/Gateway')
         if (this.sessionID) {
             if (!this.resumeURL) {
                 this.emit("warn", "Resume url is not currently present, Discord may disconnect you quicker", this.client.options.shardId)
+                let gatewayURL = await getGatewayBot(this._token)
+                this.gatewayURL = gatewayURL
+                this.ws = new ws(`${this.gatewayURL}/?v=9&encoding=json`, this.client.options.ws)
+            } else {
+                //console.log(this.resumeURL)
+                this.ws = new ws(`${this.resumeURL}`, this.client.options.ws)
             }
-            this.ws = new ws(`${this.resumeURL || this.gatewayURL}/?v=9&encoding=json`, this.client.options.ws)
         } else {
+            let gatewayURL = await getGatewayBot(this._token)
+            this.gatewayURL = gatewayURL
             this.ws = new ws(`${this.gatewayURL}/?v=9&encoding=json`, this.client.options.ws)
         }
         this.ws.on("open", this._onWSOpen)
@@ -188,6 +193,13 @@ module.exports = class WebSocket extends EventEmitter {
         }
         this.lastHeartbeatSent = Date.now()
         this.sendWS(1, this.seq, true)
+        setTimeout(() => {
+            if (!this.lastHeartbeatAck) {
+                return this.disconnect({
+                    reconnect: "auto"
+                }, new Error("Server didn't acknowledge previous heartbeat, possible lost connection"))
+            }
+        }, 6000)
     }
 
     sendWS(op, _data, priority = false) {
@@ -220,8 +232,6 @@ module.exports = class WebSocket extends EventEmitter {
             shard: this.client.options.shardCount > 0 ? [Number(this.client.options.shardId), Number(this.client.options.shardCount)] : undefined
         }
         this.sendWS(2, identify)
-        this.lastHeartbeatSent = Date.now()
-        this.sendWS(1, this.seq, true)
     }
 
     resume() {
@@ -243,8 +253,8 @@ module.exports = class WebSocket extends EventEmitter {
         switch (packet.op) {
             case 0: {
                 const Events = require('../util/GatewayEvents');
-                if (!Events.hasOwnProperty(packet.t)) return;
-                if (packet.t == 'READY') {
+
+                if (packet.t === 'READY') {
                     this.connectAttempts = 0
                     this.reconnectInterval = 1000
                     this.connecting = false
@@ -254,29 +264,50 @@ module.exports = class WebSocket extends EventEmitter {
                     this.connectTimeout = null
                     this.status = "ready"
                     this.client.readyAt = Date.now()
-                    this.resumeURL = `${packet.d.resume_gateway_url}?v=9&encoding=json}`
+                    this.resumeURL = `${packet.d.resume_gateway_url}?v=9&encoding=json`
                     if (packet.d._trace) {
                         this.discordServerTrace = packet.d._trace
                     }
                     this.sessionID = packet.d.session_id
                     this.client.application = packet.d.application;
                     this.client.emit('debug', `Session ready with succes, shard : ${this.client.options.shardId}`)
-                }
-                if (packet.t == 'RESUMED') {
+                    this.emit('debug', `Session ready with succes, shard : ${this.client.options.shardId}`)
+                    this.lastHeartbeatAck = true
                     this.heartbeat()
+                    packet.d.guilds.map(g => {
+                        this.client.guildsIds.push(g.id)
+                        if (typeof this.client.options.guildsLifeTime === "number" && this.client.options.guildsLifeTime > 0) {
+                            this.client.guilds.set(g.id, { ready: false, id: g.id })
+                        }
+                    })
+                }
+                if (packet.t === 'RESUMED') {
+                    this.connectAttempts = 0
+                    this.reconnectInterval = 1000
+                    this.connecting = false
+                    if (this.connectTimeout) {
+                        clearTimeout(this.connectTimeout)
+                    }
+                    this.connectTimeout = null
+                    this.status = "ready"
                     this.preReady = true
                     this.ready = true
+                    if (packet.d._trace) {
+                        this.discordServerTrace = packet.d._trace
+                    }
                     this.client.emit('debug', `Session resumed with succes, shard : ${this.client.options.shardId}`)
+                    this.emit('debug', `Session resumed with succes, shard : ${this.client.options.shardId}`)
+                    this.lastHeartbeatAck = true
+                    this.heartbeat()
                 }
+
                 this.client.emit('raw', {
                     eventName: packet.t,
                     data: packet.d
                 })
+                if (!Events.hasOwnProperty(packet.t)) return;
                 if (!this.eventFiles.has(Events[packet.t])) return
-                let event = this.eventFiles.get(Events[packet.t])
-                try {
-                    event.run(this.client, packet)
-                } catch (err) { }
+                this.checkClientReady(packet)
             }
                 break;
             case 1: {
@@ -284,11 +315,13 @@ module.exports = class WebSocket extends EventEmitter {
             }
                 break;
             case 9: {
+                if (packet.d) {
+                    return this.resume()
+                }
                 this.seq = 0
                 this.sessionId = null
                 this.resumeURL = null
-                this.emit("warn", "Invalid session, reidentifying", this.client.options.shardId)
-                this.emit("debug", "Invalid session, reidentifying", this.client.options.shardId)
+
             }
                 break;
             case 7: {
@@ -299,6 +332,7 @@ module.exports = class WebSocket extends EventEmitter {
             }
                 break;
             case 10: {
+                this.emit("hello", packet.d._trace, this.client.options.shardId)
                 if (packet.d.heartbeat_interval > 0) {
                     if (this.heartbeatInterval) clearInterval(this.heartbeatInterval)
                     this.heartbeatInterval = setInterval(() => this.heartbeat(true), packet.d.heartbeat_interval)
@@ -312,9 +346,8 @@ module.exports = class WebSocket extends EventEmitter {
                 if (this.sessionID) {
                     this.resume()
                 } else {
-                    this.identify(true)
+                    this.identify()
                 }
-                this.emit("hello", packet.d._trace, this.client.options.shardId)
             }
                 break;
             case 11: {
@@ -330,6 +363,20 @@ module.exports = class WebSocket extends EventEmitter {
             }
                 break;
         }
+    }
+
+    async checkClientReady(packet) {
+        if (packet.t === "READY" && this.client.guildsIds?.length < packet.d?.guilds?.length) return setTimeout(async () => this.checkClientReady(packet), 1000)
+        else if (this.client.ready) return this.execEventFile(packet)
+        else if (packet.t === "GUILD_CREATE" || packet.t === "GUID_DELETE" || packet.t === "GUILD_UPDATE" || packet.t === "READY") return this.execEventFile(packet)
+        else return setTimeout(async () => this.checkClientReady(packet), 1000)
+    }
+    async execEventFile(packet) {
+        const Events = require('../util/GatewayEvents');
+        let event = this.eventFiles.get(Events[packet.t])
+        try {
+            event.run(this.client, packet)
+        } catch (err) { }
     }
 
     _onWSOpen() {

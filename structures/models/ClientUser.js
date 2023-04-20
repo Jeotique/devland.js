@@ -82,7 +82,7 @@ module.exports = class ClientUser {
         resolve(newClientUser)
         Object.keys(newClientUser).map(k => this[k] = newClientUser[k])
       }).catch(e => {
-        return reject(new Error(e))
+        return reject(e)
       })
     })
   }
@@ -98,7 +98,7 @@ module.exports = class ClientUser {
         resolve(newClientUser)
         Object.keys(newClientUser).map(k => this[k] = newClientUser[k])
       }).catch(e => {
-        return reject(new Error(e))
+        return reject(e)
       })
     })
   }

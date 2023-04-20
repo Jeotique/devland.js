@@ -36,7 +36,7 @@ module.exports = class Invite {
                     this.client.guilds.set(this.guildId, this.guild)
                 }
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }

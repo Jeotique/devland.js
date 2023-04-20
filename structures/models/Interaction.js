@@ -73,7 +73,7 @@ module.exports = class Interaction {
             }).then(() => {
                 resolve(this)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -96,7 +96,7 @@ module.exports = class Interaction {
                 }).then(() => {
                     return resolve(this)
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (options instanceof Embed) {
                 data['embeds'].push(options.pack())
@@ -106,7 +106,7 @@ module.exports = class Interaction {
                 }).then(() => {
                     return resolve(this)
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (options instanceof ActionRow) {
                 data['components'].push(options.pack())
@@ -123,7 +123,7 @@ module.exports = class Interaction {
                 }).then(() => {
                     return resolve(this)
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
@@ -157,7 +157,7 @@ module.exports = class Interaction {
                 }).then(() => {
                     return resolve(this)
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else return reject(new TypeError("Send without any options is not authorized"))
         })
@@ -175,7 +175,7 @@ module.exports = class Interaction {
             }).then(() => {
                 resolve(this)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -196,7 +196,7 @@ module.exports = class Interaction {
             }).then(() => {
                 resolve(this)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -219,7 +219,7 @@ module.exports = class Interaction {
                     this.followUpMessage = a
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (options instanceof Embed) {
                 data['embeds'].push(options.pack())
@@ -228,7 +228,7 @@ module.exports = class Interaction {
                     this.followUpMessage = a
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (options instanceof ActionRow) {
                 data['components'].push(options.pack())
@@ -244,7 +244,7 @@ module.exports = class Interaction {
                     this.followUpMessage = a
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
@@ -277,15 +277,16 @@ module.exports = class Interaction {
                     this.followUpMessage = a
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else return reject(new TypeError("Send without any options is not authorized"))
         })
     }
 
-    async editFollowUp(options = {}) {
+    async editFollowUp(options = {}, message_to_edit) {
         return new Promise(async (resolve, reject) => {
-            let data = {
+            var IdMessageToEdit = this.followUpMessageId
+            var data = {
                 content: undefined,
                 embeds: this.followUpMessage?.embeds || [],
                 tts: false,
@@ -294,22 +295,28 @@ module.exports = class Interaction {
                 components: this.followUpMessage?.components || [],
                 flags: undefined,
             }
+            if (typeof message_to_edit !== "undefined" && message_to_edit !== null) {
+                if (typeof message_to_edit !== "object" || !(message_to_edit instanceof Message)) return reject(new TypeError("The message to edit must be a Message instance"))
+                IdMessageToEdit = message_to_edit.id
+                data['embeds'] = message_to_edit.embeds || []
+                data['components'] = message_to_edit.components || []
+            }
             if (typeof options === 'string') {
                 data['content'] = options
-                this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + this.followUpMessageId, data).then((a) => {
-                    this.followUpMessage = a
+                this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + IdMessageToEdit, data).then((a) => {
+                    if (IdMessageToEdit === this.followUpMessageId) this.followUpMessage = a
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (options instanceof Embed) {
                 data['embeds'] = []
                 data['embeds'].push(options.pack())
-                this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + this.followUpMessageId, data).then((a) => {
-                    this.followUpMessage = a
+                this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + IdMessageToEdit, data).then((a) => {
+                    if (IdMessageToEdit === this.followUpMessageId) this.followUpMessage = a
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (options instanceof ActionRow) {
                 data['components'] = []
@@ -321,11 +328,11 @@ module.exports = class Interaction {
                     if (alrSeen[test.custom_id]) return reject(new TypeError("Duplicated custom Id"))
                     else alrSeen[test.custom_id] = true
                 })
-                this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + this.followUpMessageId, data).then((a) => {
-                    this.followUpMessage = a
+                this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + IdMessageToEdit, data).then((a) => {
+                    if (IdMessageToEdit === this.followUpMessageId) this.followUpMessage = a
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
@@ -357,11 +364,11 @@ module.exports = class Interaction {
                     else alrSeen[test.custom_id] = true
                 })
                 data['flags'] = options['ephemeral'] ? 1 << 6 : undefined
-                this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + this.followUpMessageId, data).then((a) => {
-                    this.followUpMessage = a
+                this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + IdMessageToEdit, data).then((a) => {
+                    if (IdMessageToEdit === this.followUpMessageId) this.followUpMessage = a
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else return reject(new TypeError("Send without any options is not authorized"))
         })
@@ -369,21 +376,29 @@ module.exports = class Interaction {
 
     /**
      * Delete the message
-     * @param {number} delay Delay in ms before deleting the message  
      * @returns {Promise<Interaction>}
      */
-    async deleteFollowUp(delay) {
+    async deleteFollowUp(options = {}) {
         return new Promise(async (resolve, reject) => {
-            if (typeof delay !== 'number') delay = 0
+            if (typeof options !== "object") options = {}
+            if (typeof options.delay !== 'number') options.delay = 0
+            var IdMessageToDelete = this.followUpMessageId
+            if (typeof options.message_to_delete !== "undefined" && options.message_to_delete !== null) {
+                if (typeof options.message_to_delete !== "object" || !(options.message_to_delete instanceof Message)) return reject(new TypeError("The message to delete must be a Message instance"))
+                IdMessageToDelete = options.message_to_delete.id
+            }
             setTimeout(() => {
-                if (this.deleted) return resolve(this)
-                this.client.rest.delete(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + this.followUpMessageId).then(() => {
-                    this.deleted = true
+                this.client.rest.delete(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + IdMessageToDelete).then(() => {
+                    if (IdMessageToDelete === this.followUpMessageId) {
+                        this.followUpMessage.deleted = true
+                    } else {
+                        options.message_to_delete.deleted = true
+                    }
                     return resolve(this)
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
-            }, delay)
+            }, options.delay)
         })
     }
 
@@ -398,7 +413,7 @@ module.exports = class Interaction {
             }).then(() => {
                 resolve(this)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -446,8 +461,10 @@ module.exports = class Interaction {
     getCommandValue(name) {
         if (!this.isSlashCommand) throw new TypeError("This function can be used on a slash command only")
         if (typeof name !== "string") throw new TypeError("You didn't provide any option name")
-        let value = this.data.options.find(op => op.name === name)
-        if (!value) return null
+        if (!this.data) return this.client.options.invalidCommandValueReturnNull ? null : undefined
+        if (!this.data?.options || this.data?.options?.length < 1) return this.client.options.invalidCommandValueReturnNull ? null : undefined
+        let value = this.data?.options?.find(op => op?.name === name)
+        if (!value) return this.client.options.invalidCommandValueReturnNull ? null : undefined
         switch (value.type) {
             case 3:
                 return value.value

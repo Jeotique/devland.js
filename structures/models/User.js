@@ -74,7 +74,7 @@ module.exports = class User {
                         let Message = require('./Message')
                         return resolve(new Message(this.client, this.guild, dm_channel, messageData))
                     }).catch(e => {
-                        return reject(new Error(e))
+                        return reject(e)
                     })
                 } else {
                     this.client.rest.post(this.client._ENDPOINTS.DM_CHANNEL(), {
@@ -87,10 +87,10 @@ module.exports = class User {
                             let Message = require('./Message')
                             return resolve(new Message(this.client, this.guild, dm_channel, messageData))
                         }).catch(e => {
-                            return reject(new Error(e))
-                        })
+                            return reject(e)
+                          })
                     }).catch(e => {
-                        return reject(new Error(e))
+                        return reject(e)
                     })
                 }
             } else if (options instanceof Embed) {
@@ -101,7 +101,7 @@ module.exports = class User {
                         let Message = require('./Message')
                         return resolve(new Message(this.client, this.guild, dm_channel, messageData))
                     }).catch(e => {
-                        return reject(new Error(e))
+                        return reject(e)
                     })
                 } else {
                     this.client.rest.post(this.client._ENDPOINTS.DM_CHANNEL(), {
@@ -114,10 +114,10 @@ module.exports = class User {
                             let Message = require('./Message')
                             return resolve(new Message(this.client, this.guild, dm_channel, messageData))
                         }).catch(e => {
-                            return reject(new Error(e))
-                        })
+                            return reject(e)
+                          })
                     }).catch(e => {
-                        return reject(new Error(e))
+                        return reject(e)
                     })
                 }
             } else if (options instanceof ActionRow) {
@@ -135,7 +135,7 @@ module.exports = class User {
                         let Message = require('./Message')
                         return resolve(new Message(this.client, this.guild, dm_channel, messageData))
                     }).catch(e => {
-                        return reject(new Error(e))
+                        return reject(e)
                     })
                 } else {
                     this.client.rest.post(this.client._ENDPOINTS.DM_CHANNEL(), {
@@ -148,10 +148,10 @@ module.exports = class User {
                             let Message = require('./Message')
                             return resolve(new Message(this.client, this.guild, dm_channel, messageData))
                         }).catch(e => {
-                            return reject(new Error(e))
-                        })
+                            return reject(e)
+                          })
                     }).catch(e => {
-                        return reject(new Error(e))
+                        return reject(e)
                     })
                 }
             } else if (typeof options === 'object') {
@@ -185,7 +185,7 @@ module.exports = class User {
                         let Message = require('./Message')
                         return resolve(new Message(this.client, this.guild, dm_channel, messageData))
                     }).catch(e => {
-                        return reject(new Error(e))
+                        return reject(e)
                     })
                 } else {
                     this.client.rest.post(this.client._ENDPOINTS.DM_CHANNEL(), {
@@ -198,10 +198,10 @@ module.exports = class User {
                             let Message = require('./Message')
                             return resolve(new Message(this.client, this.guild, dm_channel, messageData))
                         }).catch(e => {
-                            return reject(new Error(e))
-                        })
+                            return reject(e)
+                          })
                     }).catch(e => {
-                        return reject(new Error(e))
+                        return reject(e)
                     })
                 }
             } else return reject(new TypeError("Send without any options is not authorized"))
@@ -211,7 +211,7 @@ module.exports = class User {
     async fetchBanner(size) {
         return new Promise(async (resolve, reject) => {
             if (typeof size !== "number") size = 1024
-            let user = await this.client.rest.get(this.client._ENDPOINTS.USER(this.id)).catch(e => { return reject(new Error(e)) })
+            let user = await this.client.rest.get(this.client._ENDPOINTS.USER(this.id)).catch(e => { return reject(e) })
             if (!user.banner) return resolve(null)
             else return resolve(`https://cdn.discordapp.com/banners/${this.id}/${user.banner}${user.banner.startsWith('a_') ? '.gif' : '.png'}?size=${size}`)
         })

@@ -57,7 +57,7 @@ module.exports = class Message {
         this.createdAt = new Date(this.createdTimestamp)
         this.guildId = this.guild?.id
         this.editTimestamp = new Date(data.edited_timestamp)
-        this.flags = new MessageFlags(BigInt(data.flags??0))
+        this.flags = new MessageFlags(BigInt(data.flags ?? 0))
         this.components = []
         this.messageReplyied = data.referenced_message ? new Message(this.client, this.guild, this.channel, data.referenced_message) : null
         this.deleted = false
@@ -67,33 +67,33 @@ module.exports = class Message {
         this.member = this.webhookId ? null : this.guildId ? data.member ? data.member : this.guild.members.get(this.authorId) : null
         this.interaction = data.interaction
         this.data_is_available = true
-        if(this.interaction && this.interaction.user){
+        if (this.interaction && this.interaction.user) {
             this.interaction.user = this.client.users.get(this.interaction.user.id) || new User(this.client, this.interaction.user)
         }
-        if(data.mentions) data.mentions.map(m => {
-            if(m.member){
-            m.member.user = m
-            this.memberMentions.set(m.id, new Member(this.client, this.client.guilds.get(this.guildId)||this.guild, m.member))
+        if (data.mentions) data.mentions.map(m => {
+            if (m.member) {
+                m.member.user = m
+                this.memberMentions.set(m.id, new Member(this.client, this.client.guilds.get(this.guildId) || this.guild, m.member))
             } else {
                 this.memberMentions.set(m.id, new User(this.client, m))
             }
         })
-        if(data.mention_roles && !data.roleMentions) data.mention_roles.map(async r_id => {
-            if(this.guild.roles.get(r_id)) this.roleMentions.set(r_id, this.guild.roles.get(r_id))
+        if (data.mention_roles && !data.roleMentions) data.mention_roles.map(async r_id => {
+            if (this.guild.roles.get(r_id)) this.roleMentions.set(r_id, this.guild.roles.get(r_id))
             else {
-                let res = await this.client.rest.get(this.client._ENDPOINTS.ROLES(this.guildId)).catch(e=>{})
-                if(!res) return
+                let res = await this.client.rest.get(this.client._ENDPOINTS.ROLES(this.guildId)).catch(e => { })
+                if (!res) return
                 let role = res.find(r => r.id === r_id)
-                if(!role) return
-                this.roleMentions.set(r_id, new Role(this.client, this.client.guilds.get(this.guildId)||this.guild, role))
+                if (!role) return
+                this.roleMentions.set(r_id, new Role(this.client, this.client.guilds.get(this.guildId) || this.guild, role))
             }
         })
-        if(data.mention_channels && !data.channelMentions) data.mention_channels.map(async channelraw => {
-            if(this.client.textChannels.get(channelraw.id)) this.channelMentions.set(channelraw.id, this.textChannels.get(channelraw.id))
+        if (data.mention_channels && !data.channelMentions) data.mention_channels.map(async channelraw => {
+            if (this.client.textChannels.get(channelraw.id)) this.channelMentions.set(channelraw.id, this.textChannels.get(channelraw.id))
             else {
-                let res = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(channelraw.id)).catch(e=>{})
-                if(!res) return
-                this.channelMentions.set(channelraw.id, new TextChannel(this.client, this.client.guilds.get(this.guildId)||this.guild, res))
+                let res = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(channelraw.id)).catch(e => { })
+                if (!res) return
+                this.channelMentions.set(channelraw.id, new TextChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, res))
             }
         })
         data.attachments.map(attach => {
@@ -138,14 +138,14 @@ module.exports = class Message {
                 nonce: undefined,
                 allowed_mentions: undefined,
                 components: this.components,
-                files: null
+                files: undefined
             }
             if (typeof options === 'string') {
                 data['content'] = options
                 this.client.rest.patch(this.client._ENDPOINTS.MESSAGES(this.channelId, this.id), data).then(messageData => {
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (options instanceof Embed) {
                 data['embeds'] = []
@@ -153,7 +153,7 @@ module.exports = class Message {
                 this.client.rest.patch(this.client._ENDPOINTS.MESSAGES(this.channelId, this.id), data).then(messageData => {
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (options instanceof ActionRow) {
                 data['components'] = []
@@ -168,7 +168,7 @@ module.exports = class Message {
                 this.client.rest.patch(this.client._ENDPOINTS.MESSAGES(this.channelId, this.id), data).then(messageData => {
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
@@ -187,6 +187,11 @@ module.exports = class Message {
                 }
                 if (Array.isArray(options['components'])) data['components'] = []
                 if (options['components'] === null) data['components'] = []
+                options['components']?.map(comp => {
+                    if (comp instanceof ActionRow) data['components'].push(comp.pack())
+                    else return reject(new TypeError("Invalid component, must be a ActionRow instance"))
+                })
+                data['files'] = await Utils.lookForFiles(options.files)
                 let toTestCustomId = []
                 let alrSeen = {}
                 data['components']?.map(ar => ar?.components.map(comp => toTestCustomId.push(comp)))
@@ -197,7 +202,7 @@ module.exports = class Message {
                 this.client.rest.patch(this.client._ENDPOINTS.MESSAGES(this.channelId, this.id), data).then(messageData => {
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else return reject(new TypeError("Send without any options is not authorized"))
         })
@@ -211,12 +216,12 @@ module.exports = class Message {
         return new Promise(async (resolve, reject) => {
             if (typeof delay !== 'number') delay = 0
             setTimeout(() => {
-                if(this.deleted) return resolve(this)
+                if (this.deleted) return resolve(this)
                 this.client.rest.delete(this.client._ENDPOINTS.MESSAGES(this.channelId, this.id)).then(() => {
                     this.deleted = true
                     return resolve(this)
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             }, delay)
         })
@@ -257,14 +262,14 @@ module.exports = class Message {
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.channelId), data).then(messageData => {
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (options instanceof Embed) {
                 data['embeds'].push(options.pack())
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.channelId), data).then(messageData => {
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (options instanceof ActionRow) {
                 data['components'].push(options.pack())
@@ -278,7 +283,7 @@ module.exports = class Message {
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.channelId), data).then(messageData => {
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
@@ -308,7 +313,7 @@ module.exports = class Message {
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.channelId), data).then(messageData => {
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else return reject(new TypeError("Send without any options is not authorized"))
         })
@@ -322,7 +327,7 @@ module.exports = class Message {
                 Object.keys(message).map(k => this[k] = message[k])
                 return resolve(message)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -337,7 +342,7 @@ module.exports = class Message {
             }).then(() => {
                 return resolve()
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -352,7 +357,7 @@ module.exports = class Message {
             }).then(() => {
                 return resolve()
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -369,7 +374,7 @@ module.exports = class Message {
             this.client.rest.put(this.client._ENDPOINTS.REACTIONS(this.channelId, this.id, encoded, "@me")).then(() => {
                 return resolve()
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -389,13 +394,13 @@ module.exports = class Message {
                 this.client.rest.delete(this.client._ENDPOINTS.REACTIONS(this.channelId, this.id, encoded, user)).then(() => {
                     return resolve()
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else {
                 this.client.rest.delete(this.client._ENDPOINTS.REACTIONS(this.channelId, this.id, encoded, "@me")).then(() => {
                     return resolve()
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             }
         })
@@ -428,7 +433,7 @@ module.exports = class Message {
                 })
                 return resolve(collect)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -446,39 +451,39 @@ module.exports = class Message {
                 this.client.rest.delete(this.client._ENDPOINTS.REACTIONS(this.channelId, this.id, encoded)).then(() => {
                     return resolve()
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else {
                 this.client.rest.delete(this.client._ENDPOINTS.REACTIONS(this.channelId, this.id)).then(() => {
                     return resolve()
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             }
         })
     }
 
-    createComponentsCollector(options = {}){
-        if(typeof options !== "object") throw new TypeError("You must provide options for the collector")
-        if(typeof options.count !== "undefined"){
-            if(typeof options.count !== "number") throw new TypeError("The count must be a number")
+    createComponentsCollector(options = {}) {
+        if (typeof options !== "object") throw new TypeError("You must provide options for the collector")
+        if (typeof options.count !== "undefined") {
+            if (typeof options.count !== "number") throw new TypeError("The count must be a number")
         }
         options.type = 'component'
-        if(typeof options.time !== "undefined"){
-            if(typeof options.time !== "number") throw new TypeError("The time must be a number")
+        if (typeof options.time !== "undefined") {
+            if (typeof options.time !== "number") throw new TypeError("The time must be a number")
         }
-        if(typeof options.componentType !== "undefined"){
-            if(typeof options.componentType !== "number") throw new TypeError("The componentType must be a number")
-            if(options.componentType < 1 || options.componentType > 8) throw new TypeError("Invalid componentType for the collector")
+        if (typeof options.componentType !== "undefined") {
+            if (typeof options.componentType !== "number") throw new TypeError("The componentType must be a number")
+            if (options.componentType < 1 || options.componentType > 8) throw new TypeError("Invalid componentType for the collector")
         }
-        if(typeof options.filter !== "undefined"){
-            if(typeof options.filter !== "function") throw new TypeError("The filter must be a filter function for the collector, example : 'filter: (collected) => collected.author.id === message.author.id'")
+        if (typeof options.filter !== "undefined") {
+            if (typeof options.filter !== "function") throw new TypeError("The filter must be a filter function for the collector, example : 'filter: (collected) => collected.author.id === message.author.id'")
         }
         let identifier = Date.now()
-        this.client.collectorCache[identifier] = new Collector(this.client, this.client.guilds.get(this.guildId)||this.guild, this, this.channel, options)
+        this.client.collectorCache[identifier] = new Collector(this.client, this.client.guilds.get(this.guildId) || this.guild, this, this.channel, options)
         this.client.collectorCache[identifier]?.on('end', () => {
             delete this.client.collectorCache[identifier]
         })
-        return this.client.collectorCache[identifier]  
+        return this.client.collectorCache[identifier]
     }
 }

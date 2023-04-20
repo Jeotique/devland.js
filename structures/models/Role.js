@@ -97,7 +97,7 @@ module.exports = class Role {
                     }).catch(e => { console.error(`Can't update the role position of ${role.name} in ${role.guild.name} for the next reason : ${e}`) })
                 }
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -112,7 +112,7 @@ module.exports = class Role {
                 resolve(this)
                 this.guild.roles.delete(this.id)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }

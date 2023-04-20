@@ -90,7 +90,7 @@ module.exports = class Guild {
      */
     async fetchVanity() {
         return new Promise(async (resolve, reject) => {
-            let result = await this.client.rest.get(this.client._ENDPOINTS.SERVERS(this.id) + '/vanity-url').catch(e => { return reject(new Error(e)) })
+            let result = await this.client.rest.get(this.client._ENDPOINTS.SERVERS(this.id) + '/vanity-url').catch(e => { return reject(e) })
             if (!result) return reject(new TypeError("Can't fetch the vanity data from : " + this.name))
             let res = {
                 code: result.vanityUrlCode,
@@ -116,7 +116,7 @@ module.exports = class Guild {
      */
     async fetchUtilsChannels() {
         return new Promise(async (resolve, reject) => {
-            let guildResult = await this.client.rest.get(this.client._ENDPOINTS.SERVERS(this.id)).catch(e => { return reject(new Error(e)) })
+            let guildResult = await this.client.rest.get(this.client._ENDPOINTS.SERVERS(this.id)).catch(e => { return reject(e) })
             if (!guildResult) return reject(new TypeError("Can't fetch the guild : " + this.name))
             let afkChannel = null
             let afkTimeout = guildResult.afk_timeout
@@ -126,12 +126,12 @@ module.exports = class Guild {
             let rulesChannel = null
             let safetyChannel = null
             let publicUpdatesChannel = null
-            if (guildResult.system_channel_id) systemChannel = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(guildResult.system_channel_id)).catch(e => reject(new Error(e)))
-            if (guildResult.afk_channel_id) afkChannel = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(guildResult.afk_channel_id)).catch(e => reject(new Error(e)))
-            if (guildResult.widget_channel_id) widgetChannel = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(guildResult.widget_channel_id)).catch(e => reject(new Error(e)))
-            if (guildResult.rules_channel_id) rulesChannel = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(guildResult.rules_channel_id)).catch(e => reject(new Error(e)))
-            if (guildResult.safety_alerts_channel_id) safetyChannel = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(guildResult.safety_alerts_channel_id)).catch(e => reject(new Error(e)))
-            if (guildResult.public_updates_channel_id) publicUpdatesChannel = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(guildResult.public_updates_channel_id)).catch(e => { reject(new Error(e)) })
+            if (guildResult.system_channel_id) systemChannel = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(guildResult.system_channel_id)).catch(e => reject(e))
+            if (guildResult.afk_channel_id) afkChannel = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(guildResult.afk_channel_id)).catch(e => reject(e))
+            if (guildResult.widget_channel_id) widgetChannel = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(guildResult.widget_channel_id)).catch(e => reject(e))
+            if (guildResult.rules_channel_id) rulesChannel = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(guildResult.rules_channel_id)).catch(e => reject(e))
+            if (guildResult.safety_alerts_channel_id) safetyChannel = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(guildResult.safety_alerts_channel_id)).catch(e => reject(e))
+            if (guildResult.public_updates_channel_id) publicUpdatesChannel = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(guildResult.public_updates_channel_id)).catch(e => reject(e))
             if (systemChannel) systemChannel = new TextChannel(this.client, this, systemChannel)
             if (afkChannel) afkChannel = new VoiceChannel(this.client, this, afkChannel)
             if (widgetChannel) widgetChannel = new TextChannel(this.client, this, widgetChannel)
@@ -169,7 +169,7 @@ module.exports = class Guild {
                 this.client.rest.put(this.client._ENDPOINTS.COMMANDS(this.id), body).then(() => {
                     return resolve(true)
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else {
                 var all = []
@@ -193,7 +193,7 @@ module.exports = class Guild {
                 this.client.rest.put(this.client._ENDPOINTS.COMMANDS(this.id), all).then(() => {
                     return resolve(true)
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             }
         })
@@ -208,7 +208,7 @@ module.exports = class Guild {
                     return resolve(res)
                 }
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -219,14 +219,14 @@ module.exports = class Guild {
                 this.client.rest.delete(this.client._ENDPOINTS.COMMANDS(this.id, command.id)).then(() => {
                     return resolve(true)
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (typeof command === "object") {
                 if (!command?.id) return reject(new TypeError("Invalid command provided, if you are using a custom object you need to provide the \"<command>.id\""))
                 this.client.rest.delete(this.client._ENDPOINTS.COMMANDS(this.id, command.id)).then(() => {
                     return resolve(true)
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else return reject(new TypeError("Invalid command provided"))
         })
@@ -245,7 +245,7 @@ module.exports = class Guild {
                     return resolve(collect)
                 }
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -270,7 +270,7 @@ module.exports = class Guild {
             }).then(res => {
                 return resolve(new Emoji(this.client, this.client.guilds.get(this.id) || this, res))
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -344,7 +344,7 @@ module.exports = class Guild {
                 Object.keys(newGuild).map(k => this[k] = newGuild[k])
                 return resolve(newGuild)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -355,7 +355,7 @@ module.exports = class Guild {
             this.client.rest.delete(this.client._ENDPOINTS.SERVERS(this.id)).then(() => {
                 return resolve()
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -375,7 +375,7 @@ module.exports = class Guild {
                     })
                 }
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -395,7 +395,7 @@ module.exports = class Guild {
                     })
                 }
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -418,7 +418,7 @@ module.exports = class Guild {
                     })
                 }
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -438,7 +438,7 @@ module.exports = class Guild {
                     })
                 }
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -458,7 +458,7 @@ module.exports = class Guild {
                     })
                 }
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -478,7 +478,7 @@ module.exports = class Guild {
                     })
                 }
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -556,7 +556,7 @@ module.exports = class Guild {
                 })
                 return resolve(toSend)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -624,7 +624,7 @@ module.exports = class Guild {
                         break;
                 }
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -690,7 +690,7 @@ module.exports = class Guild {
                     })
                 }
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -766,7 +766,7 @@ module.exports = class Guild {
                 }
 
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -800,7 +800,7 @@ module.exports = class Guild {
                 let audit = new AuditLogs(this.client, auditResult)
                 return resolve(audit)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -810,7 +810,7 @@ module.exports = class Guild {
             this.client.rest.delete(this.client._ENDPOINTS.SERVERS(this.id)).then(() => {
                 resolve()
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -834,7 +834,7 @@ module.exports = class Guild {
                     this.client.guilds.set(this.id, this)
                 }
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -861,7 +861,7 @@ module.exports = class Guild {
                     this.client.guilds.set(this.id, this)
                 }
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -878,7 +878,7 @@ module.exports = class Guild {
             }).then(() => {
                 resolve(true)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -890,7 +890,7 @@ module.exports = class Guild {
                 res.map(b => collect.set(b.user.id, new Ban(this.client, b)))
                 return resolve(collect)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -903,7 +903,7 @@ module.exports = class Guild {
             this.client.rest.get(this.client._ENDPOINTS.BANS(this.id, user)).then(res => {
                 return resolve(new Ban(this.client, res))
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -933,7 +933,7 @@ module.exports = class Guild {
             this.client.rest.post(this.client._ENDPOINTS.PRUNE(this.id), options).then(() => {
                 return resolve(this)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -953,7 +953,7 @@ module.exports = class Guild {
                     })
                 }
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -965,7 +965,7 @@ module.exports = class Guild {
                 res.map(web => collect.set(web.id, new Webhook(this.client, this.client.guilds.get(this.id) || this, web)))
                 resolve(collect)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -977,7 +977,7 @@ module.exports = class Guild {
                 res.map(i => collect.set(i.id, new Integration(this.client, this.client.guilds.get(this.id) || this, i)))
                 resolve(collect)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -995,7 +995,7 @@ module.exports = class Guild {
                     if (collect.size === res.length) return resolve(collect)
                 })
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -1009,7 +1009,7 @@ module.exports = class Guild {
                 if (res.creator && !(res.creator instanceof User)) res.creator = new User(this.client, res.creator)
                 return resolve(new AutoModRule(this.client, this.client.guilds.get(this.id) || this, res))
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -1084,7 +1084,7 @@ module.exports = class Guild {
                 res.creator = this.client.user
                 return resolve(new AutoModRule(this.client, this.client.guilds.get(this.id) || this, res))
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -1213,7 +1213,7 @@ module.exports = class Guild {
                 else if (channel.type === 15) channel = new ForumChannel(this.client, this.client.guilds.get(this.id) || this, channel)
                 return resolve(channel)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }

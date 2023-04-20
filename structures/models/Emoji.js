@@ -59,9 +59,9 @@ module.exports = class Emoji {
                 let newEmoji = new Emoji(this.client, this.client.guilds.get(this.guildId)|this.guild, res)
                 Object.keys(newEmoji).map(k => this[k] = newEmoji[k])
                 return resolve(newEmoji)
-            }).catch(e=>{
-                return reject(new Error(e))
-            })
+            }).catch(e => {
+                return reject(e)
+              })
         })
     }
 
@@ -72,9 +72,9 @@ module.exports = class Emoji {
                 "reason": reason,
             }).then(() => {
                 return resolve()
-            }).catch(e=>{
-                return reject(new Error(e))
-            })
+            }).catch(e => {
+                return reject(e)
+              })
         })
     }
 }

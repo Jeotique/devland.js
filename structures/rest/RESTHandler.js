@@ -67,8 +67,7 @@ module.exports = class RESTHandler {
                             } catch (errr) { res.promise.resolve(res?.body) }
                         }
                     } else {
-                        let errorMessage = new APIError(null, null, req.method, res.statusCode, null, null).get()
-                        res.promise.reject(new Error(errorMessage))
+                        res.promise.reject(new APIError("Looking for the error", res))
                     }
                 }
             });

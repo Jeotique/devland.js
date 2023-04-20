@@ -93,14 +93,14 @@ module.exports = class ForumChannel {
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id), data).then(messageData => {
                     return resolve(new Message(this.client, this.guild, this, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (options instanceof Embed) {
                 data['embeds'].push(options.pack())
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id), data).then(messageData => {
                     return resolve(new Message(this.client, this.guild, this, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (options instanceof ActionRow) {
                 data['components'].push(options.pack())
@@ -114,7 +114,7 @@ module.exports = class ForumChannel {
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.channelId), data).then(messageData => {
                     return resolve(new Message(this.client, this.guild, this, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
@@ -144,7 +144,7 @@ module.exports = class ForumChannel {
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id), data).then(messageData => {
                     return resolve(new Message(this.client, this.guild, this, messageData))
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else return reject(new TypeError("Send without any options is not authorized"))
         })
@@ -162,7 +162,7 @@ module.exports = class ForumChannel {
                         this.client.messages.set(message.id, message)
                     }
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (typeof options === "object") {
                 if (options.limit && typeof options.limit !== "number") return reject(new TypeError("Limit must be a number"))
@@ -189,7 +189,7 @@ module.exports = class ForumChannel {
                     })
                     return resolve(cache)
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (typeof options === "undefined") {
                 this.client.rest.get(this.client._ENDPOINTS.MESSAGES(this.id)).then(data => {
@@ -205,7 +205,7 @@ module.exports = class ForumChannel {
                     })
                     return resolve(cache)
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else return reject(new TypeError("Invalid fetch messages options provided"))
         })
@@ -329,7 +329,7 @@ module.exports = class ForumChannel {
                 Object.keys(newChannel).map(k => this[k] = newChannel[k])
                 return resolve(newChannel)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -350,7 +350,7 @@ module.exports = class ForumChannel {
                     Object.keys(channel).map(k => this[k] = channel[k])
                     return resolve(channel)
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             }, time)
         })
@@ -391,7 +391,7 @@ module.exports = class ForumChannel {
                     let channel = new ForumChannel(this.client, this.client.guilds.get(this.guildId) || this.guild, newChannel)
                     return resolve(channel)
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             }, time)
         })
@@ -407,7 +407,7 @@ module.exports = class ForumChannel {
                 Object.keys(newChannel).map(k => this[k] = newChannel[k])
                 return resolve(newChannel)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -428,14 +428,14 @@ module.exports = class ForumChannel {
                 }).then(() => {
                     return resolve()
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             } else if (typeof data === "number") {
                 let res = []
                 if (data < 2) return reject(new TypeError("The message count must be more than 1"))
                 if (data > 100) return reject(new TypeError("The message count must be less than 100"))
                 let all = await this.fetchMessages({ limit: data }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
                 all.map(message => res.push(message.id))
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id) + "/bulk-delete", {
@@ -443,7 +443,7 @@ module.exports = class ForumChannel {
                 }).then(() => {
                     return resolve()
                 }).catch(e => {
-                    return reject(new Error(e))
+                    return reject(e)
                 })
             }
         })
@@ -527,8 +527,18 @@ module.exports = class ForumChannel {
             if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
             this.client.rest.post(`${this.client._ENDPOINTS.CHANNEL(this.id)}/invites`, options).then(res => {
                 return resolve(new Invite(this.client, this.client.guilds.get(this.guildId)||this.guild, res, this))
-            }).catch(e=>{
-                return reject(new Error(e))
+            }).catch(e => {
+                return reject(e)
+              })
+        })
+    }
+
+    async startTyping() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.post(this.client._ENDPOINTS.TYPING(this.id)).then(() => {
+                resolve()
+            }).catch(e => {
+                return reject(e)
             })
         })
     }

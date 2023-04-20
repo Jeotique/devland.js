@@ -14,7 +14,7 @@ module.exports = {
         try {
             const data = d.d
             setTimeout(async () => {
-                if (client.guildsIds.includes(data.id)) {
+                if (client.guildsIds.includes(data.id) || (client.guilds.get(data.id) && !client.guilds.get(data.id).ready)) {
                     data.ready = true
                     let guild = new Models.Guild(client, data)
                     guild.totalRolesCount = data.roles.length
@@ -32,7 +32,7 @@ module.exports = {
                         user.expireAt = Date.now() + client.options.usersLifeTime
                         return client.users.set(user.id, user)
                     }))
-                    if (typeof client.options.membersLifeTime === "number" && client.options.membersLifeTime > 0) await Promise.all(data.members.map(member_data => {
+                    if (typeof client.options.membersLifeTime === "number" && client.options.membersLifeTime > 0) await Promise.all(data.members.map((member_data, index) => {
                         let member = new Member(client, guild, member_data)
                         member.cachedAt = Date.now()
                         member.expireAt = Date.now() + client.options.membersLifeTime
@@ -175,7 +175,6 @@ module.exports = {
                             forum.expireAt = Date.now() + client.options.channelsLifeTime
                             return client.forumChannels.set(forum.id, forum)
                         }))
-
                     /**
                      * Emitted whenever the guild data is available
                      * @event client#guildAvailable

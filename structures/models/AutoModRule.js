@@ -90,7 +90,7 @@ module.exports = class AutoModRule {
                 resolve(rules)
                 Object.keys(rules).map(k => this[k] = rules[k])
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
@@ -105,7 +105,7 @@ module.exports = class AutoModRule {
                 this.enabled = false
                 return resolve(this)
             }).catch(e => {
-                return reject(new Error(e))
+                return reject(e)
             })
         })
     }
