@@ -4,7 +4,7 @@ const ws = require('ws')
 const util = require('../util')
 const Models = require('../models')
 const { Store } = require('../util/Store/Store')
-const { Message, Guild, TextChannel, User, VoiceChannel, CategoryChannel, AnnouncementChannel, StageChannel, DmChannel } = require('../models')
+const { Message, Guild, TextChannel, User, VoiceChannel, CategoryChannel, AnnouncementChannel, StageChannel, DmChannel, GuildCommand } = require('../models')
 const Thread = require('../models/Thread')
 const ForumChannel = require('../models/ForumChannel')
 const IntentFlags = require('../util/BitFieldManagement/IntentFlags')
@@ -51,7 +51,8 @@ module.exports = class Client extends EventEmitter {
      * @property {number} connectionTimeout
      * @property {number} maxReconnectAttempts
      * @property {number} maxResumeAttempts
-     * @property {number} invalidCommandValueReturnNull
+     * @property {boolean} invalidCommandValueReturnNull
+     * @property {boolean} fetchAllMembers
      */
     /**
      * The client options
@@ -110,6 +111,7 @@ module.exports = class Client extends EventEmitter {
             BULD_DELETE: (channelID) => { return `${this._ENDPOINTS.CHANNEL(channelID)}/messages/bulk-delete`; },
             TYPING: (channelID) => { return `${this._ENDPOINTS.CHANNEL(channelID)}/typing`; },
             COMMANDS: (guildId, commandId) => { return `${this._ENDPOINTS.API}/applications/${this.user.id}/guilds/${guildId}/commands${commandId ? `/${commandId}` : ``}` },
+            GLOBAL_COMMANDS: (commandId) => { return `${this._ENDPOINTS.API}/applications/${this.user.id}/commands${commandId ? `/${commandId}` : ``}` },
             SERVER_CHANNEL: (serverID, channelID) => { return `${DiscordAPI}/guilds/${serverID}/channels${channelID ? `/${channelID}` : ``}`; },
             REACTIONS: (channelID, messageID, emoji, user) => { return `${this._ENDPOINTS.CHANNEL(channelID)}/messages/${messageID}/reactions${emoji ? `/${emoji}${user ? `/${user}` : ``}` : ``}`; },
             EMOJI: (guildID, emoji) => { return `${this._ENDPOINTS.SERVERS(guildID)}/emojis${emoji ? `/${emoji}` : ``}` },
@@ -117,10 +119,11 @@ module.exports = class Client extends EventEmitter {
             STAGE: () => { return `${DiscordAPI}/stage-instances`; },
             PRUNE: (serverID) => { return `${this._ENDPOINTS.SERVERS(serverID)}/prune`; },
             SERVER_INVITES: (serverID) => { return `${this._ENDPOINTS.SERVERS(serverID)}/invites`; },
-            INTEGRATIONS: (serverID, integrationID) => { return `${this._ENDPOINTS.SERVERS(serverID)}/integrations${integrationID?`/${integrationID}`:``}`; },
+            INTEGRATIONS: (serverID, integrationID) => { return `${this._ENDPOINTS.SERVERS(serverID)}/integrations${integrationID ? `/${integrationID}` : ``}`; },
             INTERACTIONS: (interactionID, interactionToken) => { return DiscordAPI + '/interactions/' + interactionID + '/' + interactionToken + '/callback'; },
             INTERACTIONS_MESSAGE: (interactionID, interactionToken) => { return DiscordAPI + '/interactions/' + interactionID + '/' + interactionToken; },
-            AUTOMOD: (serverID, ruleID) => { return `${this._ENDPOINTS.SERVERS(serverID)}/auto-moderations/rules${ruleID?`/${ruleID}`:``}`; },
+            AUTOMOD: (serverID, ruleID) => { return `${this._ENDPOINTS.SERVERS(serverID)}/auto-moderations/rules${ruleID ? `/${ruleID}` : ``}`; },
+            EVENT: (serverID, eventID) => { return `${this._ENDPOINTS.SERVERS(serverID)}/scheduled-events${eventID ? `/${eventID}` : ``}`; },
         }
 
         this.token = options?.token
@@ -159,17 +162,17 @@ module.exports = class Client extends EventEmitter {
             process.emitWarning("The guilds cache must be enabled if you want to use the voices cache")
         }
 
-        if(!this.options.shardId && 'SHARD_ID' in process.env){
+        if (!this.options.shardId && 'SHARD_ID' in process.env) {
             this.options.shardId = Number(process.env.SHARD_ID)
         }
-        if(!this.options.shardCount && 'SHARD_COUNT' in process.env){
+        if (!this.options.shardCount && 'SHARD_COUNT' in process.env) {
             this.options.shardCount = Number(process.env.SHARD_COUNT)
         }
-        if(typeof this.options.shardId !== "number" || isNaN(this.options.shardId)) throw new TypeError("shardId must be a number")
-        if(typeof this.options.shardCount !== "number" || isNaN(this.options.shardCount)) throw new TypeError("shardCount must be a number")
-        if(this.options.shardId < 0) throw new RangeError("shardId can't be less than 0")
-        if(this.options.shardCount < 0) throw new RangeError("shardCount can't be less than 0")
-        if(this.options.shardId !== 0 && this.options.shardId >= this.options.shardCount) throw new RangeError("shardId must be less than shardCount")
+        if (typeof this.options.shardId !== "number" || isNaN(this.options.shardId)) throw new TypeError("shardId must be a number")
+        if (typeof this.options.shardCount !== "number" || isNaN(this.options.shardCount)) throw new TypeError("shardCount must be a number")
+        if (this.options.shardId < 0) throw new RangeError("shardId can't be less than 0")
+        if (this.options.shardCount < 0) throw new RangeError("shardCount can't be less than 0")
+        if (this.options.shardId !== 0 && this.options.shardId >= this.options.shardCount) throw new RangeError("shardId must be less than shardCount")
         this.shard = process.env.SHARDING_MANAGER ? ShardClientUtil.singleton(this) : null
 
         this.rest = new RESTHandler(this)
@@ -237,10 +240,23 @@ module.exports = class Client extends EventEmitter {
     }
 
     get uptime() {
-        return this.readyAt ? Date.now()-this.readyAt : 0
+        return this.readyAt ? Date.now() - this.readyAt : 0
     }
 
     static get version() { return require('../../package.json').version }
+
+    get allChannels() {
+        let collect = new Store()
+        this.textChannels.map(c => collect.set(c.id, c))
+        this.categoryChannels.map(c => collect.set(c.id, c))
+        this.voiceChannels.map(c => collect.set(c.id, c))
+        this.announcementChannels.map(c => collect.set(c.id, c))
+        this.threadChannels.map(c => collect.set(c.id, c))
+        this.stageChannels.map(c => collect.set(c.id, c))
+        this.forumChannels.map(c => collect.set(c.id, c))
+        return collect
+    }
+
     /**
      * Connect your bot to the discord gateway
      * @param {string} token The discord bot token 
@@ -248,17 +264,18 @@ module.exports = class Client extends EventEmitter {
     connect(token) {
         this.emit('debug', `Connect attempt started`)
         if (token && typeof token === 'string') this.token = token;
-        if(Array.isArray(this.options.intents)) this.options.intents = parseInt(new IntentFlags(this.options.intents).bitfield)
+        if (Array.isArray(this.options.intents)) this.options.intents = parseInt(new IntentFlags(this.options.intents).bitfield)
+        if (this.options.fetchAllMembers && !(new IntentFlags(BigInt(this.options.intents)).has(IntentFlags.FLAGS.GUILD_MEMBERS))) throw new TypeError("You cannot use 'fetchAllMembers' if your bot is not using 'GUILD_MEMBERS' intent")
         this.emit('debug', `Trying to attempt login`)
         this.ws._token = this.token
         this.ws.connect()
         return this
     }
 
-    destroy(reopen = false){
-        this.emit('debug', reopen ? `Reopening a new session after a request`:`Destroying the current session`)
-        if(!reopen) this.readyAt = 0
-        if(!reopen) this.ready = false
+    destroy(reopen = false) {
+        this.emit('debug', reopen ? `Reopening a new session after a request` : `Destroying the current session`)
+        if (!reopen) this.readyAt = 0
+        if (!reopen) this.ready = false
         this.ws.disconnect({
             reconnect: reopen ? "auto" : false
         })
@@ -346,6 +363,88 @@ module.exports = class Client extends EventEmitter {
                 this.users.set(user.id, user)
             }
             return resolve(user)
+        })
+    }
+
+    async getCommands() {
+        return new Promise(async (resolve, reject) => {
+            this.rest.get(this._ENDPOINTS.GLOBAL_COMMANDS()).then(res => {
+                if (res.length < 1) return resolve([])
+                else {
+                    let data = []
+                    res.map(com => data.push(new GuildCommand(com)))
+                    return resolve(data)
+                }
+            }).catch(e => {
+                return reject(e)
+            })
+        })
+    }
+
+    async deleteCommand(command) {
+        return new Promise(async (resolve, reject) => {
+            if (command instanceof GuildCommand) {
+                if (!command.id) return reject(new TypeError("Invalid command provided, you must provide a GuildCommand class get after using \"getCommands()\""))
+                this.rest.delete(this._ENDPOINTS.COMMANDS(this.id, command.id)).then(() => {
+                    return resolve(true)
+                }).catch(e => {
+                    return reject(e)
+                })
+            } else if (typeof command === "object") {
+                if (!command?.id) return reject(new TypeError("Invalid command provided, if you are using a custom object you need to provide the \"<command>.id\""))
+                this.rest.delete(this._ENDPOINTS.GLOBAL_COMMANDS(command.id)).then(() => {
+                    return resolve(true)
+                }).catch(e => {
+                    return reject(e)
+                })
+            } else return reject(new TypeError("Invalid command provided"))
+        })
+    }
+
+    async setCommands(...commands) {
+        return new Promise(async (resolve, reject) => {
+            if (!commands || (!(commands instanceof Store) && commands?.length < 1) || (commands instanceof Store && commands?.size < 1)) return reject(new TypeError("No command provided"))
+            if (commands[0] instanceof Store || commands[0] instanceof Map) {
+                var body = [...commands[0].values()]
+                body.map(data => {
+                    data.map(command => {
+                        if (command instanceof GuildCommand) {
+                            command = command.pack()
+                        } else if (typeof command == "object") {
+                            command = new GuildCommand(command).pack()
+                        } else return reject(new TypeError("Invalid command format"))
+                    })
+                })
+                this.rest.put(this._ENDPOINTS.GLOBAL_COMMANDS(), body).then(() => {
+                    return resolve(true)
+                }).catch(e => {
+                    return reject(e)
+                })
+            } else {
+                var all = []
+                commands.map(command => {
+                    if (Array.isArray(command)) {
+                        command.map(cmd => {
+                            if (cmd instanceof GuildCommand) {
+                                all.push(cmd.pack())
+                            } else if (typeof cmd == "object") {
+                                all.push(new GuildCommand(cmd).pack())
+                            } else return reject(new TypeError("Invalid command format"))
+                        })
+                    } else {
+                        if (command instanceof GuildCommand) {
+                            all.push(command.pack())
+                        } else if (typeof command == "object") {
+                            all.push(new GuildCommand(command).pack())
+                        } else return reject(new TypeError("Invalid command format"))
+                    }
+                })
+                this.rest.put(this._ENDPOINTS.GLOBAL_COMMANDS(), all).then(() => {
+                    return resolve(true)
+                }).catch(e => {
+                    return reject(e)
+                })
+            }
         })
     }
 

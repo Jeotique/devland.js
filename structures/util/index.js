@@ -51,6 +51,7 @@ module.exports.createDefaultOptions = () => {
     maxReconnectAttempts: Infinity,
     maxResumeAttempts: 10,
     invalidCommandValueReturnNull: true,
+    fetchAllMembers: false,
   }
 }
 

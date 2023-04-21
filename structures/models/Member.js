@@ -36,6 +36,17 @@ module.exports = class Member {
         return `<@${this.id}>`
     }
 
+    async fetch(){
+        return new Promise(async(resolve, reject) => {
+            this.guild.fetchMember(this.id).then(member => {
+                Object.keys(member).map(k => this[k] = member[k])
+                return resolve(member)
+            }).catch(e=>{
+                return reject(e)
+            })
+        })
+    }
+
     get highestRole() {
         let all = this.guild.roles.toJSON()
         all = all.filter(r => this.roles.includes(r.id))

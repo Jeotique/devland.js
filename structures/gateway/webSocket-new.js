@@ -24,15 +24,7 @@ module.exports = class WebSocket extends EventEmitter {
             if (!event) return
             this.eventFiles.set(event.name, event)
         }
-
         this.hardReset()
-
-        /**
-         this.ws.on("open", this._onWSOpen)
-        this.ws.on("message", this._onWSMessage)
-        this.ws.on("error", this._onWSError)
-        this.ws.on("close", this._onWSClose)
-         */
     }
 
     emit(event, ...args) {
@@ -65,7 +57,6 @@ module.exports = class WebSocket extends EventEmitter {
                 this.gatewayURL = gatewayURL
                 this.ws = new ws(`${this.gatewayURL}/?v=9&encoding=json`, this.client.options.ws)
             } else {
-                //console.log(this.resumeURL)
                 this.ws = new ws(`${this.resumeURL}`, this.client.options.ws)
             }
         } else {
@@ -252,8 +243,7 @@ module.exports = class WebSocket extends EventEmitter {
         }
         switch (packet.op) {
             case 0: {
-                const Events = require('../util/GatewayEvents');
-
+                const Events = require('../util/GatewayEvents')
                 if (packet.t === 'READY') {
                     this.connectAttempts = 0
                     this.reconnectInterval = 1000
@@ -305,7 +295,7 @@ module.exports = class WebSocket extends EventEmitter {
                     eventName: packet.t,
                     data: packet.d
                 })
-                if (!Events.hasOwnProperty(packet.t)) return;
+                if (!Events.hasOwnProperty(packet.t)) return
                 if (!this.eventFiles.has(Events[packet.t])) return
                 this.checkClientReady(packet)
             }

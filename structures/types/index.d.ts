@@ -26,6 +26,7 @@ declare module 'devland.js' {
         maxReconnectAttempts: number;
         maxResumeAttempts: number;
         invalidCommandValueReturnNull: boolean;
+        fetchAllMembers: boolean;
     }
     type wsOptions = {
         large_threshold: number;
@@ -56,23 +57,6 @@ declare module 'devland.js' {
         Custom = 4,
         Competing = 5
     }
-    /*type wsClientData = {
-        socket: ws,
-        connected: boolean,
-        gateway: gatewayClientData,
-        ping: number|null,
-    }*/
-    /*type gatewayClientData = {
-        url: string,
-        obtainedAt: number,
-        heartbeat: heartbeatClientData,
-    }*/
-    /*type heartbeatClientData = {
-        interval: number,
-        last: number,
-        recieved: boolean,
-        seq: any,
-    }*/
     export type Awaitable<T> = T | PromiseLike<T>;
     export class Client extends EventEmitter {
         constructor(options: clientOptions);
@@ -100,6 +84,7 @@ declare module 'devland.js' {
         private readonly deletedmessages: Store<string, Message>;
         readonly version: string;
         readonly uptime: number;
+        readonly allChannels: Store<string, TextChannel|VoiceChannel|CategoryChannel|AnnouncementChannel|StageChannel|ForumChannel|Thread>;
         /**
          * Connect the client to the token
          * @param token 
@@ -122,6 +107,20 @@ declare module 'devland.js' {
          * @param userId the user Id
          */
         fetchUser(userId: string | User): Promise<User>;
+         /**
+         * Register new GuildCommand on all guilds of the bot
+         * @param commands the list of GuildCommand
+         */
+         setCommands(...commands: GuildCommand[]): Promise<boolean>;
+         /**
+          * Fetch all current commands on all guilds of the bot
+          */
+         getCommands(): Promise<GuildCommand[]>;
+         /**
+          * Delete a GuildCommand on all guilds of the bot
+          * @param command the GuildCommand to delete
+          */
+         deleteCommand(command: GuildCommand | object): Promise<boolean>;
 
         public on<K extends keyof ClientEvents>(event: K, listener: (...args: ClientEvents[K]) => Awaitable<void>): this;
         public on<S extends string | symbol>(
@@ -307,6 +306,11 @@ declare module 'devland.js' {
         raw: [data: rawData];
         error: [info: string];
         rateLimit: [info: string];
+        guildScheduledEventCreate: [event: ScheduledEvent];
+        guildScheduledEventUpdate: [event: ScheduledEvent];
+        guildScheduledEventDelete: [event: ScheduledEvent];
+        guildScheduledEventUserAdd: [event: ScheduledEvent, user: User];
+        guildScheduledEventUserRemove: [event: ScheduledEvent, user: User];
     }
     type AutoModExec = {
         guild_id: string,
@@ -744,6 +748,43 @@ declare module 'devland.js' {
          * @param reason the reason of the creation
          */
         createChannel(options: channelCreateOptions, reason?: string): Promise<TextChannel | VoiceChannel | AnnouncementChannel | CategoryChannel | Thread | StageChannel | ForumChannel>;
+        /**
+         * Create a new scheduled event on the guild
+         * @param options the event data
+         */
+        createScheduledEvent(options: eventCreateOptions): Promise<ScheduledEvent>;
+        /**
+         * Fetch and return a scheduled event from the guild
+         * @param event the event Id to fetch and return
+         */
+        getScheduledEvent(event: string|ScheduledEvent): Promise<ScheduledEvent>;
+        /**
+         * Fetch and return all scheduled event of the guild
+         */
+        listScheduledEvent(): Promise<Store<String, ScheduledEvent>>;
+    }
+    type eventCreateOptions = {
+        channel_id: string|VoiceChannel|StageChannel|null,
+        entity_metadata: eventEntityMetadata|null,
+        name: string,
+        privacy_level: eventPrivacyLevel,
+        scheduled_start_time: number|Date,
+        scheduled_end_time?: number|Date,
+        description?: string,
+        entity_type: eventEntityType,
+        image?: string|Buffer,
+        reason?: string,
+    }
+    export enum eventEntityType {
+        STAGE_INSTANCE = 1,
+        VOICE = 2,
+        EXTERNAL = 3
+    }
+    export enum eventPrivacyLevel {
+        GUILD_ONLY = 2
+    }
+    type eventEntityMetadata = {
+        location: string
     }
     type channelCreateOptions = {
         name: string,
@@ -801,13 +842,51 @@ declare module 'devland.js' {
         readonly data_is_available: boolean;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
+        /**
+         * Fetch this member, useful to refresh is data
+         */
+        fetch(): Promise<Member>;
+        /**
+         * Send a private message to this member
+         * @param options the message payload
+         */
         send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
+        /**
+         * Update the member status, like a timeout
+         * @param data the data to update
+         */
         edit(data: editMemberOptions): Promise<Member>;
+        /**
+         * Give roles to this member
+         * @param roles the roles to give
+         * @param reason the reason of this action
+         */
         addRoles(roles: Role | Role[] | string | string[], reason?: string): Promise<Member>;
+        /**
+         * Remove roles to this member
+         * @param roles the roles to remove
+         * @param reason the reason of this action
+         */
         removeRoles(roles: Role | Role[] | string | string[], reason?: string): Promise<Member>;
-        hasPermissions(permission: string | PermissionResolvable): boolean;
+        /**
+         * Chech if this member have a specific permission
+         * @param permission the resolvable permission to check
+         */
+        hasPermissions(permission: PermissionResolvable): boolean;
+        /**
+         * Kick this member from the guild
+         * @param reason the reason of the kick
+         */
         kick(reason?: string): Promise<Member | undefined>;
+        /**
+         * Ban this member from the guild
+         * @param delete_message_seconds will delete all messages in this time
+         * @param reason the reason of the ban
+         */
         ban(delete_message_seconds?: number, reason?: string): Promise<Member | undefined>;
+        /**
+         * Fetch and returns all roles of the member
+         */
         fetchRoles(): Promise<Store<String, Role>>;
     }
     type editMemberOptions = {
@@ -920,19 +999,75 @@ declare module 'devland.js' {
         readonly permission_overwrites: PermissionOverwritesResolvable[];
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
+        /**
+         * Send a message in this channel
+         * @param options the message payload
+         */
         send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
+        /**
+         * Fetch and returns a Store of messages in the channel
+         * @param options the options before fetching
+         */
         fetchMessages(options?: fetchMessagesOptions | string): Promise<Store<String, Message>>;
+        /**
+         * Edit the channel data
+         * @param options new channel data
+         * @param reason the reason of this edit
+         */
         edit(options: channelEditOptions, reason?: string): Promise<TextChannel>;
+        /**
+         * Delete this channel
+         * @param reason the reason of the delete
+         * @param time the waiting time before deleting
+         */
         delete(reason?: string, time?: number): Promise<TextChannel>;
+        /**
+         * Create a perfect copy of the channel
+         * @param reason the reason of the clone
+         * @param time the waiting time before cloning
+         */
         clone(reason?: string, time?: number): Promise<TextChannel>;
+        /**
+         * Change the channel position
+         * @param position the new position of the channel
+         */
         setPosition(position: number): Promise<TextChannel>;
+        /**
+         * Delete multiples messages at once, max 99
+         * @param data the messages to delete at once
+         */
         bulkDelete(data: number | Message[] | string[]): Promise<void>;
+        /**
+         * Fetch and return all pinned messages in the channel
+         */
         getPinnedMessages(): Promise<Store<String, Message>>;
+        /**
+         * Create a new webhook on this channel
+         * @param options the webhook data
+         */
         createWebhook(options: createWebhookOptions): Promise<Webhook>;
+        /**
+         * Fetch and return all webhooks of this channel
+         */
         fetchWebhooks(): Promise<Store<String, Webhook>>;
+        /**
+         * Create a collector to get all components/messages actions of this channel
+         * @param options the collector options
+         */
         createCollector(options?: collectorOptions): Collector;
+        /**
+         * Create a collector to get a Store of messages with the filter configured
+         * @param options the collector options
+         */
         awaitMessages(options?: collectorOptions): Promise<Store<String, Message>>;
+        /**
+         * Create a new invite for this channel
+         * @param options the invite data
+         */
         createInvite(options?: createInviteOptions): Promise<Invite>;
+        /**
+         * Mark the bot as typing in the channel
+         */
         startTyping(): Promise<void>;
     }
     export class DmChannel {
@@ -950,12 +1085,43 @@ declare module 'devland.js' {
         readonly data_is_available: boolean;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
+        /**
+         * Send a message in this channel
+         * @param options the message playload
+         */
         send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
+        /**
+         * Fetch and return a Store of messages from this channel
+         * @param options the fetch options
+         */
         fetchMessages(options?: fetchMessagesOptions | string): Promise<Store<String, Message>>;
+        /**
+         * Delete multiples messages at once, max 99
+         * @param data the messages to delete at once
+         */
         bulkDelete(data: number | Message[] | string[]): Promise<void>;
+        /**
+         * Fetch and return all pinned messages in the channel
+         */
         getPinnedMessages(): Promise<Store<String, Message>>;
+        /**
+         * Create a collector to get all components/messages actions of this channel
+         * @param options the collector options
+         */
         createCollector(options?: collectorOptions): Collector;
+        /**
+         * Create a collector to get a Store of messages with the filter configured
+         * @param options the collector options
+         */
         awaitMessages(options?: collectorOptions): Promise<Store<String, Message>>;
+        /**
+         * Create a new invite for this channel
+         * @param options the invite data
+         */
+        createInvite(options?: createInviteOptions): Promise<Invite>;
+        /**
+         * Mark the bot as typing in the channel
+         */
         startTyping(): Promise<void>;
     }
     export class ForumChannel {
@@ -984,16 +1150,75 @@ declare module 'devland.js' {
         readonly default_auto_archive_duration: 60 | 1440 | 4320 | 10080;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
+        /**
+         * Send a message in this channel
+         * @param options the message payload
+         */
         send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
+        /**
+         * Fetch and returns a Store of messages in the channel
+         * @param options the options before fetching
+         */
         fetchMessages(options?: fetchMessagesOptions | string): Promise<Store<String, Message>>;
+        /**
+         * Edit the channel data
+         * @param options new channel data
+         * @param reason the reason of this edit
+         */
         edit(options: channelEditOptions, reason?: string): Promise<ForumChannel>;
+        /**
+         * Delete this channel
+         * @param reason the reason of the delete
+         * @param time the waiting time before deleting
+         */
         delete(reason?: string, time?: number): Promise<ForumChannel>;
+        /**
+         * Create a perfect copy of the channel
+         * @param reason the reason of the clone
+         * @param time the waiting time before cloning
+         */
         clone(reason?: string, time?: number): Promise<ForumChannel>;
+        /**
+         * Change the channel position
+         * @param position the new position of the channel
+         */
         setPosition(position: number): Promise<ForumChannel>;
+        /**
+         * Delete multiples messages at once, max 99
+         * @param data the messages to delete at once
+         */
         bulkDelete(data: number | Message[] | string[]): Promise<void>;
+        /**
+         * Fetch and return all pinned messages in the channel
+         */
+        getPinnedMessages(): Promise<Store<String, Message>>;
+        /**
+         * Create a new webhook on this channel
+         * @param options the webhook data
+         */
+        createWebhook(options: createWebhookOptions): Promise<Webhook>;
+        /**
+         * Fetch and return all webhooks of this channel
+         */
+        fetchWebhooks(): Promise<Store<String, Webhook>>;
+        /**
+         * Create a collector to get all components/messages actions of this channel
+         * @param options the collector options
+         */
         createCollector(options?: collectorOptions): Collector;
+        /**
+         * Create a collector to get a Store of messages with the filter configured
+         * @param options the collector options
+         */
         awaitMessages(options?: collectorOptions): Promise<Store<String, Message>>;
+        /**
+         * Create a new invite for this channel
+         * @param options the invite data
+         */
         createInvite(options?: createInviteOptions): Promise<Invite>;
+        /**
+         * Mark the bot as typing in the channel
+         */
         startTyping(): Promise<void>;
     }
     export type voiceBitrate = 8000 | 128000 | 256000 | 384000;
@@ -1021,19 +1246,84 @@ declare module 'devland.js' {
         readonly video_quality_mode: videoQualityMode;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
+        /**
+         * Send a message in this channel
+         * @param options the message payload
+         */
         send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
+        /**
+         * Fetch and returns a Store of messages in the channel
+         * @param options the options before fetching
+         */
         fetchMessages(options?: fetchMessagesOptions | string): Promise<Store<String, Message>>;
+        /**
+         * Edit the channel data
+         * @param options new channel data
+         * @param reason the reason of this edit
+         */
         edit(options: channelEditOptions, reason?: string): Promise<VoiceChannel>;
+        /**
+         * Delete this channel
+         * @param reason the reason of the delete
+         * @param time the waiting time before deleting
+         */
         delete(reason?: string, time?: number): Promise<VoiceChannel>;
+        /**
+         * Create a perfect copy of the channel
+         * @param reason the reason of the clone
+         * @param time the waiting time before cloning
+         */
         clone(reason?: string, time?: number): Promise<VoiceChannel>;
+        /**
+         * Change the channel position
+         * @param position the new position of the channel
+         */
         setPosition(position: number): Promise<VoiceChannel>;
+        /**
+         * Delete multiples messages at once, max 99
+         * @param data the messages to delete at once
+         */
         bulkDelete(data: number | Message[] | string[]): Promise<void>;
-        join(): void;
-        leave(): void;
+        /**
+         * Fetch and return all pinned messages in the channel
+         */
+        getPinnedMessages(): Promise<Store<String, Message>>;
+        /**
+         * Create a new webhook on this channel
+         * @param options the webhook data
+         */
+        createWebhook(options: createWebhookOptions): Promise<Webhook>;
+        /**
+         * Fetch and return all webhooks of this channel
+         */
+        fetchWebhooks(): Promise<Store<String, Webhook>>;
+        /**
+         * Create a collector to get all components/messages actions of this channel
+         * @param options the collector options
+         */
         createCollector(options?: collectorOptions): Collector;
+        /**
+         * Create a collector to get a Store of messages with the filter configured
+         * @param options the collector options
+         */
         awaitMessages(options?: collectorOptions): Promise<Store<String, Message>>;
+        /**
+         * Create a new invite for this channel
+         * @param options the invite data
+         */
         createInvite(options?: createInviteOptions): Promise<Invite>;
+        /**
+         * Mark the bot as typing in the channel
+         */
         startTyping(): Promise<void>;
+        /**
+         * Connect the bot to this voice channel
+         */
+        join(): void;
+        /**
+         * Disconnect the bot from this voice channel
+         */
+        leave(): void;
     }
     type stageStartOptions = {
         topic: string,
@@ -1082,20 +1372,94 @@ declare module 'devland.js' {
         readonly rtc_region: string;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
-        edit(options: channelEditOptions, reason?: string): Promise<StageChannel>;
-        delete(reason?: string, time?: number): Promise<StageChannel>;
-        clone(reason?: string, time?: number): Promise<StageChannel>;
-        setPosition(position: number): Promise<StageChannel>;
+        /**
+         * Start the stage
+         * @param options start stage options
+         */
         start_stage(options: stageStartOptions): Promise<StageInstance>;
+        /**
+         * Edit the stage
+         * @param options edit stage options
+         */
         edit_stage(options: stageEditOptions): Promise<StageInstance>;
+        /**
+         * Delete the stage
+         * @param reason the reason of the delete
+         */
         delete_stage(reason?: string): Promise<void>;
+        /**
+         * Fetch and return the current stage
+         */
         stage(): Promise<StageInstance | void>;
-        createInvite(options?: createInviteOptions): Promise<Invite>;
+        /**
+         * Send a message in this channel
+         * @param options the message payload
+         */
         send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
+        /**
+         * Fetch and returns a Store of messages in the channel
+         * @param options the options before fetching
+         */
         fetchMessages(options?: fetchMessagesOptions | string): Promise<Store<String, Message>>;
+        /**
+         * Edit the channel data
+         * @param options new channel data
+         * @param reason the reason of this edit
+         */
+        edit(options: channelEditOptions, reason?: string): Promise<StageChannel>;
+        /**
+         * Delete this channel
+         * @param reason the reason of the delete
+         * @param time the waiting time before deleting
+         */
+        delete(reason?: string, time?: number): Promise<StageChannel>;
+        /**
+         * Create a perfect copy of the channel
+         * @param reason the reason of the clone
+         * @param time the waiting time before cloning
+         */
+        clone(reason?: string, time?: number): Promise<StageChannel>;
+        /**
+         * Change the channel position
+         * @param position the new position of the channel
+         */
+        setPosition(position: number): Promise<StageChannel>;
+        /**
+         * Delete multiples messages at once, max 99
+         * @param data the messages to delete at once
+         */
+        bulkDelete(data: number | Message[] | string[]): Promise<void>;
+        /**
+         * Fetch and return all pinned messages in the channel
+         */
+        getPinnedMessages(): Promise<Store<String, Message>>;
+        /**
+         * Create a new webhook on this channel
+         * @param options the webhook data
+         */
+        createWebhook(options: createWebhookOptions): Promise<Webhook>;
+        /**
+         * Fetch and return all webhooks of this channel
+         */
+        fetchWebhooks(): Promise<Store<String, Webhook>>;
+        /**
+         * Create a collector to get all components/messages actions of this channel
+         * @param options the collector options
+         */
         createCollector(options?: collectorOptions): Collector;
+        /**
+         * Create a collector to get a Store of messages with the filter configured
+         * @param options the collector options
+         */
         awaitMessages(options?: collectorOptions): Promise<Store<String, Message>>;
+        /**
+         * Create a new invite for this channel
+         * @param options the invite data
+         */
         createInvite(options?: createInviteOptions): Promise<Invite>;
+        /**
+         * Mark the bot as typing in the channel
+         */
         startTyping(): Promise<void>;
     }
     export class CategoryChannel {
@@ -1115,14 +1479,48 @@ declare module 'devland.js' {
         readonly permission_overwrites: PermissionOverwritesResolvable[];
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
+        /**
+         * Edit this category
+         * @param options new channel data
+         * @param reason the reason of the edit
+         */
         edit(options: channelEditOptions, reason?: string): Promise<CategoryChannel>;
+        /**
+         * Delete this category
+         * @param reason the reason of the delete
+         * @param time the waiting time before deleting
+         */
         delete(reason?: string, time?: number): Promise<CategoryChannel>;
+        /**
+         * Create a perfect copy of this category
+         * @param reason the reason of the clone
+         * @param time the waiting time before cloning
+         */
         clone(reason?: string, time?: number): Promise<CategoryChannel>;
+        /**
+         * Update the category position
+         * @param position the new position
+         */
         setPosition(position: number): Promise<CategoryChannel>;
+        /**
+         * Fetch and return all text channels from this category
+         */
         fetchTextChannels(): Promise<Store<String, TextChannel>>;
+        /**
+         * Fetch and return all voice channels from this category
+         */
         fetchVoiceChannels(): Promise<Store<String, VoiceChannel>>;
+        /**
+         * Fetch and return all announcement channels from this category
+         */
         fetchAnnouncementChannels(): Promise<Store<String, AnnouncementChannel>>;
+        /**
+         * Fetch and return all stage channels from this category
+         */
         fetchStageChannels(): Promise<Store<String, StageChannel>>;
+        /**
+         * Fetch and return all forum channels from this category
+         */
         fetchForumChannels(): Promise<Store<String, ForumChannel>>;
     }
     export class AnnouncementChannel {
@@ -1146,20 +1544,80 @@ declare module 'devland.js' {
         readonly permission_overwrites: PermissionOverwritesResolvable[];
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
-        send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
-        fetchMessages(options?: fetchMessagesOptions | string): Promise<Store<String, Message>>;
-        edit(options: channelEditOptions, reason?: string): Promise<AnnouncementChannel>;
-        delete(reason?: string, time?: number): Promise<AnnouncementChannel>;
-        clone(reason?: string, time?: number): Promise<AnnouncementChannel>;
-        setPosition(position: number): Promise<AnnouncementChannel>;
-        bulkDelete(data: number | Message[] | string[]): Promise<void>;
-        getPinnedMessages(): Promise<Store<String, Message>>;
+        /**
+         * Crosspost a message in the announcement channel
+         * @param message the message to cross post
+         */
         crosspost(message: Message | string): Promise<Message>;
+        /**
+         * Send a message in this channel
+         * @param options the message payload
+         */
+        send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
+        /**
+         * Fetch and returns a Store of messages in the channel
+         * @param options the options before fetching
+         */
+        fetchMessages(options?: fetchMessagesOptions | string): Promise<Store<String, Message>>;
+        /**
+         * Edit the channel data
+         * @param options new channel data
+         * @param reason the reason of this edit
+         */
+        edit(options: channelEditOptions, reason?: string): Promise<AnnouncementChannel>;
+        /**
+         * Delete this channel
+         * @param reason the reason of the delete
+         * @param time the waiting time before deleting
+         */
+        delete(reason?: string, time?: number): Promise<AnnouncementChannel>;
+        /**
+         * Create a perfect copy of the channel
+         * @param reason the reason of the clone
+         * @param time the waiting time before cloning
+         */
+        clone(reason?: string, time?: number): Promise<AnnouncementChannel>;
+        /**
+         * Change the channel position
+         * @param position the new position of the channel
+         */
+        setPosition(position: number): Promise<AnnouncementChannel>;
+        /**
+         * Delete multiples messages at once, max 99
+         * @param data the messages to delete at once
+         */
+        bulkDelete(data: number | Message[] | string[]): Promise<void>;
+        /**
+         * Fetch and return all pinned messages in the channel
+         */
+        getPinnedMessages(): Promise<Store<String, Message>>;
+        /**
+         * Create a new webhook on this channel
+         * @param options the webhook data
+         */
         createWebhook(options: createWebhookOptions): Promise<Webhook>;
+        /**
+         * Fetch and return all webhooks of this channel
+         */
         fetchWebhooks(): Promise<Store<String, Webhook>>;
+        /**
+         * Create a collector to get all components/messages actions of this channel
+         * @param options the collector options
+         */
         createCollector(options?: collectorOptions): Collector;
+        /**
+         * Create a collector to get a Store of messages with the filter configured
+         * @param options the collector options
+         */
         awaitMessages(options?: collectorOptions): Promise<Store<String, Message>>;
+        /**
+         * Create a new invite for this channel
+         * @param options the invite data
+         */
         createInvite(options?: createInviteOptions): Promise<Invite>;
+        /**
+         * Mark the bot as typing in the channel
+         */
         startTyping(): Promise<void>;
     }
     type ThreadMetadata = {
@@ -1187,19 +1645,74 @@ declare module 'devland.js' {
         readonly data_is_available: boolean;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
+        /**
+         * Send a message in this thread
+         * @param options the message payload
+         */
         send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
+        /**
+         * Fetch and returns a Store of messages in the thread
+         * @param options the options before fetching
+         */
         fetchMessages(options?: fetchMessagesOptions | string): Promise<Store<String, Message>>;
+        /**
+         * Edit the thread data
+         * @param options new thread data
+         * @param reason the reason of this edit
+         */
         edit(options: channelEditOptions, reason?: string): Promise<Thread>;
+        /**
+         * Delete this thread
+         * @param reason the reason of the delete
+         * @param time the waiting time before deleting
+         */
         delete(reason?: string, time?: number): Promise<Thread>;
+        /**
+         * Delete multiples messages at once, max 99
+         * @param data the messages to delete at once
+         */
         bulkDelete(data: number | Message[] | string[]): Promise<void>;
+        /**
+         * Fetch and return all pinned messages in the thread
+         */
         getPinnedMessages(): Promise<Store<String, Message>>;
-        join(): Promise<void>;
-        leave(): Promise<void>;
-        add(member: User | Member | string): Promise<void>;
-        remove(member: User | Member | string): Promise<void>;
+        /**
+         * Create a collector to get all components/messages actions of this thread
+         * @param options the collector options
+         */
         createCollector(options?: collectorOptions): Collector;
+        /**
+         * Create a collector to get a Store of messages with the filter configured
+         * @param options the collector options
+         */
         awaitMessages(options?: collectorOptions): Promise<Store<String, Message>>;
+        /**
+         * Create a new invite for this thread
+         * @param options the invite data
+         */
+        createInvite(options?: createInviteOptions): Promise<Invite>;
+        /**
+         * Mark the bot as typing in the thread
+         */
         startTyping(): Promise<void>;
+        /**
+         * Make the bot join this thread
+         */
+        join(): Promise<void>;
+        /**
+         * Make the bot leaving this thread
+         */
+        leave(): Promise<void>;
+        /**
+         * Add a member in this thread
+         * @param member the member to add
+         */
+        add(member: User | Member | string): Promise<void>;
+        /**
+         * Remove a member from this thread
+         * @param member the member to remove
+         */
+        remove(member: User | Member | string): Promise<void>;
     }
     type webhookId = string;
     type getUsersFromReactionOptions = {
@@ -1245,16 +1758,61 @@ declare module 'devland.js' {
         readonly interaction?: simpleInteraction;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
+        /**
+         * Edit the message
+         * @param options the message payload
+         */
         edit(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
+        /**
+         * Delete this message
+         * @param delay the waiting time before deleting
+         */
         delete(delay: number): Promise<Message>;
+        /**
+         * Reply to this message
+         * @param options the message payload
+         */
         reply(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
+        /**
+         * Cross post this message in a announcement channel
+         */
         crosspost(): Promise<Message>;
+        /**
+         * Pin this message in his channel
+         * @param reason the reason of this action
+         */
         pinMessage(reason?: string): Promise<void>;
+        /**
+         * Unpin this message from his channel
+         * @param reason the reason of this action
+         */
         unpinMessage(reason?: string): Promise<void>;
+        /**
+         * React to this message with a emoji
+         * @param emoji the emoji to add
+         */
         react(emoji: APIEmoji | string): Promise<void>;
+        /**
+         * Remove a reaction from this message, you can specify a user
+         * @param emoji the emoji to react
+         * @param user the user (optional)
+         */
         unreact(emoji: APIEmoji | string, user?: User | string): Promise<void>;
+        /**
+         * Fetch and return all users who reacted with the given emoji
+         * @param emoji the emoji to fetch
+         * @param options the fetch options
+         */
         getUsersFromReaction(emoji: APIEmoji | string, options?: getUsersFromReactionOptions): Promise<Store<String, User>>;
+        /**
+         * Remove all reactions from all emojis or from one specific emoji
+         * @param emoji the emoji to remove
+         */
         deleteAllReactions(emoji?: APIEmoji | string): Promise<void>;
+        /**
+         * Create a collector for all components which contains this message
+         * @param options the collector options
+         */
         createComponentsCollector(options?: collectorOptions): Collector;
     }
 
@@ -1336,7 +1894,15 @@ declare module 'devland.js' {
         readonly data_is_available: boolean;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
+        /**
+         * Send a message to this user
+         * @param options the message payload
+         */
         send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
+        /**
+         * Fetch and return the banner of this user, return null if not
+         * @param size the size of the banner
+         */
         fetchBanner(size?: number): Promise<string>;
     }
 
@@ -1369,6 +1935,10 @@ declare module 'devland.js' {
         readonly components: resolvableComponents[];
         private readonly type: number;
         private pack();
+        /**
+         * Add components into this action rows
+         * @param components components to add, only one type per action row
+         */
         addComponents(...components: resolvableComponents[]): void;
     }
     type buttonData = {
@@ -1418,7 +1988,15 @@ declare module 'devland.js' {
         customId: string;
         options: selectOptions[];
         disabled?: boolean;
+        /**
+         * Add options to this string select
+         * @param options the options to add
+         */
         addOptions(...options: selectOptions[]): void;
+        /**
+         * Remove options from this string select
+         * @param options the options to remove
+         */
         setOptions(...options: selectOptions[]): void;
         private pack();
     }
@@ -1719,7 +2297,15 @@ declare module 'devland.js' {
         readonly available: boolean;
         readonly user?: User;
         private pack();
+        /**
+         * Edit this emoji
+         * @param options the new emoji data
+         */
         edit(options: editEmojiOptions): Promise<Emoji>;
+        /**
+         * Delete this emoji
+         * @param reason the reason of the delete
+         */
         delete(reason?: string): Promise<void>;
     }
     type editRoleOptions = {
@@ -1756,9 +2342,21 @@ declare module 'devland.js' {
         readonly createdAt: Date;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
+        /**
+         * Edit this role
+         * @param options the new role data
+         */
         edit(options: editRoleOptions): Promise<Role>;
+        /**
+         * Delete this role
+         * @param reason the reason of the delete
+         */
         delete(reason?: string): Promise<Role>;
         readonly hexColor: string;
+        /**
+         * Compare the position of this role with an other role, result inferior to 1 mean this role is under
+         * @param role the role to compare
+         */
         comparePositions(role: Role | string): number;
     }
     export class AuditLogs {
@@ -1806,6 +2404,10 @@ declare module 'devland.js' {
         readonly data_is_available: boolean;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
+        /**
+         * Delete this invite
+         * @param reason the reason of the delete
+         */
         delete(reason?: string): Promise<Invite>;
     }
     export enum webhookType {
@@ -1847,8 +2449,20 @@ declare module 'devland.js' {
         readonly url?: string;
         readonly createdTimestamp: number;
         readonly createdAt: Date;
+        /**
+         * Edit this webhook
+         * @param options the new webhook data
+         */
         edit(options: editWebhookOptions): Promise<Webhook>;
+        /**
+         * Delete this webhook
+         * @param reason the reason of this delete
+         */
         delete(reason?: string): Promise<void>;
+        /**
+         * Send a message with this webhook
+         * @param options the message payload
+         */
         send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
     }
     export enum integrationExpireBehavior {
@@ -1883,6 +2497,10 @@ declare module 'devland.js' {
             bot?: User;
         };
         scopes?: OAuth2Scopes[];
+        /**
+         * Delete this integration
+         * @param reason the reason of this delete
+         */
         delete(reason?: string): Promise<void>;
     }
     export class VoiceState {
@@ -1995,21 +2613,80 @@ declare module 'devland.js' {
         readonly createdAt: Date;
         private readonly deleted: boolean;
         private readonly followUpMessageId: string | null;
+        /**
+         * Mark this interaction as "replied" and remove the loading state, usable only on message component
+         * @param options the reply options
+         */
         deferUpdate(options?: { ephemeral: boolean }): Promise<Interaction>;
+        /**
+         * Reply to this interaction, this reply can't be edited
+         * @param options the message payload
+         */
         reply(options: MessageInteractionOptions | string | Embed | ActionRow): Promise<Interaction>;
+        /**
+         * Mark this interaction as "loading" to reply later with a followUp
+         * @param options the reply options
+         */
         deferReply(options?: { ephemeral: boolean }): Promise<Interaction>;
+        /**
+         * Reply to a message after the "loading" state created with the deferReply
+         * @param options the message payload
+         */
         followUp(options: MessageInteractionOptions | string | Embed | ActionRow): Promise<Message>;
+        /**
+         * Edit a followUp message
+         * @param options the message payload
+         * @param message_to_edit the followUp message to edit (optional, if null/undefined the bot will edit the first followUp sent) 
+         */
         editFollowUp(options: MessageInteractionOptions | string | Embed | ActionRow, message_to_edit?: Message): Promise<Message>;
+        /**
+         * Delete a followUp message
+         * @param options the delete options
+         */
         deleteFollowUp(options?: deleteFollowUpOptions): Promise<Interaction>;
+        /**
+         * Reply to the interaction with a modal
+         * @param modal the modal to send
+         */
         submitModal(modal: Modal | modalOptions): Promise<Interaction>;
+        /**
+         * Return the value returned by the modal
+         * @param input_id the text input Id
+         */
         getModalValue(input_id: string): string | null;
+        /**
+         * Get the selected users from the UserSelect
+         */
         getSelectedUsers(): User[];
+        /**
+         * Get the selected roles from the RoleSelect
+         */
         getSelectedRoles(): Role[];
+        /**
+         * Get the selected mentionables from the MentionableSelect
+         */
         getSelectedMentionables(): User[];
+        /**
+         * Get the selected channels from the ChannelSelect
+         */
         getSelectedChannels(): TextChannel[] | VoiceChannel[] | CategoryChannel[] | AnnouncementChannel[] | Thread[] | StageChannel[] | ForumChannel[];
+        /**
+         * Get the option value received, slash command only
+         * @param name the option name
+         */
         getCommandValue(name: string): string | number | boolean | User | Role | TextChannel | VoiceChannel | CategoryChannel | AnnouncementChannel | Thread | StageChannel | ForumChannel;
+        /**
+         * Get the target user, context user only
+         */
         getTargetUser(): User;
+        /**
+         * Get the target message, context message only
+         */
         getTargetMessage(): Message;
+        /**
+         * Reply to a auto complete request, usable only on slash command
+         * @param options array of choices
+         */
         sendAutoCompleteChoices(options: commandChoicesOptions[]): Promise<Interaction>;
     }
     type modalOptions = {
@@ -2319,7 +2996,15 @@ declare module 'devland.js' {
         readonly enabled: boolean;
         readonly exempt_roles: string[];
         readonly exempt_channels: string[];
+        /**
+         * Edit this auto moderation rule
+         * @param options the new auto moderation rule data
+         */
         edit(options: editAutoModRuleOptions): Promise<AutoModRule>;
+        /**
+         * Delete this auto moderation rule
+         * @param reason the reason of the delete
+         */
         delete(reason?: string): Promise<AutoModRule>;
     }
     type editAutoModRuleOptions = {
@@ -2385,11 +3070,31 @@ declare module 'devland.js' {
         token: string | null;
         autospawn: boolean;
         shards: Store<number, Shard>;
+        /**
+         * Create a new shard
+         * @param id the shard Id to create
+         */
         createShard(id?: 0): Shard;
+        /**
+         * Spawn the shards
+         * @param amount the amount of shard to spawn
+         * @param delay the delay between all spawns
+         * @param waitForReady wait for the shard to be ready before deploy
+         */
         spawn(amount?: number | string, delay?: number, waitForReady?: boolean): Promise<Store<number, Shard>>;
         broadcast(message: any): Promise<Shard[]>;
         broadcastEval(script: string): Promise<Array<any>>;
+        /**
+         * Fetch a value trought all shards
+         * @param prop the value to fetch
+         */
         fetchClientValues(prop: string): Promise<Array<any>>;
+        /**
+         * Destroy and respawn all shards
+         * @param shardDelay the delay between all shards deletion
+         * @param respawnDelay the delay between all shards respawns
+         * @param waitForReady wait for the shard to be ready before deploy
+         */
         respawnAll(shardDelay?: number, respawnDelay?: number, waitForReady?: boolean): Promise<Store<number, Shard>>;
         public on<K extends keyof ShardingManagerEvents>(event: K, listener: (...args: ShardingManagerEvents[K]) => Awaitable<void>): this;
         public on<S extends string | symbol>(
@@ -2427,10 +3132,30 @@ declare module 'devland.js' {
         private readonly _evals: Map<string, Promise<any>>;
         private readonly _fetches: Map<string, Promise<any>>;
         private readonly _exitListener: Function;
+        /**
+         * Spawn this shard
+         * @param waitForReady wait the shard to be ready before deploy
+         */
         spawn(waitForReady?: boolean): Promise<ChildProcess>;
+        /**
+         * Kill & destroy this shard
+         */
         kill(): void;
+        /**
+         * Destroy & respawn this shard
+         * @param delay the delay before recreating this shard
+         * @param waitForReady wait for the shard to be ready before deploy
+         */
         respawn(delay?: number, waitForReady?: boolean): Promise<ChildProcess>;
+        /**
+         * Send a message to this shard
+         * @param message the message to send
+         */
         send(message: any): Promise<Shard>;
+         /**
+         * Fetch a value of this shard
+         * @param prop the value to fetch
+         */
         fetchClientValue(prop: string): Promise<any>;
         eval(script: string | Function): Promise<any>;
         private _handleMessage(message: any);
@@ -2469,12 +3194,82 @@ declare module 'devland.js' {
         private readonly client: Client;
         readonly id: number;
         readonly count: number;
+        /**
+         * Send a message into this shard
+         * @param message the message to send
+         */
         send(message: any): Promise<void>;
+         /**
+         * Fetch a value trought all shards
+         * @param prop the value to fetch
+         */
         fetchClientValues(prop: string): Promise<Array<any>>;
         broadcastEval(script: string | Function): Promise<Array<any>>;
+        /**
+         * Destroy and respawn all shards
+         * @param shardDelay the delay between all shards deletion
+         * @param respawnDelay the delay between all shards respawns
+         * @param waitForReady wait for the shard to be ready before deploy
+         */
         respawnAll(shardDelay?: number, respawnDelay?: 500, waitForReady?: boolean): Promise<void>;
         private _handleMessage(message: any);
         private _respond(type: string, message: any);
+        /**
+         * Link a client with this shard
+         * @param client the client to link
+         */
         singleton(client: Client): Promise<ShardClientUtil>;
+    }
+    export class ScheduledEvent {
+        constructor(client: Client, guild: Guild, data: any);
+        private readonly client: Client;
+        readonly id: string;
+        readonly guildId: string;
+        readonly guild: Guild;
+        readonly channel_id?: string;
+        readonly channel: VoiceChannel|StageChannel|null;
+        readonly creatorId: string;
+        readonly creator: User|null;
+        readonly name: string;
+        readonly description?: string;
+        readonly scheduled_start_time: Date;
+        readonly scheduled_end_time: Date|null;
+        readonly privacy_level: eventPrivacyLevel;
+        readonly status: eventStatus;
+        readonly entity_type: eventEntityType;
+        readonly entity_id: string;
+        readonly entity_metadata: eventEntityMetadata|null;
+        readonly user_count: number;
+        readonly image?: string;
+        readonly createdTimestamp: number;
+        readonly createdAt: Date;
+        /**
+         * Edit this scheduled event
+         * @param options the new event data
+         */
+        edit(options: eventEditOptions): Promise<ScheduledEvent>;
+        /**
+         * Delete this scheduled event
+         */
+        delete(): Promise<void>;
+    }
+    export enum eventStatus {
+        SCHEDULED = 1,
+        ACTIVE = 2,
+        COMPLETED = 3,
+        CANCELED = 4
+    }
+    type eventEditOptions = {
+        channel_id: string|VoiceChannel|StageChannel|null,
+        entity_metadata: eventEntityMetadata|null,
+        name?: string,
+        privacy_level?: eventPrivacyLevel,
+        scheduled_start_time?: number|Date,
+        scheduled_end_time?: number|Date,
+        description?: string,
+        entity_type?: eventEntityType,
+        status?: eventStatus,
+        image?: string|Buffer,
+        reason?: string,
     }
 }

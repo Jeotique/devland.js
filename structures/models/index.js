@@ -35,6 +35,7 @@ const Modal = require('./Modal')
 const Collector = require('./Collector')
 const Presence = require('./Presence')
 const AutoModRule = require('./AutoModRule')
+const ScheduledEvent = require('./ScheduledEvent')
 module.exports = {
     ClientUser,
     Attachment,
@@ -73,4 +74,5 @@ module.exports = {
     Collector,
     Presence,
     AutoModRule,
+    ScheduledEvent,
 }

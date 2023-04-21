@@ -421,8 +421,13 @@ module.exports = class Interaction {
     getModalValue(input_id) {
         if (!this.isModal) throw new TypeError("This function can be used on a modal only")
         if (typeof input_id !== "string") throw new TypeError("You didn't provide any input Id")
+        if (!this.data) return null
+        if (!this.data?.components) return null
+        if (this.data?.components?.length < 1) return null
         let goodComponent = this.data.components.find(comp => comp.components.find(c => c.custom_id === input_id))
         if (!goodComponent) return null
+        if (!goodComponent.components) return null
+        if (goodComponent.components.length < 1) return null
         let value = goodComponent.components.find(comp => comp.custom_id === input_id)
         if (!value) return null
         else return value.value

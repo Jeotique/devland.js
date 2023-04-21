@@ -171,3 +171,17 @@ module.exports.AutoModActionType = {
     SEND_ALERT_MESSAGE: 2,
     TIMEOUT: 3
 }
+module.exports.eventPrivacyLevel = {
+    GUILD_ONLY: 2
+}
+module.exports.eventEntityType = {
+    STAGE_INSTANCE: 1,
+    VOICE: 2,
+    EXTERNAL: 3
+}
+module.exports.eventStatus = {
+    SCHEDULED: 1,
+    ACTIVE: 2,
+    COMPLETED: 3,
+    CANCELED: 4
+}

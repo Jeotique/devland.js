@@ -3,6 +3,7 @@ const Models = require('../../models')
 const Member = require('../../models/Member')
 const Presence = require('../../models/Presence')
 const Role = require('../../models/Role')
+const IntentFlags = require('../../util/BitFieldManagement/IntentFlags')
 module.exports = {
     name: 'guildCreate',
     /**
@@ -175,6 +176,18 @@ module.exports = {
                             forum.expireAt = Date.now() + client.options.channelsLifeTime
                             return client.forumChannels.set(forum.id, forum)
                         }))
+                    
+                    if(client.options.fetchAllMembers){
+                        let intents;
+                        if (Array.isArray(client.options.intents)) intents = parseInt(new IntentFlags(client.options.intents).bitfield)
+                        intents = new IntentFlags(BigInt(client.options.intents))
+                        client.ws.sendWS(8, {
+                            guild_id: guild.id,
+                            query: "",
+                            limit: 0,
+                            presences: intents.has(IntentFlags.FLAGS.GUILD_PRESENCES)
+                        })
+                    }
                     /**
                      * Emitted whenever the guild data is available
                      * @event client#guildAvailable
