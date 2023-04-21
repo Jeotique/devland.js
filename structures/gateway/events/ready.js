@@ -31,9 +31,9 @@ module.exports = {
                         client.emit('ready', client)
                     } else {
                         if (client.guilds.filter(g => g.ready === true).size < client.guilds.size) return// console.log('waiting ready')
-                        if (client.options.waitCacheBeforeReady && client.options.membersLifeTime && client.guilds.filter(g => g.members.size < g.totalMembersCount-5).size > 0) return console.log(client.guilds.filter(g => g.members.size < g.totalMembersCount).map(g => `${g.totalMembersCount}/${g.members.size} ${g.name}`))
-                        if (client.options.waitCacheBeforeReady && client.options.presencesLifeTime && client.guilds.filter(g => g.presences.size < g.totalMembersCount-5).size > 0) return// console.log('waiting presences')
-                        if (client.options.waitCacheBeforeReady && client.options.voicesLifeTime && client.guilds.filter(g => g.voicesStates.size < g.totalMembersCount-5).size > 0) return //console.log('waiting voices')
+                        if (client.options.waitCacheBeforeReady && client.options.membersLifeTime && client.guilds.filter(g => g.members.size < g.totalMembersCount-15).size > 0) return //console.log(client.guilds.filter(g => g.members.size < g.totalMembersCount).map(g => `${g.totalMembersCount}/${g.members.size} ${g.name}`))
+                        if (client.options.waitCacheBeforeReady && client.options.presencesLifeTime && client.guilds.filter(g => g.presences.size < g.totalMembersCount-15).size > 0) return// console.log('waiting presences')
+                        if (client.options.waitCacheBeforeReady && client.options.voicesLifeTime && client.guilds.filter(g => g.voicesStates.size < g.totalMembersCount-15).size > 0) return //console.log('waiting voices')
                         clearInterval(checkGuilds)
                         client.ready = true
                         //console.log('all guilds good')
