@@ -16,6 +16,7 @@ const AnnouncementChannel = require('./AnnouncementChannel')
 const Thread = require('./Thread')
 const StageChannel = require('./StageChannel')
 const ForumChannel = require('./ForumChannel')
+const Attachment = require('./Attachment')
 module.exports = class Interaction {
     constructor(client, guild, data) {
         Object.defineProperty(this, 'client', { value: client })
@@ -58,10 +59,14 @@ module.exports = class Interaction {
         this.deleted = false
         this.createdTimestamp = Utils.getTimestampFrom(this.id)
         this.createdAt = new Date(this.createdTimestamp)
+        this.isReplied = false
+        this.isDeferUpdate = false
+        this.isDeferReply = false
     }
 
     async deferUpdate(options = {}) {
         return new Promise(async (resolve, reject) => {
+            if(this.isDeferReply || this.isDeferUpdate || this.isReplied) return reject(new TypeError("Interaction already replied"))
             if (this.isCommand) return reject(new TypeError("You can't use deferUpdate on a command"))
             if (typeof options !== "object") options = {}
             if (typeof options.ephemeral !== "boolean") options.ephemeral = false
@@ -71,6 +76,7 @@ module.exports = class Interaction {
                 type: 6,
                 data: options
             }).then(() => {
+                this.isDeferUpdate = true
                 resolve(this)
             }).catch(e => {
                 return reject(e)
@@ -80,6 +86,7 @@ module.exports = class Interaction {
 
     async reply(options = {}) {
         return new Promise(async (resolve, reject) => {
+            if (this.isReplied || this.isDeferReply || this.isDeferUpdate) return reject(new TypeError("Interaction already replied"))
             let data = {
                 content: undefined,
                 embeds: [],
@@ -94,6 +101,7 @@ module.exports = class Interaction {
                     type: 4,
                     data: data
                 }).then(() => {
+                    this.isReplied = true
                     return resolve(this)
                 }).catch(e => {
                     return reject(e)
@@ -104,6 +112,7 @@ module.exports = class Interaction {
                     type: 4,
                     data: data
                 }).then(() => {
+                    this.isReplied = true
                     return resolve(this)
                 }).catch(e => {
                     return reject(e)
@@ -121,6 +130,7 @@ module.exports = class Interaction {
                     type: 4,
                     data: data
                 }).then(() => {
+                    this.isReplied = true
                     return resolve(this)
                 }).catch(e => {
                     return reject(e)
@@ -155,6 +165,7 @@ module.exports = class Interaction {
                     type: 4,
                     data: data
                 }).then(() => {
+                    this.isReplied = true
                     return resolve(this)
                 }).catch(e => {
                     return reject(e)
@@ -165,6 +176,7 @@ module.exports = class Interaction {
 
     async deferReply(options = {}) {
         return new Promise(async (resolve, reject) => {
+            if (this.isReplied || this.isDeferReply || this.isDeferUpdate) return reject(new TypeError("Interaction already replied"))
             if (typeof options !== "object") options = {}
             if (typeof options.ephemeral !== "boolean") options.ephemeral = false
             if (options.ephemeral) options.flags = 1 << 6
@@ -173,6 +185,7 @@ module.exports = class Interaction {
                 type: 5,
                 data: options
             }).then(() => {
+                this.isDeferReply = true
                 resolve(this)
             }).catch(e => {
                 return reject(e)
@@ -203,6 +216,8 @@ module.exports = class Interaction {
 
     async followUp(options = {}) {
         return new Promise(async (resolve, reject) => {
+            if(this.isReplied) return reject(new TypeError("Interaction already replied with \".reply()\""))
+            if(!this.isDeferReply && !this.isDeferUpdate) return reject(new TypeError(`You must reply to the interaction first with ".deferUpdate()" for message components or ".deferReply()" for commands`))
             let data = {
                 content: undefined,
                 embeds: [],
@@ -298,12 +313,14 @@ module.exports = class Interaction {
                 allowed_mentions: undefined,
                 components: this.followUpMessage?.components || [],
                 flags: undefined,
+                attachments: this.followUpMessage?.attachments?.size < 1 ? [] : [...this.followUpMessage?.attachments?.values()]
             }
             if (typeof message_to_edit !== "undefined" && message_to_edit !== null) {
                 if (typeof message_to_edit !== "object" || !(message_to_edit instanceof Message)) return reject(new TypeError("The message to edit must be a Message instance"))
                 IdMessageToEdit = message_to_edit.id
                 data['embeds'] = message_to_edit.embeds || []
                 data['components'] = message_to_edit.components || []
+                data['attachments'] = message_to_edit.attachments?.size < 1 ? [] : [...message_to_edit.attachments?.values()]
             }
             if (typeof options === 'string') {
                 data['content'] = options
@@ -347,6 +364,10 @@ module.exports = class Interaction {
                 if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
                 if (Array.isArray(options['embeds']) && options['embeds'].length < 1) data['embeds'] = []
                 if (options['embeds'] === null) data['embeds'] = []
+                if (Array.isArray(options['attachments'])) data['attachments'] = []
+                if (Array.isArray(options['attachments'])) options['attachments']?.map(attach_data => data['attachments'].push((attach_data instanceof Attachment) ? attach_data.pack() : new Attachment(attach_data).pack()))
+                if (Array.isArray(options['attachments']) && options['attachments'].length < 1) data['attachments'] = []
+                if (options['attachments'] === null) data['attachments'] = []
                 data['tts'] = options['tts']
                 data['nonce'] = options['nonce']
                 data['allowed_mentions'] = options['allowedMentions']

@@ -53,6 +53,7 @@ module.exports = class Client extends EventEmitter {
      * @property {number} maxResumeAttempts
      * @property {boolean} invalidCommandValueReturnNull
      * @property {boolean} fetchAllMembers
+     * @property {boolean} checkForUpdate
      */
     /**
      * The client options
@@ -232,6 +233,9 @@ module.exports = class Client extends EventEmitter {
         this.deletedmessages = new Store()
 
         this.lastHeartbeatAcked = true
+        if (this.options.checkForUpdate) {
+            util.checkUpdate()
+        }
         if (this.options && this.options.connect == false) {
             return this;
         } else {

@@ -138,7 +138,8 @@ module.exports = class Message {
                 nonce: undefined,
                 allowed_mentions: undefined,
                 components: this.components,
-                files: undefined
+                files: undefined,
+                attachments: this.attachments.size < 1 ? [] : [...this.attachments.values()]
             }
             if (typeof options === 'string') {
                 data['content'] = options
@@ -175,7 +176,11 @@ module.exports = class Message {
                 if (Array.isArray(options['embeds'])) data['embeds'] = []
                 if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
                 if (Array.isArray(options['embeds']) && options['embeds'].length < 1) data['embeds'] = []
-                if (options['embeds'] === null) options['embeds'] = []
+                if (options['embeds'] === null) data['embeds'] = []
+                if (Array.isArray(options['attachments'])) data['attachments'] = []
+                if (Array.isArray(options['attachments'])) options['attachments']?.map(attach_data => data['attachments'].push((attach_data instanceof Attachment) ? attach_data.pack() : new Attachment(attach_data).pack()))
+                if (Array.isArray(options['attachments']) && options['attachments'].length < 1) data['attachments'] = []
+                if (options['attachments'] === null) data['attachments'] = []
                 data['tts'] = options['tts']
                 data['nonce'] = options['nonce']
                 data['allowed_mentions'] = options['allowedMentions']
@@ -224,6 +229,17 @@ module.exports = class Message {
                     return reject(e)
                 })
             }, delay)
+        })
+    }
+    async removeAttachments() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.patch(this.client._ENDPOINTS.MESSAGES(this.channelId, this.id), {
+                attachments: []
+            }).then(messageData => {
+                return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
+            }).catch(e => {
+                return reject(e)
+            })
         })
     }
     /**

@@ -52,6 +52,7 @@ module.exports.createDefaultOptions = () => {
     maxResumeAttempts: 10,
     invalidCommandValueReturnNull: true,
     fetchAllMembers: false,
+    checkForUpdate: true,
   }
 }
 
@@ -93,6 +94,29 @@ module.exports.fetchRecommendedShards = async (token, guildsPerShard = 1000) => 
         return resolve(t.shards * (1000 / guildsPerShard))
       }
     }).catch(e => { console.error(e) });
+  })
+}
+
+module.exports.checkUpdate = async () => {
+  const fetch = require('custom-got')
+  fetch(`https://registry.npmjs.com/devland.js`, {
+    method: "GET"
+  }).then(res => {
+    if (require('../../package.json').version !== Object.keys(JSON.parse(res.body).versions).reverse()[0]) {
+      console.log('\n\n');
+      console.log('\x1b[32m' + '---------------------------------------------------');
+      console.log('\x1b[32m' + '| @ devland                                - [] X |');
+      console.log('\x1b[32m' + '---------------------------------------------------');
+      console.log('\x1b[33m' + '|            The module is\x1b[31m out of date!\x1b[33m           |');
+      console.log('\x1b[35m' + '|             New version is available!           |');
+      console.log('\x1b[34m' + `|                ${require('../../package.json').version} --> ${Object.keys(JSON.parse(res.body).versions).reverse()[0]}                |`);
+      console.log('\x1b[36m' + '|          Run "npm i devland.js@latest"          |');
+      console.log('\x1b[36m' + '|                    to update!                   |');
+      console.log('\x1b[37m' + '|          View the full changelog here:          |');
+      console.log('\x1b[31m' + '|            https://discord.gg/devland           |');
+      console.log('\x1b[32m' + '---------------------------------------------------\x1b[37m');
+      console.log('\n\n');
+    }
   })
 }
 

@@ -27,6 +27,7 @@ declare module 'devland.js' {
         maxResumeAttempts: number;
         invalidCommandValueReturnNull: boolean;
         fetchAllMembers: boolean;
+        checkForUpdate: boolean;
     }
     type wsOptions = {
         large_threshold: number;
@@ -84,7 +85,7 @@ declare module 'devland.js' {
         private readonly deletedmessages: Store<string, Message>;
         readonly version: string;
         readonly uptime: number;
-        readonly allChannels: Store<string, TextChannel|VoiceChannel|CategoryChannel|AnnouncementChannel|StageChannel|ForumChannel|Thread>;
+        readonly allChannels: Store<string, TextChannel | VoiceChannel | CategoryChannel | AnnouncementChannel | StageChannel | ForumChannel | Thread>;
         /**
          * Connect the client to the token
          * @param token 
@@ -107,20 +108,20 @@ declare module 'devland.js' {
          * @param userId the user Id
          */
         fetchUser(userId: string | User): Promise<User>;
-         /**
-         * Register new GuildCommand on all guilds of the bot
-         * @param commands the list of GuildCommand
+        /**
+        * Register new GuildCommand on all guilds of the bot
+        * @param commands the list of GuildCommand
+        */
+        setCommands(...commands: GuildCommand[]): Promise<boolean>;
+        /**
+         * Fetch all current commands on all guilds of the bot
          */
-         setCommands(...commands: GuildCommand[]): Promise<boolean>;
-         /**
-          * Fetch all current commands on all guilds of the bot
-          */
-         getCommands(): Promise<GuildCommand[]>;
-         /**
-          * Delete a GuildCommand on all guilds of the bot
-          * @param command the GuildCommand to delete
-          */
-         deleteCommand(command: GuildCommand | object): Promise<boolean>;
+        getCommands(): Promise<GuildCommand[]>;
+        /**
+         * Delete a GuildCommand on all guilds of the bot
+         * @param command the GuildCommand to delete
+         */
+        deleteCommand(command: GuildCommand | object): Promise<boolean>;
 
         public on<K extends keyof ClientEvents>(event: K, listener: (...args: ClientEvents[K]) => Awaitable<void>): this;
         public on<S extends string | symbol>(
@@ -757,22 +758,22 @@ declare module 'devland.js' {
          * Fetch and return a scheduled event from the guild
          * @param event the event Id to fetch and return
          */
-        getScheduledEvent(event: string|ScheduledEvent): Promise<ScheduledEvent>;
+        getScheduledEvent(event: string | ScheduledEvent): Promise<ScheduledEvent>;
         /**
          * Fetch and return all scheduled event of the guild
          */
         listScheduledEvent(): Promise<Store<String, ScheduledEvent>>;
     }
     type eventCreateOptions = {
-        channel_id: string|VoiceChannel|StageChannel|null,
-        entity_metadata: eventEntityMetadata|null,
+        channel_id: string | VoiceChannel | StageChannel | null,
+        entity_metadata: eventEntityMetadata | null,
         name: string,
         privacy_level: eventPrivacyLevel,
-        scheduled_start_time: number|Date,
-        scheduled_end_time?: number|Date,
+        scheduled_start_time: number | Date,
+        scheduled_end_time?: number | Date,
         description?: string,
         entity_type: eventEntityType,
-        image?: string|Buffer,
+        image?: string | Buffer,
         reason?: string,
     }
     export enum eventEntityType {
@@ -921,6 +922,7 @@ declare module 'devland.js' {
         nonce: number | string,
         allowedMentions: allowedMentionsList[],
         files: string[] | filesObject[] | Buffer[],
+        attachments: Attachment[],
     }
     type filesObject = {
         attachment: string,
@@ -1814,6 +1816,10 @@ declare module 'devland.js' {
          * @param options the collector options
          */
         createComponentsCollector(options?: collectorOptions): Collector;
+        /**
+         * Remove all attachments in this message (image, file, etc)
+         */
+        removeAttachments(): Promise<Message>;
     }
 
     export class Attachment {
@@ -2609,6 +2615,9 @@ declare module 'devland.js' {
         readonly isUserContext: boolean;
         readonly isMessageContext: boolean;
         readonly isAutoCompleteRequest: boolean;
+        readonly isReplied: boolean;
+        readonly isDeferUpdate: boolean;
+        readonly isDeferReply: boolean;
         readonly createdTimestamp: number;
         readonly createdAt: Date;
         private readonly deleted: boolean;
@@ -3152,10 +3161,10 @@ declare module 'devland.js' {
          * @param message the message to send
          */
         send(message: any): Promise<Shard>;
-         /**
-         * Fetch a value of this shard
-         * @param prop the value to fetch
-         */
+        /**
+        * Fetch a value of this shard
+        * @param prop the value to fetch
+        */
         fetchClientValue(prop: string): Promise<any>;
         eval(script: string | Function): Promise<any>;
         private _handleMessage(message: any);
@@ -3199,10 +3208,10 @@ declare module 'devland.js' {
          * @param message the message to send
          */
         send(message: any): Promise<void>;
-         /**
-         * Fetch a value trought all shards
-         * @param prop the value to fetch
-         */
+        /**
+        * Fetch a value trought all shards
+        * @param prop the value to fetch
+        */
         fetchClientValues(prop: string): Promise<Array<any>>;
         broadcastEval(script: string | Function): Promise<Array<any>>;
         /**
@@ -3227,18 +3236,18 @@ declare module 'devland.js' {
         readonly guildId: string;
         readonly guild: Guild;
         readonly channel_id?: string;
-        readonly channel: VoiceChannel|StageChannel|null;
+        readonly channel: VoiceChannel | StageChannel | null;
         readonly creatorId: string;
-        readonly creator: User|null;
+        readonly creator: User | null;
         readonly name: string;
         readonly description?: string;
         readonly scheduled_start_time: Date;
-        readonly scheduled_end_time: Date|null;
+        readonly scheduled_end_time: Date | null;
         readonly privacy_level: eventPrivacyLevel;
         readonly status: eventStatus;
         readonly entity_type: eventEntityType;
         readonly entity_id: string;
-        readonly entity_metadata: eventEntityMetadata|null;
+        readonly entity_metadata: eventEntityMetadata | null;
         readonly user_count: number;
         readonly image?: string;
         readonly createdTimestamp: number;
@@ -3260,16 +3269,16 @@ declare module 'devland.js' {
         CANCELED = 4
     }
     type eventEditOptions = {
-        channel_id: string|VoiceChannel|StageChannel|null,
-        entity_metadata: eventEntityMetadata|null,
+        channel_id: string | VoiceChannel | StageChannel | null,
+        entity_metadata: eventEntityMetadata | null,
         name?: string,
         privacy_level?: eventPrivacyLevel,
-        scheduled_start_time?: number|Date,
-        scheduled_end_time?: number|Date,
+        scheduled_start_time?: number | Date,
+        scheduled_end_time?: number | Date,
         description?: string,
         entity_type?: eventEntityType,
         status?: eventStatus,
-        image?: string|Buffer,
+        image?: string | Buffer,
         reason?: string,
     }
 }
