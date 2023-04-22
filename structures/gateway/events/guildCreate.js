@@ -90,7 +90,7 @@ module.exports = {
                             }
                             return guild.voicesStates.set(user.id, voice)
                         } else {
-                            let channel = await client.rest.get(client._ENDPOINTS.CHANNEL(voice_data.channel_id)).catch(e=>{})//.catch(e => {  })
+                            let channel = await client.rest.get(client._ENDPOINTS.CHANNEL(voice_data.channel_id)).catch(e => { })//.catch(e => {  })
                             if (channel) {
                                 if (channel.type === 0) channel = new Models.TextChannel(client, guild, channel)
                                 else if (channel.type === 1) channel = new Models.DmChannel(client, channel)
@@ -176,8 +176,8 @@ module.exports = {
                             forum.expireAt = Date.now() + client.options.channelsLifeTime
                             return client.forumChannels.set(forum.id, forum)
                         }))
-                    
-                    if(client.options.fetchAllMembers){
+
+                    if (client.options.fetchAllMembers) {
                         let intents;
                         if (Array.isArray(client.options.intents)) intents = parseInt(new IntentFlags(client.options.intents).bitfield)
                         intents = new IntentFlags(BigInt(client.options.intents))
@@ -272,7 +272,7 @@ module.exports = {
                             }
                             return guild.voicesStates.set(user.id, voice)
                         } else {
-                            let channel = await client.rest.get(client._ENDPOINTS.CHANNEL(voice_data.channel_id)).catch(e => {  })
+                            let channel = await client.rest.get(client._ENDPOINTS.CHANNEL(voice_data.channel_id)).catch(e => { })
                             if (channel) {
                                 if (channel.type === 0) channel = new Models.TextChannel(client, guild, channel)
                                 else if (channel.type === 1) channel = new Models.DmChannel(client, channel)
@@ -359,6 +359,17 @@ module.exports = {
                             forum.expireAt = Date.now() + client.options.channelsLifeTime
                             return client.forumChannels.set(forum.id, forum)
                         }))
+                    if (client.options.fetchAllMembers) {
+                        let intents;
+                        if (Array.isArray(client.options.intents)) intents = parseInt(new IntentFlags(client.options.intents).bitfield)
+                        intents = new IntentFlags(BigInt(client.options.intents))
+                        client.ws.sendWS(8, {
+                            guild_id: guild.id,
+                            query: "",
+                            limit: 0,
+                            presences: intents.has(IntentFlags.FLAGS.GUILD_PRESENCES)
+                        })
+                    }
                     /**
                      * Emitted whenever the bot join a new guild
                      * @event client#guildAdded

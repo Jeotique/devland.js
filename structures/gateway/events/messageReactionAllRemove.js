@@ -26,6 +26,9 @@ module.exports = {
             let user = client.users.get(data.user_id) || await client.rest.get(client._ENDPOINTS.USER(data.user_id)).catch(e => { })
             if (user && !(user instanceof User)) user = new User(client, user)
             client.emit('messageReactionAllRemove', guild, channel, message)
+            if (typeof client.options.usersLifeTime === "number" && client.options.usersLifeTime > 0) {
+                client.users.set(user.id, user)
+            }
         } catch (err) { client.emit('errordev', d.t, err) }
 
     }

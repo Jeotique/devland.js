@@ -254,6 +254,7 @@ module.exports = class Client extends EventEmitter {
         this.threadChannels.map(c => collect.set(c.id, c))
         this.stageChannels.map(c => collect.set(c.id, c))
         this.forumChannels.map(c => collect.set(c.id, c))
+        this.dmChannels.map(c => collect.set(c.id, c))
         return collect
     }
 

@@ -217,6 +217,7 @@ module.exports = class Interaction {
                 this.client.rest.post(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token), data).then((a) => {
                     this.followUpMessageId = a.id
                     this.followUpMessage = a
+                    const Message = require('./Message')
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
                     return reject(e)
@@ -226,6 +227,7 @@ module.exports = class Interaction {
                 this.client.rest.post(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token), data).then((a) => {
                     this.followUpMessageId = a.id
                     this.followUpMessage = a
+                    const Message = require('./Message')
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
                     return reject(e)
@@ -242,6 +244,7 @@ module.exports = class Interaction {
                 this.client.rest.post(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token), data).then((a) => {
                     this.followUpMessageId = a.id
                     this.followUpMessage = a
+                    const Message = require('./Message')
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
                     return reject(e)
@@ -275,6 +278,7 @@ module.exports = class Interaction {
                 this.client.rest.post(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token), data).then((a) => {
                     this.followUpMessageId = a.id
                     this.followUpMessage = a
+                    const Message = require('./Message')
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
                     return reject(e)
@@ -305,6 +309,7 @@ module.exports = class Interaction {
                 data['content'] = options
                 this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + IdMessageToEdit, data).then((a) => {
                     if (IdMessageToEdit === this.followUpMessageId) this.followUpMessage = a
+                    const Message = require('./Message')
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
                     return reject(e)
@@ -314,6 +319,7 @@ module.exports = class Interaction {
                 data['embeds'].push(options.pack())
                 this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + IdMessageToEdit, data).then((a) => {
                     if (IdMessageToEdit === this.followUpMessageId) this.followUpMessage = a
+                    const Message = require('./Message')
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
                     return reject(e)
@@ -330,6 +336,7 @@ module.exports = class Interaction {
                 })
                 this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + IdMessageToEdit, data).then((a) => {
                     if (IdMessageToEdit === this.followUpMessageId) this.followUpMessage = a
+                    const Message = require('./Message')
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
                     return reject(e)
@@ -366,6 +373,7 @@ module.exports = class Interaction {
                 data['flags'] = options['ephemeral'] ? 1 << 6 : undefined
                 this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + IdMessageToEdit, data).then((a) => {
                     if (IdMessageToEdit === this.followUpMessageId) this.followUpMessage = a
+                    const Message = require('./Message')
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
                     return reject(e)

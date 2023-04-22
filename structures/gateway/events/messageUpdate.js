@@ -31,6 +31,9 @@ module.exports = {
                     let dm_channel = new DmChannel(client, channel)
                     client.dmChannels.set(dm_channel.id, dm_channel)
                     let message = new Message(client, guild, dm_channel, data)
+                    if (typeof client.options.usersLifeTime === "number" && client.options.usersLifeTime > 0) {
+                        client.users.set(channel.user.id, channel.user)
+                    }
 
                     if (oldMessage) {
                         /**
@@ -88,6 +91,9 @@ module.exports = {
                             message.cachedAt = Date.now()
                             message.expireAt = Date.now() + client.options.messagesLifeTime
                             client.messages.set(message.id, message)
+                        }
+                        if (typeof client.options.usersLifeTime === "number" && client.options.usersLifeTime > 0) {
+                            client.users.set(user.id, user)
                         }
 
                     } else {

@@ -16,8 +16,12 @@ module.exports = {
             if (!event_data) return
             let event = new ScheduledEvent(client, guild, event_data)
             let user = client.users.get(data.user_id) || await client.rest.get(client._ENDPOINTS.USER(data.user_id))
+            if (!user) return
             if (!(user instanceof User)) user = new User(client, user)
             client.emit('guildScheduledEventUserRemove', event, user)
+            if (typeof client.options.usersLifeTime === "number" && client.options.usersLifeTime > 0) {
+                client.users.set(user.id, user)
+            }
         } catch (err) { client.emit('errordev', d.t, err) }
     }
 }

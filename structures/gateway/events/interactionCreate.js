@@ -33,6 +33,9 @@ module.exports = {
             data.member = member
             let interaction = new Interaction(client, guild, data)
             client.emit('interaction', interaction)
+            if (typeof client.options.usersLifeTime === "number" && client.options.usersLifeTime > 0) {
+                client.users.set(user.id, user)
+            }
         } catch (err) { client.emit('errordev', d.t, err) }
     }
 }

@@ -19,6 +19,9 @@ module.exports = {
             if (!user) return
             if (!(user instanceof User)) user = new User(client, user)
             client.emit('guildScheduledEventUserAdd', event, user)
+            if (typeof client.options.usersLifeTime === "number" && client.options.usersLifeTime > 0) {
+                client.users.set(user.id, user)
+            }
         } catch (err) { client.emit('errordev', d.t, err) }
     }
 }

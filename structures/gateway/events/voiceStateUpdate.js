@@ -45,6 +45,9 @@ module.exports = {
                 }
                 guild.voicesStates.set(data.user_id, voicestate)
             }
+            if (typeof client.options.usersLifeTime === "number" && client.options.usersLifeTime > 0) {
+                client.users.set(user.id, user)
+            }
         } catch (err) { client.emit('errordev', d.t, err) }
     }
 }

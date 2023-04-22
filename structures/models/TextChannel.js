@@ -86,6 +86,7 @@ module.exports = class TextChannel {
             if (typeof options === 'string') {
                 data['content'] = options
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id), data).then(messageData => {
+                    const Message = require('./Message')
                     return resolve(new Message(this.client, this.guild, this, messageData))
                 }).catch(e => {
                     return reject(e)
@@ -93,6 +94,7 @@ module.exports = class TextChannel {
             } else if (options instanceof Embed) {
                 data['embeds'].push(options.pack())
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id), data).then(messageData => {
+                    const Message = require('./Message')
                     return resolve(new Message(this.client, this.guild, this, messageData))
                 }).catch(e => {
                     return reject(e)
@@ -107,6 +109,7 @@ module.exports = class TextChannel {
                     else alrSeen[test.custom_id] = true
                 })
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id), data).then(messageData => {
+                    const Message = require('./Message')
                     return resolve(new Message(this.client, this.guild, this, messageData))
                 }).catch(e => {
                     return reject(e)
@@ -138,6 +141,7 @@ module.exports = class TextChannel {
                     else alrSeen[test.custom_id] = true
                 })
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id), data).then(messageData => {
+                    const Message = require('./Message')
                     return resolve(new Message(this.client, this.guild, this, messageData))
                 }).catch(e => {
                     return reject(e)
@@ -151,6 +155,7 @@ module.exports = class TextChannel {
         return new Promise(async (resolve, reject) => {
             if (options && typeof options === "string") {
                 this.client.rest.get(this.client._ENDPOINTS.MESSAGES(this.id, options)).then(data => {
+                    const Message = require('./Message')
                     let message = new Message(this.client, this.guild, this, data)
                     resolve(new Store().set(message.id, message))
                     if (typeof this.client.options.messagesLifeTime === "number" && this.client.options.messagesLifeTime > 0) {
@@ -176,6 +181,7 @@ module.exports = class TextChannel {
                 this.client.rest.get(`${this.client._ENDPOINTS.MESSAGES(this.id)}${options.limit ? `?limit=${options.limit}${options.around ? `&around=${options.around}` : `${options.before ? `&before=${options.before}` : `${options.after ? `&after=${options.after}` : ``}`}`}` : `${options.around ? `?around=${options.around}` : `${options.before ? `?before=${options.before}` : `${options.after ? `?after=${options.after}` : ``}`}`}`}`).then(data => {
                     let cache = new Store()
                     data.map(message_data => {
+                        const Message = require('./Message')
                         let message = new Message(this.client, this.guild, this, message_data)
                         cache.set(message.id, message)
                         if (typeof this.client.options.messagesLifeTime === "number" && this.client.options.messagesLifeTime > 0) {
@@ -192,6 +198,7 @@ module.exports = class TextChannel {
                 this.client.rest.get(this.client._ENDPOINTS.MESSAGES(this.id)).then(data => {
                     let cache = new Store()
                     data.map(message_data => {
+                        const Message = require('./Message')
                         let message = new Message(this.client, this.guild, this, message_data)
                         cache.set(message.id, message)
                         if (typeof this.client.options.messagesLifeTime === "number" && this.client.options.messagesLifeTime > 0) {

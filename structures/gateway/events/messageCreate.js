@@ -66,6 +66,9 @@ module.exports = {
                     message.expireAt = Date.now() + client.options.messagesLifeTime
                     client.messages.set(message.id, message)
                 }
+                if (typeof client.options.usersLifeTime === "number" && client.options.usersLifeTime > 0) {
+                    client.users.set(user.id, user)
+                }
 
                 async function fetchMentionsRoles() {
                     return new Promise(async (resolve) => {
