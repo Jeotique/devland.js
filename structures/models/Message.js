@@ -174,7 +174,7 @@ module.exports = class Message {
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
                 if (Array.isArray(options['embeds'])) data['embeds'] = []
-                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
+                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push((embed_data instanceof Embed) ? embed_data.pack() : new Embed(embed_data).pack()))
                 if (Array.isArray(options['embeds']) && options['embeds'].length < 1) data['embeds'] = []
                 if (options['embeds'] === null) data['embeds'] = []
                 if (Array.isArray(options['attachments'])) data['attachments'] = []
@@ -236,7 +236,35 @@ module.exports = class Message {
             this.client.rest.patch(this.client._ENDPOINTS.MESSAGES(this.channelId, this.id), {
                 attachments: []
             }).then(messageData => {
-                return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData))
+                let newMsg = new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData)
+                resolve(newMsg)
+                Object.keys(newMsg).map(k => this[k] = newMsg[k])
+            }).catch(e => {
+                return reject(e)
+            })
+        })
+    }
+    async removeEmbeds() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.patch(this.client._ENDPOINTS.MESSAGES(this.channelId, this.id), {
+                embeds: []
+            }).then(messageData => {
+                let newMsg = new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData)
+                resolve(newMsg)
+                Object.keys(newMsg).map(k => this[k] = newMsg[k])
+            }).catch(e => {
+                return reject(e)
+            })
+        })
+    }
+    async removeComponents() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.patch(this.client._ENDPOINTS.MESSAGES(this.channelId, this.id), {
+                components: []
+            }).then(messageData => {
+                let newMsg = new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, messageData)
+                resolve(newMsg)
+                Object.keys(newMsg).map(k => this[k] = newMsg[k])
             }).catch(e => {
                 return reject(e)
             })
@@ -303,7 +331,7 @@ module.exports = class Message {
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
-                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
+                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push((embed_data instanceof Embed) ? embed_data.pack() : new Embed(embed_data).pack()))
                 data['tts'] = options['tts']
                 data['nonce'] = options['nonce']
                 data['allowed_mentions'] = options['allowedMentions']

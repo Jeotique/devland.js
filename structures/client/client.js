@@ -453,4 +453,29 @@ module.exports = class Client extends EventEmitter {
         })
     }
 
+    async fetchChannel(channel) {
+        return new Promise(async (resolve, reject) => {
+            if (channel instanceof VoiceChannel || channel instanceof TextChannel || channel instanceof CategoryChannel || channel instanceof AnnouncementChannel || channel instanceof StageChannel || channel instanceof ForumChannel || channel instanceof Thread) channel = channel.id
+            if (typeof channel !== "string") return reject(new TypeError("The channel must be a valid channel instance or a valid Id"))
+            this.rest.get(this._ENDPOINTS.CHANNEL(channel)).then(async channel => {
+                if (channel.type !== 1) {
+                    let guild = this.guilds.get(channel.guild_id) || await this.rest.get(this._ENDPOINTS.SERVERS(channel.guild_id)).catch(e => { })
+                    if (guild && !(guild instanceof Guild)) guild = new Guild(this, guild)
+                    if (channel.type === 0) channel = new TextChannel(this, guild, channel)
+                    else if (channel.type === 2) channel = new VoiceChannel(this, guild, channel)
+                    else if (channel.type === 5) channel = new AnnouncementChannel(this, guild, channel)
+                    else if (channel.type === 10 || channel.type === 11 || channel.type === 12) channel = new Thread(this, guild, channel)
+                    else if (channel.type === 13) channel = new StageChannel(this, guild, channel)
+                    else if (channel.type === 15) channel = new ForumChannel(this, guild, channel)
+                    return resolve(channel)
+                } else {
+                    channel = new DmChannel(this, channel)
+                    return resolve(channel)
+                }
+            }).catch(e => {
+                return reject(e)
+            })
+        })
+    }
+
 }

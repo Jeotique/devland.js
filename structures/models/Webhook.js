@@ -117,7 +117,7 @@ module.exports = class Webhook {
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
-                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
+                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push((embed_data instanceof Embed) ? embed_data.pack() : new Embed(embed_data).pack()))
                 data['tts'] = options['tts']
                 data['nonce'] = options['nonce']
                 data['allowed_mentions'] = options['allowedMentions']

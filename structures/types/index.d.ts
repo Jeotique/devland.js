@@ -122,7 +122,11 @@ declare module 'devland.js' {
          * @param command the GuildCommand to delete
          */
         deleteCommand(command: GuildCommand | object): Promise<boolean>;
-
+        /**
+         * Fetch a channel and return it
+         * @param channel the channel to fetch or a valid channel Id
+         */
+        fetchChannel(channel: string | TextChannel | VoiceChannel | AnnouncementChannel | CategoryChannel | Thread | StageChannel | ForumChannel | DmChannel): Promise<TextChannel | VoiceChannel | AnnouncementChannel | CategoryChannel | Thread | StageChannel | ForumChannel | DmChannel>;
         public on<K extends keyof ClientEvents>(event: K, listener: (...args: ClientEvents[K]) => Awaitable<void>): this;
         public on<S extends string | symbol>(
             event: Exclude<S, keyof ClientEvents>,
@@ -916,7 +920,7 @@ declare module 'devland.js' {
     }
     type MessageOptions = {
         content: string,
-        embeds: Embed[],
+        embeds: Embed[] | embedOptions[],
         components: ActionRow[],
         tts: boolean,
         nonce: number | string,
@@ -1083,7 +1087,7 @@ declare module 'devland.js' {
         readonly flags: number;
         readonly createdTimestamp: number;
         readonly createdAt: Date;
-        readonly user: User;
+        readonly user: User | null;
         readonly data_is_available: boolean;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
@@ -1820,6 +1824,14 @@ declare module 'devland.js' {
          * Remove all attachments in this message (image, file, etc)
          */
         removeAttachments(): Promise<Message>;
+        /**
+         * Remove all embeds in this message
+         */
+        removeEmbeds(): Promise<Message>;
+        /**
+         * Remove all components in this message
+         */
+        removeComponents(): Promise<Message>;
     }
 
     export class Attachment {
@@ -2612,6 +2624,8 @@ declare module 'devland.js' {
         readonly isMentionableSelect: boolean;
         readonly isChannelSelect: boolean;
         readonly isSlashCommand: boolean;
+        readonly isSubCommand: boolean;
+        readonly isSubCommandGroup: boolean;
         readonly isUserContext: boolean;
         readonly isMessageContext: boolean;
         readonly isAutoCompleteRequest: boolean;
@@ -2622,6 +2636,8 @@ declare module 'devland.js' {
         readonly createdAt: Date;
         private readonly deleted: boolean;
         private readonly followUpMessageId: string | null;
+        readonly subCommandName?: string|null;
+        readonly subCommandGroupName?: string|null;
         /**
          * Mark this interaction as "replied" and remove the loading state, usable only on message component
          * @param options the reply options

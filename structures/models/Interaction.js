@@ -53,6 +53,8 @@ module.exports = class Interaction {
         this.isMentionableSelect = this.isMessageComponent && this.data.component_type === 7
         this.isChannelSelect = this.isMessageComponent && this.data.component_type === 8
         this.isSlashCommand = this.isCommand && this.data.type === 1
+        this.isSubCommand = this.isCommand && this.data?.options[0]?.type === 1
+        this.isSubCommandGroup = this.isCommand && this.data?.options[0]?.type === 2
         this.isUserContext = this.isCommand && this.data.type === 2
         this.isMessageContext = this.isCommand && this.data.type === 3
         this.followUpMessageId = null
@@ -66,7 +68,7 @@ module.exports = class Interaction {
 
     async deferUpdate(options = {}) {
         return new Promise(async (resolve, reject) => {
-            if(this.isDeferReply || this.isDeferUpdate || this.isReplied) return reject(new TypeError("Interaction already replied"))
+            if (this.isDeferReply || this.isDeferUpdate || this.isReplied) return reject(new TypeError("Interaction already replied"))
             if (this.isCommand) return reject(new TypeError("You can't use deferUpdate on a command"))
             if (typeof options !== "object") options = {}
             if (typeof options.ephemeral !== "boolean") options.ephemeral = false
@@ -137,7 +139,7 @@ module.exports = class Interaction {
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
-                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
+                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push((embed_data instanceof Embed) ? embed_data.pack() : new Embed(embed_data).pack()))
                 data['tts'] = options['tts']
                 data['nonce'] = options['nonce']
                 data['allowed_mentions'] = options['allowedMentions']
@@ -216,8 +218,8 @@ module.exports = class Interaction {
 
     async followUp(options = {}) {
         return new Promise(async (resolve, reject) => {
-            if(this.isReplied) return reject(new TypeError("Interaction already replied with \".reply()\""))
-            if(!this.isDeferReply && !this.isDeferUpdate) return reject(new TypeError(`You must reply to the interaction first with ".deferUpdate()" for message components or ".deferReply()" for commands`))
+            if (this.isReplied) return reject(new TypeError("Interaction already replied with \".reply()\""))
+            if (!this.isDeferReply && !this.isDeferUpdate) return reject(new TypeError(`You must reply to the interaction first with ".deferUpdate()" for message components or ".deferReply()" for commands`))
             let data = {
                 content: undefined,
                 embeds: [],
@@ -266,7 +268,7 @@ module.exports = class Interaction {
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
-                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
+                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push((embed_data instanceof Embed) ? embed_data.pack() : new Embed(embed_data).pack()))
                 data['tts'] = options['tts']
                 data['nonce'] = options['nonce']
                 data['allowed_mentions'] = options['allowedMentions']
@@ -361,7 +363,7 @@ module.exports = class Interaction {
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
                 if (Array.isArray(options['embeds'])) data['embeds'] = []
-                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
+                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push((embed_data instanceof Embed) ? embed_data.pack() : new Embed(embed_data).pack()))
                 if (Array.isArray(options['embeds']) && options['embeds'].length < 1) data['embeds'] = []
                 if (options['embeds'] === null) data['embeds'] = []
                 if (Array.isArray(options['attachments'])) data['attachments'] = []
@@ -492,12 +494,29 @@ module.exports = class Interaction {
         })
     }
 
+    get subCommandName() {
+        if (!this.isSubCommand && !this.isSubCommandGroup) return this.client.options.invalidCommandValueReturnNull ? null : undefined
+        const { name } = this.isSubCommand ? this.data?.options[0] : this.data?.options[0]?.options[0]
+        if (!name) return this.client.options.invalidCommandValueReturnNull ? null : undefined
+        return name
+    }
+
+    get subCommandGroupName() {
+        if (!this.isSubCommandGroup) return this.client.options.invalidCommandValueReturnNull ? null : undefined
+        const {name} = this.data?.options[0]
+        if (!name) return this.client.options.invalidCommandValueReturnNull ? null : undefined
+        return name
+    }
+
     getCommandValue(name) {
         if (!this.isSlashCommand) throw new TypeError("This function can be used on a slash command only")
         if (typeof name !== "string") throw new TypeError("You didn't provide any option name")
         if (!this.data) return this.client.options.invalidCommandValueReturnNull ? null : undefined
         if (!this.data?.options || this.data?.options?.length < 1) return this.client.options.invalidCommandValueReturnNull ? null : undefined
-        let value = this.data?.options?.find(op => op?.name === name)
+        let value;
+        if (!this.isSubCommand && !this.isSubCommandGroup) value = this.data?.options?.find(op => op?.name === name)
+        else if (this.isSubCommand) value = this.data?.options[0]?.options?.find(op => op?.name === name)
+        else if (this.isSubCommandGroup) value = this.data?.options[0]?.options[0]?.options?.find(op => op?.name === name)
         if (!value) return this.client.options.invalidCommandValueReturnNull ? null : undefined
         switch (value.type) {
             case 3:

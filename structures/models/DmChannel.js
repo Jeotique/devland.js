@@ -7,6 +7,7 @@ const ActionRow = require('./ActionRow')
 const { default: Store } = require('../util/Store/Store')
 const Permissions = require('../util/BitFieldManagement/Permissions')
 const ForumTag = require('./ForumTag')
+const User = require('./User')
 module.exports = class DmChannel {
     /**
      * 
@@ -29,7 +30,8 @@ module.exports = class DmChannel {
         this.flags = data.flags
         this.createdTimestamp = Utils.getTimestampFrom(this.id)
         this.createdAt = new Date(this.createdTimestamp)
-        this.user = data.user
+        const User = require('./User')
+        this.user = data.user || data.recipients ? data.recipients.length < 1 ? null : new User(client, data.recipients[0]) : null
         this.data_is_available = true
     }
 
@@ -94,7 +96,7 @@ module.exports = class DmChannel {
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
-                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
+                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push((embed_data instanceof Embed) ? embed_data.pack() : new Embed(embed_data).pack()))
                 data['tts'] = options['tts']
                 data['nonce'] = options['nonce']
                 data['allowed_mentions'] = options['allowedMentions']
