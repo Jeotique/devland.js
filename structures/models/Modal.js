@@ -7,7 +7,7 @@ module.exports = class Modal {
      */
     constructor(modalData = {}) {
         this.isModal = true
-        this.name = modalData.name
+        this.name = modalData.name || modalData.title
         this.custom_id = modalData.custom_id || modalData.customId
         this.customId = modalData.customId || modalData.custom_id
         this.components = modalData.components || []
@@ -15,7 +15,7 @@ module.exports = class Modal {
     }
 
     pack() {
-        if (typeof this.name !== "string") throw new TypeError("The modal name must be provided as a string")
+        if (typeof this.name === "undefined") throw new TypeError("The modal name must be provided as a string")
         if (typeof this.customId !== "string" && typeof this.custom_id !== "string") throw new TypeError("The modal custom Id must be provided as a string")
         if (!Array.isArray(this.components)) throw new TypeError("The modal components must be provided as a array")
         if (this.components.length < 1) throw new TypeError("You must provided a minimum of one component in a modal")

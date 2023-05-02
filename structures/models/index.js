@@ -24,7 +24,6 @@ const ForumTag = require('./ForumTag')
 const Emoji = require('./Emoji')
 const Member = require('./Member')
 const Role = require('./Role')
-const AuditLogs = require('./AuditLogs')
 const Log = require('./Log')
 const Invite = require('./Invite')
 const Webhook = require('./Webhook')
@@ -63,7 +62,6 @@ module.exports = {
     Emoji,
     Member,
     Role,
-    AuditLogs,
     Log,
     Invite,
     Webhook,

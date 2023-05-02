@@ -89,6 +89,7 @@ module.exports = class Interaction {
     async reply(options = {}) {
         return new Promise(async (resolve, reject) => {
             if (this.isReplied || this.isDeferReply || this.isDeferUpdate) return reject(new TypeError("Interaction already replied"))
+            if(typeof options !== "string" && typeof options !== "object") return reject(new TypeError("Invalid message payload"))
             let data = {
                 content: undefined,
                 embeds: [],
@@ -220,6 +221,7 @@ module.exports = class Interaction {
         return new Promise(async (resolve, reject) => {
             if (this.isReplied) return reject(new TypeError("Interaction already replied with \".reply()\""))
             if (!this.isDeferReply && !this.isDeferUpdate) return reject(new TypeError(`You must reply to the interaction first with ".deferUpdate()" for message components or ".deferReply()" for commands`))
+            if(typeof options !== "string" && typeof options !== "object") return reject(new TypeError("Invalid message payload"))
             let data = {
                 content: undefined,
                 embeds: [],

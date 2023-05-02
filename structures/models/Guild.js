@@ -14,7 +14,6 @@ const Member = require('./Member')
 const Role = require('./Role')
 const Permissions = require('../util/BitFieldManagement/Permissions')
 const Constants = require('../util/Constants')
-const AuditLogs = require('./AuditLogs')
 const Ban = require('./Ban')
 const Invite = require('./Invite')
 const Integration = require('./Integration')
@@ -797,9 +796,20 @@ module.exports = class Guild {
             let limitQuery = query.limit ? `&limit=${query.limit}` : null
             let userIdQuery = query.user_id ? `&user_id=${query.user_id}` : null
             this.client.rest.get(`${this.client._ENDPOINTS.SERVERS(this.id)}/audit-logs?${typeQuery ? typeQuery : ''}${limitQuery ? limitQuery : ''}${userIdQuery ? userIdQuery : ''}`).then(auditResult => {
-                auditResult.guild = this
-                let audit = new AuditLogs(this.client, auditResult)
-                return resolve(audit)
+                let collect = new Store()
+                auditResult?.audit_log_entries?.map(d => {
+                    let obj = {}
+                    obj.id = d.id
+                    obj.user = auditResult?.users?.find(u => u?.id === d?.user_id)
+                    obj.user.tag = obj?.user?.username + '#' + obj?.user?.discriminator
+                    obj.action_type = d.action_type
+                    obj.target_id = d.target_id
+                    obj.changes = d.changes
+                    obj.reason = d.reason || null
+                    obj.options = d.options || null
+                    collect.set(obj.id, new (require('./Log'))(this.client, obj))
+                })
+                return resolve(collect)
             }).catch(e => {
                 return reject(e)
             })

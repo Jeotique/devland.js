@@ -683,7 +683,7 @@ declare module 'devland.js' {
          * Return a audit logs with all logs matching with your fetch options
          * @param options fetch options
          */
-        fetchLogs(options: fetchLogsOptions): Promise<AuditLogs>;
+        fetchLogs(options: fetchLogsOptions): Promise<Store<String, Log>>;
         /**
          * Leave the guild, use .delete() if bot owner
          */
@@ -2377,18 +2377,13 @@ declare module 'devland.js' {
          */
         comparePositions(role: Role | string): number;
     }
-    export class AuditLogs {
-        constructor(client: Client, data: any);
-        private client: Client;
-        readonly entries: Store<String, Log>;
-    }
     type logsType = "GUILD_UPDATE" | "CHANNEL_CREATE" | "CHANNEL_UPDATE" | "CHANNEL_DELETE" | "CHANNEL_OVERWRITE_CREATE" | "CHANNEL_OVERWRITE_UPDATE" | "CHANNEL_OVERWRITE_DELETE" | "MEMBER_KICK" | "MEMBER_PRUNE" | "MEMBER_BAN_ADD" | "MEMBER_BAN_REMOVE" | "MEMBER_UPDATE" | "MEMBER_ROLE_UPDATE" | "MEMBER_MOVE" | "MEMBER_DISCONNECT" | "BOT_ADD" | "ROLE_CREATE" | "ROLE_UPDATE" | "ROLE_DELETE" | "INVITE_CREATE" | "INVITE_UPDATE" | "INVITE_DELETE" | "WEBHOOK_CREATE" | "WEBHOOK_UPDATE" | "WEBHOOK_DELETE" | "EMOJI_CREATE" | "EMOJI_UPDATE" | "EMOJI_DELETE" | "MESSAGE_DELETE" | "MESSAGE_BULK_DELETE" | "MESSAGE_PIN" | "MESSAGE_UNPIN" | "INTEGRATION_CREATE" | "INTEGRATION_UPDATE" | "INTEGRATION_DELETE" | "STAGE_INSTANCE_CREATE" | "STAGE_INSTANCE_UPDATE" | "STAGE_INSTANCE_DELETE" | "STICKER_CREATE" | "STICKER_UPDATE" | "STICKER_DELETE" | "GUILD_SCHEDULED_EVENT_CREATE" | "GUILD_SCHEDULED_EVENT_UPDATE" | "GUILD_SCHEDULED_EVENT_DELETE" | "THREAD_CREATE" | "THREAD_UPDATE" | "THREAD_DELETE" | "APPLICATION_COMMAND_PERMISSION_UPDATE" | "AUTO_MODERATION_RULE_CREATE" | "AUTO_MODERATION_RULE_UPDATE" | "AUTO_MODERATION_RULE_DELETE" | "AUTO_MODERATION_BLOCK_MESSAGE" | "AUTO_MODERATION_FLAG_TO_CHANNEL" | "AUTO_MODERATION_USER_COMMUNICATION_DISABLED";
     export class Log {
         constructor(client: Client, data: any);
         private client: Client;
         readonly id: string;
-        readonly guild: Guild;
-        readonly guildId: string;
+        readonly guild?: Guild;
+        readonly guildId?: string;
         readonly executor: User;
         readonly type: logsType;
         readonly targetId?: string;

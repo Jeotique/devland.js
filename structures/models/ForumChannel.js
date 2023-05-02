@@ -80,6 +80,7 @@ module.exports = class ForumChannel {
      */
     async send(options) {
         return new Promise(async (resolve, reject) => {
+            if(typeof options !== "string" && typeof options !== "object") return reject(new TypeError("Invalid message payload"))
             let data = {
                 content: undefined,
                 embeds: [],

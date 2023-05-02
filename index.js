@@ -32,7 +32,6 @@ const {Store} = require('./structures/util/Store/Store')
 const Emoji = require('./structures/models/Emoji')
 const Member = require('./structures/models/Member')
 const Role = require('./structures/models/Role')
-const AuditLogs = require('./structures/models/AuditLogs')
 const Log = require('./structures/models/Log')
 const Invite = require('./structures/models/Invite')
 const Webhook = require('./structures/models/Webhook')
@@ -90,7 +89,6 @@ module.exports = {
     Emoji,
     Member,
     Role,
-    AuditLogs,
     Log,
     Invite,
     Webhook,

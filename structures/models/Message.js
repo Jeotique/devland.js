@@ -131,6 +131,7 @@ module.exports = class Message {
      */
     async edit(options) {
         return new Promise(async (resolve, reject) => {
+            if(typeof options !== "string" && typeof options !== "object") return reject(new TypeError("Invalid message payload"))
             let data = {
                 content: undefined,
                 embeds: this.embeds,
@@ -286,6 +287,7 @@ module.exports = class Message {
      */
     async reply(options) {
         return new Promise(async (resolve, reject) => {
+            if(typeof options !== "string" && typeof options !== "object") return reject(new TypeError("Invalid message payload"))
             let data = {
                 content: undefined,
                 embeds: [],
