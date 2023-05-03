@@ -53,8 +53,8 @@ module.exports = class Interaction {
         this.isMentionableSelect = this.isMessageComponent && this.data.component_type === 7
         this.isChannelSelect = this.isMessageComponent && this.data.component_type === 8
         this.isSlashCommand = this.isCommand && this.data.type === 1
-        this.isSubCommand = this.isCommand && this.data?.options[0]?.type === 1
-        this.isSubCommandGroup = this.isCommand && this.data?.options[0]?.type === 2
+        this.isSubCommand = this.isCommand && this.data?.options && this.data?.options?.length > 0 && this.data?.options[0]?.type === 1
+        this.isSubCommandGroup = this.isCommand && this.data?.options && this.data?.options?.length > 0 && this.data?.options[0]?.type === 2
         this.isUserContext = this.isCommand && this.data.type === 2
         this.isMessageContext = this.isCommand && this.data.type === 3
         this.followUpMessageId = null
@@ -89,7 +89,7 @@ module.exports = class Interaction {
     async reply(options = {}) {
         return new Promise(async (resolve, reject) => {
             if (this.isReplied || this.isDeferReply || this.isDeferUpdate) return reject(new TypeError("Interaction already replied"))
-            if(typeof options !== "string" && typeof options !== "object") return reject(new TypeError("Invalid message payload"))
+            if (typeof options !== "string" && typeof options !== "object") return reject(new TypeError("Invalid message payload"))
             let data = {
                 content: undefined,
                 embeds: [],
@@ -221,7 +221,7 @@ module.exports = class Interaction {
         return new Promise(async (resolve, reject) => {
             if (this.isReplied) return reject(new TypeError("Interaction already replied with \".reply()\""))
             if (!this.isDeferReply && !this.isDeferUpdate) return reject(new TypeError(`You must reply to the interaction first with ".deferUpdate()" for message components or ".deferReply()" for commands`))
-            if(typeof options !== "string" && typeof options !== "object") return reject(new TypeError("Invalid message payload"))
+            if (typeof options !== "string" && typeof options !== "object") return reject(new TypeError("Invalid message payload"))
             let data = {
                 content: undefined,
                 embeds: [],
@@ -505,7 +505,7 @@ module.exports = class Interaction {
 
     get subCommandGroupName() {
         if (!this.isSubCommandGroup) return this.client.options.invalidCommandValueReturnNull ? null : undefined
-        const {name} = this.data?.options[0]
+        const { name } = this.data?.options[0]
         if (!name) return this.client.options.invalidCommandValueReturnNull ? null : undefined
         return name
     }

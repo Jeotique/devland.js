@@ -48,7 +48,7 @@ const ShardClientUtil = require('./structures/sharding/ShardClientUtil')
 const {webhookType, ActivityType, guildVerificationLevel, guildMfaLevel, guildDefaultMessageNotifications, guildExplicitContentFilterLevel, guildBoostLevel, guildNsfwLevel, channelType, videoQualityMode, PermissionIdType, stagePrivacyLevel, ComponentsType, ButtonStyle, commandType, commandOptionsType, integrationExpireBehavior, interactionType, textInputStyle, AutoModEventType, AutoModTriggerType, AutoModTriggerPresets, AutoModActionType, eventPrivacyLevel, eventEntityType, eventStatus} = require('./structures/types/enum')
 const {version} = require('./package.json')
 const RESTHandler = require('./structures/rest/RESTHandler')
-const clientWebSocket = require('./structures/gateway/webSocket-new')
+const clientWebSocket = require('./structures/gateway/webSocket')
 const ScheduledEvent = require('./structures/models/ScheduledEvent')
 module.exports = {
 
