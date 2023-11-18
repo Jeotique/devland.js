@@ -120,6 +120,20 @@ module.exports = class Member {
         })
     }
 
+    async setTimeout(number, reason){
+        return new Promise((resolve, reject) => {
+            if(typeof number === "undefined") number = null
+            if(typeof number !== "number" && number !== null) number = null
+            if(typeof number === "number" && number < 1) number = null
+            if (reason === null) reason = undefined
+            if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            this.edit({
+                communication_disabled_until: number,
+                reason: reason
+            }).then(newMember => resolve(newMember)).catch(e=>reject(e))
+        })
+    }
+
     async addRoles(role, reason) {
         return new Promise(async (resolve, reject) => {
             let data = []

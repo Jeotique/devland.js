@@ -89,7 +89,7 @@ module.exports = class Message {
             }
         })
         if (data.mention_channels && !data.channelMentions) data.mention_channels.map(async channelraw => {
-            if (this.client.textChannels.get(channelraw.id)) this.channelMentions.set(channelraw.id, this.textChannels.get(channelraw.id))
+            if (this.client.textChannels.get(channelraw.id)) this.channelMentions.set(channelraw.id, this.client.textChannels.get(channelraw.id))
             else {
                 let res = await this.client.rest.get(this.client._ENDPOINTS.CHANNEL(channelraw.id)).catch(e => { })
                 if (!res) return

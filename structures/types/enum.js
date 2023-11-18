@@ -55,7 +55,8 @@ module.exports.channelType = {
     PRIVATE_THREAD: 12,
     GUILD_STAGE_VOICE: 13,
     GUILD_DIRECTORY: 14,
-    GUILD_FORUM: 15
+    GUILD_FORUM: 15,
+    GUILD_MEDIA: 16,
 }
 module.exports.videoQualityMode = {
     AUTO: 1,

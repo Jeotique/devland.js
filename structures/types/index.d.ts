@@ -1,4 +1,6 @@
+// @ts-ignore
 import EventEmitter from "events"
+// @ts-ignore
 import ws from 'ws'
 import Store from '../util/Store/Store'
 declare module 'devland.js' {
@@ -861,6 +863,13 @@ declare module 'devland.js' {
          * @param data the data to update
          */
         edit(data: editMemberOptions): Promise<Member>;
+
+        /**
+         * Set or remove a timeout from a member
+         * @param time the time of the timeout
+         * @param reason the reason of the timeout
+         */
+        setTimeout(time?: number|null, reason?: string): Promise<Member>;
         /**
          * Give roles to this member
          * @param roles the roles to give
@@ -916,7 +925,8 @@ declare module 'devland.js' {
         PRIVATE_THREAD = 12,
         GUILD_STAGE_VOICE = 13,
         GUILD_DIRECTORY = 14,
-        GUILD_FORUM = 15
+        GUILD_FORUM = 15,
+        GUILD_MEDIA = 16,
     }
     type MessageOptions = {
         content: string,
@@ -2035,6 +2045,7 @@ declare module 'devland.js' {
         custom_id?: string;
         customId: string;
         disabled?: boolean;
+        default_values?: selectDefaultValues[];
         private pack();
     }
     type userData = {
@@ -2054,6 +2065,7 @@ declare module 'devland.js' {
         custom_id?: string;
         customId: string;
         disabled?: boolean;
+        default_values?: selectDefaultValues[];
         private pack();
     }
     type mentionableData = {
@@ -2074,6 +2086,10 @@ declare module 'devland.js' {
         customId: string;
         disabled?: boolean;
         private pack();
+    }
+    type selectDefaultValues = {
+        id: string;
+        type: "user"|"role"|"channel";
     }
     type channelData = {
         placeholder?: string,
@@ -2096,6 +2112,7 @@ declare module 'devland.js' {
         disabled?: boolean;
         channel_types?: channelType[];
         channelTypes?: channelType[];
+        default_values?: selectDefaultValues[];
         private pack();
     }
     export function parseEmoji(text: string): APIEmoji;
