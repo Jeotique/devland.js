@@ -25,7 +25,7 @@ module.exports = {
     'GUILD_MEMBER_ADD': 'guildMemberAdd',
     'GUILD_MEMBER_UPDATE': 'guildMemberUpdate',
     'GUILD_MEMBER_REMOVE': 'guildMemberRemove',
-    'GUILD_MEMBER_CHUNK': 'guildMemberChunk',
+    'GUILD_MEMBERS_CHUNK': 'guildMembersChunk',
     'PRESENCE_UPDATE': 'presenceUpdate',
     'VOICE_STATE_UPDATE': 'voiceStateUpdate',
     'VOICE_SERVER_UPDATE': 'voiceServerUpdate',
@@ -53,5 +53,10 @@ module.exports = {
     'AUTO_MODERATION_RULE_CREATE': 'autoModRuleCreate',
     'AUTO_MODERATION_RULE_UPDATE': 'autoModRuleUpdate',
     'AUTO_MODERATION_RULE_DELETE': 'autoModRuleDelete',
-    'AUTO_MODERATION_RULE_EXECUTION': 'autoModRuleExecution'
+    'AUTO_MODERATION_RULE_EXECUTION': 'autoModRuleExecution',
+    'GUILD_SCHEDULED_EVENT_CREATE': 'guildScheduledEventCreate',
+    'GUILD_SCHEDULED_EVENT_UPDATE': 'guildScheduledEventUpdate',
+    'GUILD_SCHEDULED_EVENT_DELETE': 'guildScheduledEventDelete',
+    'GUILD_SCHEDULED_EVENT_USER_ADD': 'guildScheduledEventUserAdd',
+    'GUILD_SCHEDULED_EVENT_USER_REMOVE': 'guildScheduledEventUserRemove'
 }

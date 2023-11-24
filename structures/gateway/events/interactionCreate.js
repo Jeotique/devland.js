@@ -13,7 +13,7 @@ module.exports = {
             const data = d.d
             let guild = data.guild_id ? (client.guilds.get(data.guild_id) || await client.rest.get(client._ENDPOINTS.SERVERS(data.guild_id))) : undefined
             if (guild && !(guild instanceof Guild)) guild = new Guild(client, guild)
-            let channel = await client.rest.get(client._ENDPOINTS.CHANNEL(data.channel_id)).catch(e => { })
+            let channel = await client.rest.get(client._ENDPOINTS.CHANNEL(data.channel_id||data.channel?.id)).catch(e => { })
             if (!channel) return
             if (channel.type === 0) channel = new TextChannel(client, guild, channel)
             else if (channel.type === 1) channel = new DmChannel(client, channel)
@@ -33,6 +33,9 @@ module.exports = {
             data.member = member
             let interaction = new Interaction(client, guild, data)
             client.emit('interaction', interaction)
+            if (typeof client.options.usersLifeTime === "number" && client.options.usersLifeTime > 0) {
+                client.users.set(user.id, user)
+            }
         } catch (err) { client.emit('errordev', d.t, err) }
     }
 }

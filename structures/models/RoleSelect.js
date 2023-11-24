@@ -13,6 +13,7 @@ module.exports = class RoleSelect {
         this.custom_id = roleData.custom_id || roleData.customId
         this.customId = roleData.customId || roleData.custom_id
         this.disabled = roleData.disabled
+        this.default_values = roleData.default_values
     }
 
     pack(){
@@ -24,13 +25,19 @@ module.exports = class RoleSelect {
         if(this.min_values && typeof this.min_values !== "number") throw new TypeError("The min_values must be a number")
         if(this.min_values && this.min_values < 0) throw new TypeError("min_values the minimum is 0")
         if(this.min_values && this.min_values > 25) throw new TypeError("min_values the maximum is 25")
+        if(this.default_values && !Array.isArray(this.default_values)) throw new TypeError("default_values must be a array")
+        if(this.default_values && this.default_values.filter(d => !d.id).length > 0) throw new TypeError("default_values all values must have a 'id' field")
+        if(this.default_values) this.default_values.map(d => d.type = "role")
+        if(this.default_values && this.min_values && this.default_values.length < this.min_values) throw new TypeError("default_values must have more (or equal) element of min_values")
+        if(this.default_values && this.max_values && this.default_values.length > this.max_values) throw new TypeError("default_values must have less (or equal) element of max_values")
         return {
             type: 6,
             placeholder: this.placeholder,
             max_values: this.max_values || this.min_values ? this.min_values : 1,
             min_values: this.min_values || 0,
             custom_id: this.custom_id || this.customId,
-            disabled: this.disabled
+            disabled: this.disabled,
+            default_values: this.default_values
         }
     }
 }

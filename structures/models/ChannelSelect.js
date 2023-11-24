@@ -15,6 +15,7 @@ module.exports = class ChannelSelect {
         this.disabled = channelData.disabled
         this.channelTypes = channelData.channelTypes || []
         this.channel_types = channelData.channel_types || channelData.channelTypes || []
+        this.default_values = channelData.default_values
     }
 
     pack(){
@@ -30,7 +31,12 @@ module.exports = class ChannelSelect {
         else if(this.channelTypes.find(type => type < 0 || type > 15)) throw new TypeError("invalid channel type provided")
         if(this.channelTypes && this.channelTypes.length > 0) this.channel_types = this.channelTypes
         else if(this.channel_types.length < 1) this.channel_types = undefined
-        if(this.channel_types && this.channel_types.find(type => type > 0 || type > 15)) throw new TypeError("invalid channel type provided") 
+        if(this.channel_types && this.channel_types.find(type => type > 0 || type > 15)) throw new TypeError("invalid channel type provided")
+        if(this.default_values && !Array.isArray(this.default_values)) throw new TypeError("default_values must be a array")
+        if(this.default_values && this.default_values.filter(d => !d.id).length > 0) throw new TypeError("default_values all values must have a 'id' field")
+        if(this.default_values) this.default_values.map(d => d.type = "channel")
+        if(this.default_values && this.min_values && this.default_values.length < this.min_values) throw new TypeError("default_values must have more (or equal) element of min_values")
+        if(this.default_values && this.max_values && this.default_values.length > this.max_values) throw new TypeError("default_values must have less (or equal) element of max_values")
         return {
             type: 8,
             placeholder: this.placeholder,
@@ -38,7 +44,8 @@ module.exports = class ChannelSelect {
             min_values: this.min_values || 0,
             custom_id: this.custom_id || this.customId,
             disabled: this.disabled,
-            channel_types: this.channel_types
+            channel_types: this.channel_types,
+            default_values: this.default_values
         }
     }
 }

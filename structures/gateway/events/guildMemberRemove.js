@@ -1,5 +1,6 @@
 const Client = require('../../client/client')
 const { Guild, TextChannel, Message, DmChannel, Member } = require('../../models')
+const { default: Store } = require('../../util/Store/Store')
 module.exports = {
     name: 'guildMemberRemove',
     /**
@@ -35,7 +36,15 @@ module.exports = {
                     client.guilds.set(guild.id, guild)
                 }
                 if (typeof client.options.usersLifeTime === "number" && client.options.usersLifeTime > 0) {
-                    if (client.guilds.filter(g => g.members.has(data.user.id)).size < 1) client.users.delete(data.user.id)
+                    let allGuilds = new Store()
+                    if (client.options.guildsLifeTime) client.guilds.map(g => allGuilds.set(g.id, g))
+                    else await Promise.all(client.guildsIds.map(async id => {
+                        let guild = await client.rest.get(client._ENDPOINTS.SERVERS(id)).catch(e => { })
+                        if (!guild) return
+                        else return allGuilds.set(guild.id, guild)
+                    }))
+                    if (client.options.guildsLifeTime && client.guilds.filter(g => g.members.has(data.user.id)).size < 1) client.users.delete(data.user.id)
+                    else if (allGuilds.filter(g => g.members.find(m => m.user.id === data.user.id)).length < 1) client.users.delete(data.user.id)
                 }
             }
         } catch (err) { client.emit('errordev', d.t, err) }

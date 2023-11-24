@@ -16,6 +16,7 @@ const AnnouncementChannel = require('./AnnouncementChannel')
 const Thread = require('./Thread')
 const StageChannel = require('./StageChannel')
 const ForumChannel = require('./ForumChannel')
+const Attachment = require('./Attachment')
 module.exports = class Interaction {
     constructor(client, guild, data) {
         Object.defineProperty(this, 'client', { value: client })
@@ -52,16 +53,22 @@ module.exports = class Interaction {
         this.isMentionableSelect = this.isMessageComponent && this.data.component_type === 7
         this.isChannelSelect = this.isMessageComponent && this.data.component_type === 8
         this.isSlashCommand = this.isCommand && this.data.type === 1
+        this.isSubCommand = this.isCommand && this.data?.options && this.data?.options?.length > 0 && this.data?.options[0]?.type === 1
+        this.isSubCommandGroup = this.isCommand && this.data?.options && this.data?.options?.length > 0 && this.data?.options[0]?.type === 2
         this.isUserContext = this.isCommand && this.data.type === 2
         this.isMessageContext = this.isCommand && this.data.type === 3
         this.followUpMessageId = null
         this.deleted = false
         this.createdTimestamp = Utils.getTimestampFrom(this.id)
         this.createdAt = new Date(this.createdTimestamp)
+        this.isReplied = false
+        this.isDeferUpdate = false
+        this.isDeferReply = false
     }
 
     async deferUpdate(options = {}) {
         return new Promise(async (resolve, reject) => {
+            if (this.isDeferReply || this.isDeferUpdate || this.isReplied) return reject(new TypeError("Interaction already replied"))
             if (this.isCommand) return reject(new TypeError("You can't use deferUpdate on a command"))
             if (typeof options !== "object") options = {}
             if (typeof options.ephemeral !== "boolean") options.ephemeral = false
@@ -71,6 +78,7 @@ module.exports = class Interaction {
                 type: 6,
                 data: options
             }).then(() => {
+                this.isDeferUpdate = true
                 resolve(this)
             }).catch(e => {
                 return reject(e)
@@ -80,6 +88,8 @@ module.exports = class Interaction {
 
     async reply(options = {}) {
         return new Promise(async (resolve, reject) => {
+            if (this.isReplied || this.isDeferReply || this.isDeferUpdate) return reject(new TypeError("Interaction already replied"))
+            if (typeof options !== "string" && typeof options !== "object") return reject(new TypeError("Invalid message payload"))
             let data = {
                 content: undefined,
                 embeds: [],
@@ -94,6 +104,7 @@ module.exports = class Interaction {
                     type: 4,
                     data: data
                 }).then(() => {
+                    this.isReplied = true
                     return resolve(this)
                 }).catch(e => {
                     return reject(e)
@@ -104,6 +115,7 @@ module.exports = class Interaction {
                     type: 4,
                     data: data
                 }).then(() => {
+                    this.isReplied = true
                     return resolve(this)
                 }).catch(e => {
                     return reject(e)
@@ -121,13 +133,14 @@ module.exports = class Interaction {
                     type: 4,
                     data: data
                 }).then(() => {
+                    this.isReplied = true
                     return resolve(this)
                 }).catch(e => {
                     return reject(e)
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
-                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
+                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push((embed_data instanceof Embed) ? embed_data.pack() : new Embed(embed_data).pack()))
                 data['tts'] = options['tts']
                 data['nonce'] = options['nonce']
                 data['allowed_mentions'] = options['allowedMentions']
@@ -155,6 +168,7 @@ module.exports = class Interaction {
                     type: 4,
                     data: data
                 }).then(() => {
+                    this.isReplied = true
                     return resolve(this)
                 }).catch(e => {
                     return reject(e)
@@ -165,6 +179,7 @@ module.exports = class Interaction {
 
     async deferReply(options = {}) {
         return new Promise(async (resolve, reject) => {
+            if (this.isReplied || this.isDeferReply || this.isDeferUpdate) return reject(new TypeError("Interaction already replied"))
             if (typeof options !== "object") options = {}
             if (typeof options.ephemeral !== "boolean") options.ephemeral = false
             if (options.ephemeral) options.flags = 1 << 6
@@ -173,6 +188,7 @@ module.exports = class Interaction {
                 type: 5,
                 data: options
             }).then(() => {
+                this.isDeferReply = true
                 resolve(this)
             }).catch(e => {
                 return reject(e)
@@ -203,6 +219,9 @@ module.exports = class Interaction {
 
     async followUp(options = {}) {
         return new Promise(async (resolve, reject) => {
+            if (this.isReplied) return reject(new TypeError("Interaction already replied with \".reply()\""))
+            if (!this.isDeferReply && !this.isDeferUpdate) return reject(new TypeError(`You must reply to the interaction first with ".deferUpdate()" for message components or ".deferReply()" for commands`))
+            if (typeof options !== "string" && typeof options !== "object") return reject(new TypeError("Invalid message payload"))
             let data = {
                 content: undefined,
                 embeds: [],
@@ -217,6 +236,7 @@ module.exports = class Interaction {
                 this.client.rest.post(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token), data).then((a) => {
                     this.followUpMessageId = a.id
                     this.followUpMessage = a
+                    const Message = require('./Message')
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
                     return reject(e)
@@ -226,6 +246,7 @@ module.exports = class Interaction {
                 this.client.rest.post(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token), data).then((a) => {
                     this.followUpMessageId = a.id
                     this.followUpMessage = a
+                    const Message = require('./Message')
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
                     return reject(e)
@@ -242,13 +263,14 @@ module.exports = class Interaction {
                 this.client.rest.post(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token), data).then((a) => {
                     this.followUpMessageId = a.id
                     this.followUpMessage = a
+                    const Message = require('./Message')
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
                     return reject(e)
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
-                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
+                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push((embed_data instanceof Embed) ? embed_data.pack() : new Embed(embed_data).pack()))
                 data['tts'] = options['tts']
                 data['nonce'] = options['nonce']
                 data['allowed_mentions'] = options['allowedMentions']
@@ -275,6 +297,7 @@ module.exports = class Interaction {
                 this.client.rest.post(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token), data).then((a) => {
                     this.followUpMessageId = a.id
                     this.followUpMessage = a
+                    const Message = require('./Message')
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
                     return reject(e)
@@ -294,17 +317,20 @@ module.exports = class Interaction {
                 allowed_mentions: undefined,
                 components: this.followUpMessage?.components || [],
                 flags: undefined,
+                attachments: this.followUpMessage?.attachments?.size < 1 ? [] : [...this.followUpMessage?.attachments?.values()]
             }
             if (typeof message_to_edit !== "undefined" && message_to_edit !== null) {
                 if (typeof message_to_edit !== "object" || !(message_to_edit instanceof Message)) return reject(new TypeError("The message to edit must be a Message instance"))
                 IdMessageToEdit = message_to_edit.id
                 data['embeds'] = message_to_edit.embeds || []
                 data['components'] = message_to_edit.components || []
+                data['attachments'] = message_to_edit.attachments?.size < 1 ? [] : [...message_to_edit.attachments?.values()]
             }
             if (typeof options === 'string') {
                 data['content'] = options
                 this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + IdMessageToEdit, data).then((a) => {
                     if (IdMessageToEdit === this.followUpMessageId) this.followUpMessage = a
+                    const Message = require('./Message')
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
                     return reject(e)
@@ -314,6 +340,7 @@ module.exports = class Interaction {
                 data['embeds'].push(options.pack())
                 this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + IdMessageToEdit, data).then((a) => {
                     if (IdMessageToEdit === this.followUpMessageId) this.followUpMessage = a
+                    const Message = require('./Message')
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
                     return reject(e)
@@ -330,6 +357,7 @@ module.exports = class Interaction {
                 })
                 this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + IdMessageToEdit, data).then((a) => {
                     if (IdMessageToEdit === this.followUpMessageId) this.followUpMessage = a
+                    const Message = require('./Message')
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
                     return reject(e)
@@ -337,9 +365,13 @@ module.exports = class Interaction {
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
                 if (Array.isArray(options['embeds'])) data['embeds'] = []
-                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
+                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push((embed_data instanceof Embed) ? embed_data.pack() : new Embed(embed_data).pack()))
                 if (Array.isArray(options['embeds']) && options['embeds'].length < 1) data['embeds'] = []
                 if (options['embeds'] === null) data['embeds'] = []
+                if (Array.isArray(options['attachments'])) data['attachments'] = []
+                if (Array.isArray(options['attachments'])) options['attachments']?.map(attach_data => data['attachments'].push((attach_data instanceof Attachment) ? attach_data.pack() : new Attachment(attach_data).pack()))
+                if (Array.isArray(options['attachments']) && options['attachments'].length < 1) data['attachments'] = []
+                if (options['attachments'] === null) data['attachments'] = []
                 data['tts'] = options['tts']
                 data['nonce'] = options['nonce']
                 data['allowed_mentions'] = options['allowedMentions']
@@ -366,6 +398,7 @@ module.exports = class Interaction {
                 data['flags'] = options['ephemeral'] ? 1 << 6 : undefined
                 this.client.rest.patch(this.client._ENDPOINTS.WEBHOOKS_TOKEN(this.application_id, this.token) + '/messages/' + IdMessageToEdit, data).then((a) => {
                     if (IdMessageToEdit === this.followUpMessageId) this.followUpMessage = a
+                    const Message = require('./Message')
                     return resolve(new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, a))
                 }).catch(e => {
                     return reject(e)
@@ -421,8 +454,13 @@ module.exports = class Interaction {
     getModalValue(input_id) {
         if (!this.isModal) throw new TypeError("This function can be used on a modal only")
         if (typeof input_id !== "string") throw new TypeError("You didn't provide any input Id")
+        if (!this.data) return null
+        if (!this.data?.components) return null
+        if (this.data?.components?.length < 1) return null
         let goodComponent = this.data.components.find(comp => comp.components.find(c => c.custom_id === input_id))
         if (!goodComponent) return null
+        if (!goodComponent.components) return null
+        if (goodComponent.components.length < 1) return null
         let value = goodComponent.components.find(comp => comp.custom_id === input_id)
         if (!value) return null
         else return value.value
@@ -458,12 +496,29 @@ module.exports = class Interaction {
         })
     }
 
+    get subCommandName() {
+        if (!this.isSubCommand && !this.isSubCommandGroup) return this.client.options.invalidCommandValueReturnNull ? null : undefined
+        const { name } = this.isSubCommand ? this.data?.options[0] : this.data?.options[0]?.options[0]
+        if (!name) return this.client.options.invalidCommandValueReturnNull ? null : undefined
+        return name
+    }
+
+    get subCommandGroupName() {
+        if (!this.isSubCommandGroup) return this.client.options.invalidCommandValueReturnNull ? null : undefined
+        const { name } = this.data?.options[0]
+        if (!name) return this.client.options.invalidCommandValueReturnNull ? null : undefined
+        return name
+    }
+
     getCommandValue(name) {
         if (!this.isSlashCommand) throw new TypeError("This function can be used on a slash command only")
         if (typeof name !== "string") throw new TypeError("You didn't provide any option name")
         if (!this.data) return this.client.options.invalidCommandValueReturnNull ? null : undefined
         if (!this.data?.options || this.data?.options?.length < 1) return this.client.options.invalidCommandValueReturnNull ? null : undefined
-        let value = this.data?.options?.find(op => op?.name === name)
+        let value;
+        if (!this.isSubCommand && !this.isSubCommandGroup) value = this.data?.options?.find(op => op?.name === name)
+        else if (this.isSubCommand) value = this.data?.options[0]?.options?.find(op => op?.name === name)
+        else if (this.isSubCommandGroup) value = this.data?.options[0]?.options[0]?.options?.find(op => op?.name === name)
         if (!value) return this.client.options.invalidCommandValueReturnNull ? null : undefined
         switch (value.type) {
             case 3:

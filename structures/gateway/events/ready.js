@@ -10,7 +10,7 @@ module.exports = {
     run: async (client, d) => {
         try {
             const data = d.d
-            
+
             data.user.tag = data.user.username + '#' + data.user.discriminator
             client.user = new Models.ClientUser(client, data.user)
             /*for (const [obj] in data.guilds) {
@@ -30,10 +30,7 @@ module.exports = {
                         */
                         client.emit('ready', client)
                     } else {
-                        if (client.guilds.filter(g => g.ready === true).size < client.guilds.size) return// console.log('waiting ready')
-                        if (client.options.waitCacheBeforeReady && client.options.membersLifeTime && client.guilds.filter(g => g.members.size < g.totalMembersCount-5).size > 0) return console.log(client.guilds.filter(g => g.members.size < g.totalMembersCount).map(g => `${g.totalMembersCount}/${g.members.size} ${g.name}`))
-                        if (client.options.waitCacheBeforeReady && client.options.presencesLifeTime && client.guilds.filter(g => g.presences.size < g.totalMembersCount-5).size > 0) return// console.log('waiting presences')
-                        if (client.options.waitCacheBeforeReady && client.options.voicesLifeTime && client.guilds.filter(g => g.voicesStates.size < g.totalMembersCount-5).size > 0) return //console.log('waiting voices')
+                        if (client.options.waitCacheBeforeReady && client.guilds.filter(g => g.ready === true).size < client.guilds.size) return
                         clearInterval(checkGuilds)
                         client.ready = true
                         //console.log('all guilds good')
@@ -139,6 +136,7 @@ module.exports = {
                 if (typeof client.options.usersLifeTime !== 'number') return
                 if (client.options.usersLifeTime < 1) return
                 client.users.map(user => {
+                    if (!user.expireAt) return client.users.delete(user.id)
                     if (Date.now() < user.expireAt) return
                     else client.users.delete(user.id)
                     client.emit('debug', `(${user.id}) User removed from the cache`)

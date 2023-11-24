@@ -5,7 +5,7 @@ const Role = require('./Role')
 const StageChannel = require('./StageChannel')
 const User = require('./User')
 const VoiceChannel = require('./VoiceChannel')
-const {Store} = require('../util/Store/Store')
+const { Store } = require('../util/Store/Store')
 
 module.exports = class Member {
     constructor(client, guild, data) {
@@ -27,13 +27,24 @@ module.exports = class Member {
         const User = require('./User')
         this.user = data.user ? this.client.users.get(data.user.id) || new User(client, data.user) : null
         this.permissions = (this.id === this.guild.ownerId) ? new Permissions("ADMINISTRATOR") : this.roles.length > 0 && this.guild.roles.size > 0 ? new Permissions(this.roles.map(role_id => {
-            return this.guild.roles.get(role_id)?.permissions.toArray()
+            return this.guild.roles.get(role_id)?.permissions?.toArray() ? this.guild.roles.get(role_id).permissions.toArray().length < 1 ? new Permissions : this.guild.roles.get(role_id).permissions.toArray() : new Permissions()
         })) : new Permissions()
         this.presence = guild.presences.get(this.id) || null
     }
 
-    toString(){
+    toString() {
         return `<@${this.id}>`
+    }
+
+    async fetch() {
+        return new Promise(async (resolve, reject) => {
+            this.guild.fetchMember(this.id).then(member => {
+                Object.keys(member).map(k => this[k] = member[k])
+                return resolve(member)
+            }).catch(e => {
+                return reject(e)
+            })
+        })
     }
 
     get highestRole() {
@@ -106,6 +117,20 @@ module.exports = class Member {
             }).catch(e => {
                 return reject(e)
             })
+        })
+    }
+
+    async setTimeout(number, reason){
+        return new Promise((resolve, reject) => {
+            if(typeof number === "undefined") number = null
+            if(typeof number !== "number" && number !== null) number = null
+            if(typeof number === "number" && number < 1) number = null
+            if (reason === null) reason = undefined
+            if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            this.edit({
+                communication_disabled_until: number,
+                reason: reason
+            }).then(newMember => resolve(newMember)).catch(e=>reject(e))
         })
     }
 
@@ -217,7 +242,7 @@ module.exports = class Member {
 
     async ban(delete_message_seconds, reason) {
         return new Promise(async (resolve, reject) => {
-            if(delete_message_seconds === null) delete_message_seconds = undefined
+            if (delete_message_seconds === null) delete_message_seconds = undefined
             if (typeof delete_message_seconds !== "undefined" && typeof delete_message_seconds !== "number") return reject(new TypeError("delete_message_seconds must be a number"))
             if (reason === null) reason = undefined
             if (typeof reason !== "undefined" && typeof reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))

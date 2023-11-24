@@ -31,6 +31,9 @@ module.exports = {
             if (member && !(member instanceof Member) && (user instanceof User)) member.user = user
             if (member && !(member instanceof Member)) member = new Member(client, guild, member)
             client.emit('messageReactionAdd', { guild: guild, channel: channel, message: message, user: user, member: member, emoji: emoji })
+            if (typeof client.options.usersLifeTime === "number" && client.options.usersLifeTime > 0) {
+                client.users.set(user.id, user)
+            }
         } catch (err) { client.emit('errordev', d.t, err) }
 
     }

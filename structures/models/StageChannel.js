@@ -362,6 +362,7 @@ module.exports = class StageChannel {
      */
     async send(options) {
         return new Promise(async (resolve, reject) => {
+            if(typeof options !== "string" && typeof options !== "object") return reject(new TypeError("Invalid message payload"))
             let data = {
                 content: undefined,
                 embeds: [],
@@ -374,6 +375,7 @@ module.exports = class StageChannel {
             if (typeof options === 'string') {
                 data['content'] = options
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id), data).then(messageData => {
+                    const Message = require('./Message')
                     return resolve(new Message(this.client, this.guild, this, messageData))
                 }).catch(e => {
                     return reject(e)
@@ -381,6 +383,7 @@ module.exports = class StageChannel {
             } else if (options instanceof Embed) {
                 data['embeds'].push(options.pack())
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id), data).then(messageData => {
+                    const Message = require('./Message')
                     return resolve(new Message(this.client, this.guild, this, messageData))
                 }).catch(e => {
                     return reject(e)
@@ -395,13 +398,14 @@ module.exports = class StageChannel {
                     else alrSeen[test.custom_id] = true
                 })
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id), data).then(messageData => {
+                    const Message = require('./Message')
                     return resolve(new Message(this.client, this.guild, this, messageData))
                 }).catch(e => {
                     return reject(e)
                 })
             } else if (typeof options === 'object') {
                 data['content'] = options['content']
-                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push(embed_data.pack()))
+                if (Array.isArray(options['embeds'])) options['embeds']?.map(embed_data => data['embeds'].push((embed_data instanceof Embed) ? embed_data.pack() : new Embed(embed_data).pack()))
                 data['tts'] = options['tts']
                 if (typeof options['tts'] !== "boolean") data['tts'] = false
                 data['nonce'] = options['nonce']
@@ -426,6 +430,7 @@ module.exports = class StageChannel {
                     else alrSeen[test.custom_id] = true
                 })
                 this.client.rest.post(this.client._ENDPOINTS.MESSAGES(this.id), data).then(messageData => {
+                    const Message = require('./Message')
                     return resolve(new Message(this.client, this.guild, this, messageData))
                 }).catch(e => {
                     return reject(e)
@@ -439,6 +444,7 @@ module.exports = class StageChannel {
         return new Promise(async (resolve, reject) => {
             if (options && typeof options === "string") {
                 this.client.rest.get(this.client._ENDPOINTS.MESSAGES(this.id, options)).then(data => {
+                    const Message = require('./Message')
                     let message = new Message(this.client, this.guild, this, data)
                     resolve(new Store().set(message.id, message))
                     if (typeof this.client.options.messagesLifeTime === "number" && this.client.options.messagesLifeTime > 0) {
@@ -464,6 +470,7 @@ module.exports = class StageChannel {
                 this.client.rest.get(`${this.client._ENDPOINTS.MESSAGES(this.id)}${options.limit ? `?limit=${options.limit}${options.around ? `&around=${options.around}` : `${options.before ? `&before=${options.before}` : `${options.after ? `&after=${options.after}` : ``}`}`}` : `${options.around ? `?around=${options.around}` : `${options.before ? `?before=${options.before}` : `${options.after ? `?after=${options.after}` : ``}`}`}`}`).then(data => {
                     let cache = new Store()
                     data.map(message_data => {
+                        const Message = require('./Message')
                         let message = new Message(this.client, this.guild, this, message_data)
                         cache.set(message.id, message)
                         if (typeof this.client.options.messagesLifeTime === "number" && this.client.options.messagesLifeTime > 0) {
@@ -480,6 +487,7 @@ module.exports = class StageChannel {
                 this.client.rest.get(this.client._ENDPOINTS.MESSAGES(this.id)).then(data => {
                     let cache = new Store()
                     data.map(message_data => {
+                        const Message = require('./Message')
                         let message = new Message(this.client, this.guild, this, message_data)
                         cache.set(message.id, message)
                         if (typeof this.client.options.messagesLifeTime === "number" && this.client.options.messagesLifeTime > 0) {

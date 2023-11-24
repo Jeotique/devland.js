@@ -110,8 +110,8 @@ module.exports = class StringSelect {
         return {
             type: 3,
             placeholder: this.placeholder,
-            max_values: this.max_values || this.min_values ? this.min_values : 1,
-            min_values: this.min_values || 0,
+            max_values: this.max_values,
+            min_values: this.min_values,
             custom_id: this.custom_id || this.customId,
             options: this.options,
             disabled: this.disabled

@@ -55,7 +55,8 @@ module.exports.channelType = {
     PRIVATE_THREAD: 12,
     GUILD_STAGE_VOICE: 13,
     GUILD_DIRECTORY: 14,
-    GUILD_FORUM: 15
+    GUILD_FORUM: 15,
+    GUILD_MEDIA: 16,
 }
 module.exports.videoQualityMode = {
     AUTO: 1,
@@ -170,4 +171,18 @@ module.exports.AutoModActionType = {
     BLOCK_MESSAGE: 1,
     SEND_ALERT_MESSAGE: 2,
     TIMEOUT: 3
+}
+module.exports.eventPrivacyLevel = {
+    GUILD_ONLY: 2
+}
+module.exports.eventEntityType = {
+    STAGE_INSTANCE: 1,
+    VOICE: 2,
+    EXTERNAL: 3
+}
+module.exports.eventStatus = {
+    SCHEDULED: 1,
+    ACTIVE: 2,
+    COMPLETED: 3,
+    CANCELED: 4
 }

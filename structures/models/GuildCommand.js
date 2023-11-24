@@ -10,8 +10,8 @@ module.exports = class GuildCommand {
         this.options = options?.options || []
         this.default_member_permissions = options?.default_member_permissions || null
         this.nsfw = options?.nsfw
-        this.id = options?.id,
-            this.application_id = options?.application_id
+        this.id = options?.id
+        this.application_id = options?.application_id
         this.guild_id = options?.guild_id
     }
 

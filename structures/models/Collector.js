@@ -51,7 +51,7 @@ module.exports = class Collector extends EventEmitter {
         else if (this.data.type === "component")
             this.client.on('interaction', interaction => {
                 if (this.ended) return;
-                if (this.channel.id !== interaction.channelId) return;
+                if (this.channel && this.channel.id !== interaction.channelId) return;
                 if (this.message && this.message.id !== interaction.message?.id) return;
                 if (typeof this.data.componentType === "number" && interaction.data?.component_type !== this.data.componentType) return;
                 if (this.data.filter && typeof this.data.filter === "function") {

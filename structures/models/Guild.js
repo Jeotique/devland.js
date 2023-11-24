@@ -14,12 +14,12 @@ const Member = require('./Member')
 const Role = require('./Role')
 const Permissions = require('../util/BitFieldManagement/Permissions')
 const Constants = require('../util/Constants')
-const AuditLogs = require('./AuditLogs')
 const Ban = require('./Ban')
 const Invite = require('./Invite')
 const Integration = require('./Integration')
 const DataResolver = require('../util/DateResolver')
 const AutoModRule = require('./AutoModRule')
+const ScheduledEvent = require('./ScheduledEvent')
 
 module.exports = class Guild {
     /**
@@ -153,7 +153,7 @@ module.exports = class Guild {
 
     async setCommands(...commands) {
         return new Promise(async (resolve, reject) => {
-            if (!commands || commands.length < 1) return reject(new TypeError("No command provided"))
+            if (!commands || (Array.isArray(commands) && commands?.length < 1) || (commands instanceof Store && commands?.size < 1)) return reject(new TypeError("No command provided"))
             if (commands[0] instanceof Store || commands[0] instanceof Map) {
                 var body = [...commands[0].values()]
                 body.map(data => {
@@ -796,9 +796,20 @@ module.exports = class Guild {
             let limitQuery = query.limit ? `&limit=${query.limit}` : null
             let userIdQuery = query.user_id ? `&user_id=${query.user_id}` : null
             this.client.rest.get(`${this.client._ENDPOINTS.SERVERS(this.id)}/audit-logs?${typeQuery ? typeQuery : ''}${limitQuery ? limitQuery : ''}${userIdQuery ? userIdQuery : ''}`).then(auditResult => {
-                auditResult.guild = this
-                let audit = new AuditLogs(this.client, auditResult)
-                return resolve(audit)
+                let collect = new Store()
+                auditResult?.audit_log_entries?.map(d => {
+                    let obj = {}
+                    obj.id = d.id
+                    obj.user = auditResult?.users?.find(u => u?.id === d?.user_id)
+                    obj.user.tag = obj?.user?.username + '#' + obj?.user?.discriminator
+                    obj.action_type = d.action_type
+                    obj.target_id = d.target_id
+                    obj.changes = d.changes
+                    obj.reason = d.reason || null
+                    obj.options = d.options || null
+                    collect.set(obj.id, new (require('./Log'))(this.client, obj))
+                })
+                return resolve(collect)
             }).catch(e => {
                 return reject(e)
             })
@@ -1213,6 +1224,70 @@ module.exports = class Guild {
                 else if (channel.type === 15) channel = new ForumChannel(this.client, this.client.guilds.get(this.id) || this, channel)
                 return resolve(channel)
             }).catch(e => {
+                return reject(e)
+            })
+        })
+    }
+
+    async createScheduledEvent(options = {}) {
+        return new Promise(async (resolve, reject) => {
+            if (typeof options !== "object") return reject(new TypeError("Options must be defined by a object"))
+            if (typeof options.name !== "string") return reject(new TypeError("Options name must be a string"))
+            options.privacy_level = 2
+            if (typeof options.scheduled_start_time === "undefined") return reject(new TypeError("Options scheduled_start_time must be a number timestamp or a valid Date instance"))
+            options.scheduled_start_time = !(options.scheduled_start_time instanceof Date) ? new Date(options.scheduled_start_time) : new Date(options.scheduled_start_time.getTime())
+            if (typeof options.entity_type !== "number") return reject(new TypeError("Options entity type must be a number"))
+            if (options.entity_type < 1 || options.entity_type > 3) return reject(new TypeError("Options invalid entity type"))
+            if (typeof options.channel_id === "undefined" && options.entity_type !== 3) return reject(new TypeError("Options channel Id must be defined for non external event"))
+            else if (typeof options.channel_id !== "undefined" && options.channel_id !== null && options.entity_type === 3) return reject(new TypeError("Options channel Id must be null or undefined for external event"))
+            else if (options.channel_id instanceof VoiceChannel || options.channel_id instanceof StageChannel) options.channel_id = options.channel_id.id
+            if (typeof options.channel_id !== "undefined" && options.channel_id !== null && typeof options.channel_id !== "string") return reject(new TypeError("Options channel Id must be a string or a valid VoiceChannel/StageChannel instance"))
+            if (typeof options.description !== "undefined") {
+                if (options.description === null) options.description = undefined
+                if (typeof options.description !== "string" && typeof options.description !== "undefined") return reject(new TypeError("Options description must be a string"))
+            }
+            if (typeof options.scheduled_end_time === "undefined" && options.entity_type === 3) return reject(new TypeError("Options scheduled_end_time must be defined for external event"))
+            else options.scheduled_end_time = !(options.scheduled_end_time instanceof Date) ? new Date(options.scheduled_end_time) : new Date(options.scheduled_end_time.getTime())
+            if (options.entity_metadata === null) options.entity_metadata = undefined
+            if (typeof options.entity_metadata !== "undefined") {
+                if (options.entity_type !== 3) return reject(new TypeError("Options entity metadata must be null or undefined for non external event"))
+                if (typeof options.entity_metadata !== "object") return reject(new TypeError("Options entity metadata must be a object"))
+                if (typeof options.entity_metadata.location !== "string") return reject(new TypeError("Options entity metadata location must be a string"))
+                if (options.entity_metadata.location.length < 1 || options.entity_metadata.location.length > 100) return reject(new TypeError("Options entity metadata location length must be between 1 and 100"))
+            }
+            if (typeof options.image !== "undefined") options.image = await DataResolver.resolveImage(options.image)
+            if (options.reason === null) reason = undefined
+            if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            if (options.entity_type === 3) options.channel_id = null
+            else options.entity_metadata = null
+            this.client.rest.post(this.client._ENDPOINTS.EVENT(this.id), options).then(res => {
+                return resolve(new ScheduledEvent(this.client, this.client.guilds.get(this.id) || this, res))
+            }).catch(e => {
+                return reject(e)
+            })
+        })
+    }
+
+    async getScheduledEvent(event){
+        return new Promise(async(resolve, reject) => {
+            if(typeof event === "undefined") return reject(new TypeError("The event must be a valid Id or ScheduledEvent instance"))
+            if(event instanceof ScheduledEvent) event = event.id
+            if(typeof event !== "string") return reject(new TypeError("Event must be a valid Id or ScheduledEvent instance"))
+            this.client.rest.get(this.client._ENDPOINTS.EVENT(this.id, event)+'?with_user_count=true').then(res => {
+                return resolve(new ScheduledEvent(this.client, this.client.guilds.get(this.id)||this, res))
+            }).catch(e=>{
+                return reject(e)
+            })
+        })
+    }
+
+    async listScheduledEvent(){
+        return new Promise(async(resolve, reject) => {
+            this.client.rest.get(this.client._ENDPOINTS.EVENT(this.id)+'?with_user_count=true').then(res => {
+                let collect = new Store()
+                res.map(r => collect.set(r.id, new ScheduledEvent(this.client, this.client.guilds.get(this.id)||this, r)))
+                return resolve(collect)
+            }).catch(e=>{
                 return reject(e)
             })
         })

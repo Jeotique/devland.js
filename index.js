@@ -32,7 +32,6 @@ const {Store} = require('./structures/util/Store/Store')
 const Emoji = require('./structures/models/Emoji')
 const Member = require('./structures/models/Member')
 const Role = require('./structures/models/Role')
-const AuditLogs = require('./structures/models/AuditLogs')
 const Log = require('./structures/models/Log')
 const Invite = require('./structures/models/Invite')
 const Webhook = require('./structures/models/Webhook')
@@ -46,10 +45,11 @@ const AutoModRule = require('./structures/models/AutoModRule')
 const ShardingManager = require('./structures/sharding/ShardingManager')
 const Shard = require('./structures/sharding/Shard')
 const ShardClientUtil = require('./structures/sharding/ShardClientUtil')
-const {webhookType, ActivityType, guildVerificationLevel, guildMfaLevel, guildDefaultMessageNotifications, guildExplicitContentFilterLevel, guildBoostLevel, guildNsfwLevel, channelType, videoQualityMode, PermissionIdType, stagePrivacyLevel, ComponentsType, ButtonStyle, commandType, commandOptionsType, integrationExpireBehavior, interactionType, textInputStyle, AutoModEventType, AutoModTriggerType, AutoModTriggerPresets, AutoModActionType} = require('./structures/types/enum')
+const {webhookType, ActivityType, guildVerificationLevel, guildMfaLevel, guildDefaultMessageNotifications, guildExplicitContentFilterLevel, guildBoostLevel, guildNsfwLevel, channelType, videoQualityMode, PermissionIdType, stagePrivacyLevel, ComponentsType, ButtonStyle, commandType, commandOptionsType, integrationExpireBehavior, interactionType, textInputStyle, AutoModEventType, AutoModTriggerType, AutoModTriggerPresets, AutoModActionType, eventPrivacyLevel, eventEntityType, eventStatus} = require('./structures/types/enum')
 const {version} = require('./package.json')
 const RESTHandler = require('./structures/rest/RESTHandler')
-const clientWebSocket = require('./structures/gateway/webSocket-new')
+const clientWebSocket = require('./structures/gateway/websocket')
+const ScheduledEvent = require('./structures/models/ScheduledEvent')
 module.exports = {
 
     /** brut value */
@@ -89,7 +89,6 @@ module.exports = {
     Emoji,
     Member,
     Role,
-    AuditLogs,
     Log,
     Invite,
     Webhook,
@@ -100,6 +99,7 @@ module.exports = {
     Collector,
     Presence,
     AutoModRule,
+    ScheduledEvent,
 
     /** Shard system */
     ShardingManager,
@@ -139,4 +139,7 @@ module.exports = {
     AutoModTriggerType,
     AutoModTriggerPresets,
     AutoModActionType,
+    eventPrivacyLevel,
+    eventEntityType,
+    eventStatus,
 }

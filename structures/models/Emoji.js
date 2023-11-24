@@ -27,6 +27,7 @@ module.exports = class Emoji {
         this.require_colons = data.require_colons
         this.managed = data.managed
         this.available = data.available
+        const User = require('./User')
         this.user = data.user ? new User(client, data.user) : null
     }
 
