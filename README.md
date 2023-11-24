@@ -1,24 +1,24 @@
 <div align="center">
 	<p>
-		<a href="https://discord.gg/devland"><img src="https://img.shields.io/discord/1063182666519814206?color=5865F2&logo=discord&logoColor=white" alt="Discord server" /></a>
+		<a href="https://discord.gg/4tsZfXrRDR"><img src="https://img.shields.io/discord/1063182666519814206?color=5865F2&logo=discord&logoColor=white" alt="Discord server" /></a>
 		<a href="https://www.npmjs.com/package/devland.js"><img src="https://img.shields.io/npm/v/devland.js.svg?maxAge=3600" alt="npm version" /></a>
 		<a href="https://www.npmjs.com/package/devland.js"><img src="https://img.shields.io/npm/dt/devland.js.svg?maxAge=3600" alt="npm downloads" /></a>
 	</p>
 </div>
 
 ## Links
-- [Discord server](https://discord.gg/devland)
-- [Documentation](https://devland-1.gitbook.io/devland.js/)
+- [Discord server](https://discord.gg/4tsZfXrRDR)
+- [Documentation](https://devland.mxtorie.xyz)
 - [GitHub](https://github.com/Jeotique/devland.js)
 - [Discord API](https://discord.gg/discord-api)
 - [NPM](https://www.npmjs.com/package/devland.js)
 
 ## Need help ?
-If you need help with the module you can take a look to the [documentation](https://devland-1.gitbook.io/devland.js/) or come into our [discord server](https://discord.gg/devland).
+If you need help with the module you can take a look to the [documentation](https://devland.mxtorie.xyz/) or come into our [discord server](https://discord.gg/4tsZfXrRDR).
 
 ## You found a bug ?
 If you found a bug you can just open a [issue](https://github.com/Jeotique/devland.js/issues) by explaining this one.
-You can report it on our [discord server](https://discord.gg/devland) too.
+You can report it on our [discord server](https://discord.gg/4tsZfXrRDR) too.
 
 ## Let's start
 _This is a little part present in our documentation._
@@ -48,10 +48,12 @@ messagesLifeTime: milliseconds, //will unlock bot.messages
 threadsLifeTime: milliseconds, //will unlock bot.threadChannels
 membersLifeTime: milliseconds, //will unlock <guild>.members
 rolesLifeTime: milliseconds, //will unlock <guild>.roles
-invitesLifeTime: milliseconds //will unlock <guild>.invites
-presencesLifeTime: milliseconds //will unlock <guild>.presences and <member>.presence
+invitesLifeTime: milliseconds, //will unlock <guild>.invites
+presencesLifeTime: milliseconds, //will unlock <guild>.presences & <member>.presence
+voicesLifeTime: milliseconds, //will unlock <guild>.voicesStates & <member>.voice 
+waitCacheBeforeReady: boolean, //wait for all caches enabled to be completed before emit the ready event, by default set to true
 
-// warning, for the members, roles, presences, & invites cache the guilds cache must be enabled too
+// warning, for the members, roles, presences, voices & invites cache the guilds cache must be enabled too
 ```
 **All ws options available for the client :**
 ```js
