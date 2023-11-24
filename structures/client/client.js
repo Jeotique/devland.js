@@ -9,7 +9,7 @@ const Thread = require('../models/Thread')
 const ForumChannel = require('../models/ForumChannel')
 const IntentFlags = require('../util/BitFieldManagement/IntentFlags')
 const ShardClientUtil = require('../sharding/ShardClientUtil')
-const webSocket = require('../gateway/webSocket')
+const webSocket = require('../gateway/websocket')
 /**
  * @extends {EventEmitter}
  */
