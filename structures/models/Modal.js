@@ -16,33 +16,6 @@ module.exports = class Modal {
         if (!Array.isArray(this.components)) this.components = []
     }
 
-    createListener(options = {}) {
-        if (typeof options !== "object") throw new TypeError("You must provide options for the collector")
-        if (typeof options.count !== "undefined") {
-            if (typeof options.count !== "number") throw new TypeError("The count must be a number")
-        }
-        options.type = 'component'
-        if (typeof options.time !== "undefined") {
-            if (typeof options.time !== "number") throw new TypeError("The time must be a number")
-        }
-        options.componentType = 5
-        if (typeof options.filter !== "undefined") {
-            if (typeof options.filter !== "function") throw new TypeError("The filter must be a filter function for the collector, example : 'filter: (collected) => collected.author.id === message.author.id'")
-        }
-        if (typeof options.message !== "undefined"){
-            if(typeof options.message !== "object") throw new TypeError("The message object must be defined")
-            if(!(options.message instanceof Message)) {
-                throw new TypeError("The message object must be defined")
-            }
-        }
-        let identifier = Date.now()
-        this.client.collectorCache[identifier] = new Collector(this.client, this.client.guilds.get(this.guildId) || this.guild, options.message, this.channel, options)
-        this.client.collectorCache[identifier]?.on('end', () => {
-            delete this.client.collectorCache[identifier]
-        })
-        return this.client.collectorCache[identifier]
-    }
-
     pack() {
         if (typeof this.name === "undefined") throw new TypeError("The modal name must be provided as a string")
         if (typeof this.customId !== "string" && typeof this.custom_id !== "string") throw new TypeError("The modal custom Id must be provided as a string")

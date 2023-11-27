@@ -2692,6 +2692,11 @@ declare module 'devland.js' {
          */
         getModalValue(input_id: string): string | null;
         /**
+         * Allows you to create a listerner for the submitted modal
+         * @param options The options of the listener
+         */
+        createListener(options: collectorOptions): Collector;
+        /**
          * Get the selected users from the UserSelect
          */
         getSelectedUsers(): User[];
@@ -2753,12 +2758,6 @@ declare module 'devland.js' {
         custom_id: string;
         customId: string;
         components: textInput[];
-
-        /**
-         * Allows you to create a listerner for this modal
-         * @param options The options of the listener, message object must be set !
-         */
-        createListener(options: collectorOptions): Collector;
         private pack(): object;
     }
     type collectorOptions = {
@@ -2766,8 +2765,7 @@ declare module 'devland.js' {
         count: number,
         time: number,
         componentType: ComponentsType,
-        filter: Function,
-        message?: Message,
+        filter: Function
     }
     export class Collector {
         constructor(client: Client, guild: Guild, message: Message, channel: any, data: collectorOptions);
