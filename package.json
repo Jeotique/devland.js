@@ -14,7 +14,10 @@
   "main": "index.js",
   "types": "./structures/types/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "eslint .",
+    "test": "jest",
+    "pretest": "npm run lint",
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
