@@ -17,6 +17,7 @@ const Thread = require('./Thread')
 const StageChannel = require('./StageChannel')
 const ForumChannel = require('./ForumChannel')
 const Attachment = require('./Attachment')
+const Collector = require("./Collector");
 module.exports = class Interaction {
     constructor(client, guild, data) {
         Object.defineProperty(this, 'client', { value: client })
@@ -562,5 +563,26 @@ module.exports = class Interaction {
     getTargetMessage() {
         if (!this.isMessageContext) throw new TypeError("This function can be used on a message context only")
         return new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, this.data.resolved.messages[this.data.target_id])
+    }
+
+    createListener(options = {}) {
+        if (typeof options !== "object") throw new TypeError("You must provide options for the collector")
+        if (typeof options.count !== "undefined") {
+            if (typeof options.count !== "number") throw new TypeError("The count must be a number")
+        }
+        options.type = 'component'
+        if (typeof options.time !== "undefined") {
+            if (typeof options.time !== "number") throw new TypeError("The time must be a number")
+        }
+        options.componentType = 5
+        if (typeof options.filter !== "undefined") {
+            if (typeof options.filter !== "function") throw new TypeError("The filter must be a filter function for the collector, example : 'filter: (collected) => collected.author.id === message.author.id'")
+        }
+        let identifier = Date.now()
+        this.client.collectorCache[identifier] = new Collector(this.client, this.client.guilds.get(this.guildId) || this.guild, this.message, this.channel, options)
+        this.client.collectorCache[identifier]?.on('end', () => {
+            delete this.client.collectorCache[identifier]
+        })
+        return this.client.collectorCache[identifier]
     }
 }

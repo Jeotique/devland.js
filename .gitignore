@@ -128,5 +128,7 @@ dist
 .pnp.*
 
 # Custom files
-+test.js
-.test.js
+test.js
+*.test.js
+.test/
+test/
