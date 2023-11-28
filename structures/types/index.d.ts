@@ -2695,7 +2695,7 @@ declare module 'devland.js' {
          * Allows you to create a listerner for the submitted modal
          * @param options The options of the listener
          */
-        createListener(options: collectorOptions): Collector;
+        createModalListener(options: collectorOptions): Collector;
         /**
          * Get the selected users from the UserSelect
          */

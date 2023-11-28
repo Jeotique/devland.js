@@ -24,9 +24,9 @@ You can report it on our [discord server](https://discord.gg/4tsZfXrRDR) too.
 _This is a little part present in our documentation._
 
 ```js
-const {Client} = require("devland.js")
+const {Client, IntentFlags} = require("devland.js")
 const bot = new Client({
-    intents: 32767, //https://discord-intents-calculator.vercel.app
+    intents: [IntentFlags.FLAGS.GUILDS, IntentFlags.FLAGS.GUILD_MEMBERS, IntentFlags.FLAGS.GUILd_PRESENCES]
     guildsLifeTime: 7200000, 
     // here we ask to the module to cache all guilds during 2h
     // after all events with a guild as target, the life time will be reset to 2h
@@ -52,6 +52,8 @@ invitesLifeTime: milliseconds, //will unlock <guild>.invites
 presencesLifeTime: milliseconds, //will unlock <guild>.presences & <member>.presence
 voicesLifeTime: milliseconds, //will unlock <guild>.voicesStates & <member>.voice 
 waitCacheBeforeReady: boolean, //wait for all caches enabled to be completed before emit the ready event, by default set to true
+fetchAllMembers: boolean, //by default fetch all members in a guild
+checkForUpdate: boolean, //check for a new update when the program is up
 
 // warning, for the members, roles, presences, voices & invites cache the guilds cache must be enabled too
 ```
@@ -88,4 +90,12 @@ ActivityType = {
     Custom = 4,
     Competing = 5
 }
+```
+
+**All others options available for the client :**
+```js
+connectionTimeout: number, //how many time before throwing a error if still not connected, default set to 30000 (30s)
+maxReconnectAttempts: number, //how attempts to reconnect the gateway after a error, default set to Infinity
+maxResumeAttempts: number, //how many attempts to resume the gateway connection after a disconnect, default set to 10
+invalidCommandValueReturnNull: boolean, //<interaction>.getCommandValue() must return a null value or undefined if invalid, default set to true (null returned)
 ```
