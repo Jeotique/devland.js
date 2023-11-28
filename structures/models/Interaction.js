@@ -565,7 +565,7 @@ module.exports = class Interaction {
         return new Message(this.client, this.client.guilds.get(this.guildId) || this.guild, this.channel, this.data.resolved.messages[this.data.target_id])
     }
 
-    createListener(options = {}) {
+    createModalListener(options = {}) {
         if (typeof options !== "object") throw new TypeError("You must provide options for the collector")
         if (typeof options.count !== "undefined") {
             if (typeof options.count !== "number") throw new TypeError("The count must be a number")
