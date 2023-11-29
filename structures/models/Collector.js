@@ -24,6 +24,8 @@ module.exports = class Collector extends EventEmitter {
         })
         this.cache = new Store()
         this.ended = false
+        this.on('end', () => this.ended = true)
+
         if (this.data.type === "message")
             this.client.on('message', message => {
                 if (this.ended) return;
@@ -97,8 +99,10 @@ module.exports = class Collector extends EventEmitter {
                 }
             })
 
-        setTimeout(() => {
-            this.emit('end')
-        }, this.data.time)
+        if(typeof this.data.time !== "undefined" && this.data.time !== null && this.data.time !== Infinity) {
+            setTimeout(() => {
+                this.emit('end')
+            }, this.data.time)
+        }
     }
 }
