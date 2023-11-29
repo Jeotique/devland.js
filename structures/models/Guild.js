@@ -2,7 +2,7 @@ const Utils = require('../util')
 const Client = require('../client/client')
 const TextChannel = require('./TextChannel')
 const GuildCommand = require('./GuildCommand')
-const { Store } = require('../util/Store/Store')
+const {Store} = require('../util/Store/Store')
 const Emoji = require('./Emoji')
 const User = require('./User')
 const VoiceChannel = require('./VoiceChannel')
@@ -20,20 +20,21 @@ const Integration = require('./Integration')
 const DataResolver = require('../util/DateResolver')
 const AutoModRule = require('./AutoModRule')
 const ScheduledEvent = require('./ScheduledEvent')
+const {parseEmoji} = require("../util");
 
 module.exports = class Guild {
     /**
-     * 
-     * @param {Client} client 
+     *
+     * @param {Client} client
      */
     constructor(client, data) {
         /**
-     * The client that instantiated this
-     * @name Base#client
-     * @type {Client}
-     * @readonly
-     */
-        Object.defineProperty(this, 'client', { value: client })
+         * The client that instantiated this
+         * @name Base#client
+         * @type {Client}
+         * @readonly
+         */
+        Object.defineProperty(this, 'client', {value: client})
         this.ready = true
         this.id = data.id
         this.name = data.name
@@ -46,7 +47,7 @@ module.exports = class Guild {
         this.banner = data.banner
         this.ownerId = data.owner_id
         this.region = data.region
-        this.member_count = data.member_count
+        this.member_count = (data.member_count && !isNaN(data.member_count)) ? data.member_count : data.approximate_member_count || data?.members?.length
         this.verification_level = data.verification_level
         this.mfa_level = data.mfa_level
         this.default_message_notifications = data.default_message_notifications
@@ -90,7 +91,9 @@ module.exports = class Guild {
      */
     async fetchVanity() {
         return new Promise(async (resolve, reject) => {
-            let result = await this.client.rest.get(this.client._ENDPOINTS.SERVERS(this.id) + '/vanity-url').catch(e => { return reject(e) })
+            let result = await this.client.rest.get(this.client._ENDPOINTS.SERVERS(this.id) + '/vanity-url').catch(e => {
+                return reject(e)
+            })
             if (!result) return reject(new TypeError("Can't fetch the vanity data from : " + this.name))
             let res = {
                 code: result.vanityUrlCode,
@@ -99,6 +102,7 @@ module.exports = class Guild {
             return resolve(res)
         })
     }
+
     /**
      * @typedef {Object} utilsChannels
      * @property {TextChannel|null} systemChannel
@@ -109,14 +113,16 @@ module.exports = class Guild {
      * @property {TextChannel|null} rulesChannel
      * @property {TextChannel|null} safetyChannel
      * @property {TextChannel|null} publicUpdatesChannel
-    */
+     */
     /**
      * Fetch and returns afk, system, widget, rules, safety, public updates channels
      * @returns {Promise<utilsChannels>}
      */
     async fetchUtilsChannels() {
         return new Promise(async (resolve, reject) => {
-            let guildResult = await this.client.rest.get(this.client._ENDPOINTS.SERVERS(this.id)).catch(e => { return reject(e) })
+            let guildResult = await this.client.rest.get(this.client._ENDPOINTS.SERVERS(this.id)).catch(e => {
+                return reject(e)
+            })
             if (!guildResult) return reject(new TypeError("Can't fetch the guild : " + this.name))
             let afkChannel = null
             let afkTimeout = guildResult.afk_timeout
@@ -198,6 +204,7 @@ module.exports = class Guild {
             }
         })
     }
+
     async getCommands() {
         return new Promise(async (resolve, reject) => {
             this.client.rest.get(this.client._ENDPOINTS.COMMANDS(this.id)).then(data => {
@@ -212,6 +219,7 @@ module.exports = class Guild {
             })
         })
     }
+
     async deleteCommand(command) {
         return new Promise(async (resolve, reject) => {
             if (command instanceof GuildCommand) {
@@ -999,7 +1007,8 @@ module.exports = class Guild {
                 let collect = new Store()
                 if (res.length < 1) return resolve(collect)
                 res.map(async (value) => {
-                    value.creator = this.client.users.get(value.creator_id) || await this.client.rest.get(this.client._ENDPOINTS.USER(value.creator_id)).catch(e => { })
+                    value.creator = this.client.users.get(value.creator_id) || await this.client.rest.get(this.client._ENDPOINTS.USER(value.creator_id)).catch(e => {
+                    })
                     if (value.creator && !(value.creator instanceof User)) value.creator = new User(this.client, value.creator)
                     let rules = new AutoModRule(this.client, this.client.guilds.get(this.id) || this, value)
                     collect.set(rules.id, rules)
@@ -1016,7 +1025,8 @@ module.exports = class Guild {
             if (rule_id instanceof AutoModRules) rule_id = rule_id.id
             if (typeof rule_id !== "string") return reject(new TypeError("The rule Id must be a string"))
             this.client.rest.get(this.client._ENDPOINTS.AUTOMOD(this.id, rule_id)).then(async res => {
-                res.creator = this.client.users.get(res.creator_id) || await this.client.rest.get(this.client._ENDPOINTS.USER(res.creator_id)).catch(e => { })
+                res.creator = this.client.users.get(res.creator_id) || await this.client.rest.get(this.client._ENDPOINTS.USER(res.creator_id)).catch(e => {
+                })
                 if (res.creator && !(res.creator instanceof User)) res.creator = new User(this.client, res.creator)
                 return resolve(new AutoModRule(this.client, this.client.guilds.get(this.id) || this, res))
             }).catch(e => {
@@ -1268,26 +1278,103 @@ module.exports = class Guild {
         })
     }
 
-    async getScheduledEvent(event){
-        return new Promise(async(resolve, reject) => {
-            if(typeof event === "undefined") return reject(new TypeError("The event must be a valid Id or ScheduledEvent instance"))
-            if(event instanceof ScheduledEvent) event = event.id
-            if(typeof event !== "string") return reject(new TypeError("Event must be a valid Id or ScheduledEvent instance"))
-            this.client.rest.get(this.client._ENDPOINTS.EVENT(this.id, event)+'?with_user_count=true').then(res => {
-                return resolve(new ScheduledEvent(this.client, this.client.guilds.get(this.id)||this, res))
-            }).catch(e=>{
+    async getScheduledEvent(event) {
+        return new Promise(async (resolve, reject) => {
+            if (typeof event === "undefined") return reject(new TypeError("The event must be a valid Id or ScheduledEvent instance"))
+            if (event instanceof ScheduledEvent) event = event.id
+            if (typeof event !== "string") return reject(new TypeError("Event must be a valid Id or ScheduledEvent instance"))
+            this.client.rest.get(this.client._ENDPOINTS.EVENT(this.id, event) + '?with_user_count=true').then(res => {
+                return resolve(new ScheduledEvent(this.client, this.client.guilds.get(this.id) || this, res))
+            }).catch(e => {
                 return reject(e)
             })
         })
     }
 
-    async listScheduledEvent(){
-        return new Promise(async(resolve, reject) => {
-            this.client.rest.get(this.client._ENDPOINTS.EVENT(this.id)+'?with_user_count=true').then(res => {
+    async listScheduledEvent() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.get(this.client._ENDPOINTS.EVENT(this.id) + '?with_user_count=true').then(res => {
                 let collect = new Store()
-                res.map(r => collect.set(r.id, new ScheduledEvent(this.client, this.client.guilds.get(this.id)||this, r)))
+                res.map(r => collect.set(r.id, new ScheduledEvent(this.client, this.client.guilds.get(this.id) || this, r)))
                 return resolve(collect)
-            }).catch(e=>{
+            }).catch(e => {
+                return reject(e)
+            })
+        })
+    }
+
+    async getWelcomeScreen() {
+        return new Promise(async (resolve, reject) => {
+            this.client.rest.get(this.client._ENDPOINTS.WELCOME_SCREEN(this.id)).then(res => {
+                let sendData = {
+                    channels: res?.welcome_channels?.map(data => {
+                        return {
+                            emoji: (data.emoji_id || data.emoji_name) ? parseEmoji(data.emoji_id ? `<:${data.emoji_name}:${data.emoji_id}>` : `${data.emoji_name}`) : null,
+                            channelId: data.channel_id || null,
+                            channel: this.client.allChannels.get(data.channel_id) || null,
+                            description: data.description || null
+                        }
+                    }) || null,
+                    description: res.description || null
+                }
+                return resolve(sendData)
+            }).catch(e => {
+                return reject(e)
+            })
+        })
+    }
+
+    async setWelcomeScreen(options) {
+        return new Promise(async (resolve, reject) => {
+            if (typeof options !== "object") return reject(new TypeError("Options must be defined by a object"))
+            if (options.enabled === null) options.enabled = undefined
+            if (options.description === null) options.enabled = undefined
+            if (options.channels === null) options.channels = undefined
+            if (typeof options.enabled !== "undefined") {
+                if (typeof options.enabled !== "boolean") return reject(new TypeError("The enabled propertie must be a boolean"))
+            }
+            if (typeof options.description !== "undefined") {
+                if (typeof options.description !== "string") return reject(new TypeError("The description propertie must be a string"))
+            }
+            if (typeof options.channels !== "undefined") {
+                if (typeof options.channels !== "object") return reject(new TypeError("The channels propertie must be a object"))
+                options.channels.map(channel => {
+                    if (typeof channel.channel !== "object" && channel.channel !== null && typeof channel.channel !== "undefined") return reject(new TypeError("The channel must be a channel object"))
+                    else if(typeof channel.channelId === "undefined" || channel.channelId === null) channel.channelId = channel.channel?.id
+                    if (typeof channel.channelId !== "string" && channel.channelId !== null) return reject(new TypeError("The channelId must be a string"))
+                    if (typeof channel.description !== "string" && channel.description !== null) return reject(new TypeError("The description must be a string"))
+                    if (typeof channel.emoji !== "undefined" && channel.emoji !== null) {
+                        if (typeof channel.emoji === "string") channel.emoji = parseEmoji(channel.emoji)
+                        if (typeof channel.emoji !== "object") return reject(new TypeError("The emoji is invalid"))
+                    }
+                })
+            }
+            if (typeof options.reason !== "undefined" && typeof options.reason !== "string") return reject(new TypeError("The reason must be a string or a undefined value"))
+            this.client.rest.patch(this.client._ENDPOINTS.WELCOME_SCREEN(this.id), {
+                enabled: options.enabled,
+                description: options.description,
+                welcome_channels: options.channels ? options.channels.map(channel => {
+                    return {
+                        channel_id: channel.channelId,
+                        description: channel.description,
+                        emoji: channel.emoji
+                    }
+                }) : undefined,
+                reason: options.reason
+            }).then(res => {
+                let sendData = {
+                    channels: res?.welcome_channels?.map(data => {
+                        return {
+                            emoji: (data.emoji_id || data.emoji_name) ? parseEmoji(data.emoji_id ? `<:${data.emoji_name}:${data.emoji_id}>` : `${data.emoji_name}`) : null,
+                            channelId: data.channel_id || null,
+                            channel: this.client.allChannels.get(data.channel_id) || null,
+                            description: data.description || null
+                        }
+                    }) || null,
+                    description: res.description || null
+                }
+                return resolve(sendData)
+            }).catch(e => {
                 return reject(e)
             })
         })

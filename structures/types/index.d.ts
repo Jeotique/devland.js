@@ -546,6 +546,17 @@ declare module 'devland.js' {
         include_roles?: Role[] | string[],
         reason?: string,
     }
+    type WelcomeScreen = {
+        description: string|null,
+        channels: WelcomeScreenChannel[]|null,
+    }
+    type WelcomeScreenChannel = {
+        emoji: APIEmoji|null,
+        channelId: string|null,
+        channel?: TextChannel | VoiceChannel | CategoryChannel | AnnouncementChannel | StageChannel | ForumChannel | Thread | null,
+        description: string|null,
+        reason?: string
+    }
     export class Guild {
         private constructor(client: Client, data: object);
         private client: Client;
@@ -769,6 +780,15 @@ declare module 'devland.js' {
          * Fetch and return all scheduled event of the guild
          */
         listScheduledEvent(): Promise<Store<String, ScheduledEvent>>;
+        /**
+         * Fetch and return the welcome screen of the guild with the description and channels
+         */
+        getWelcomeScreen(): Promise<WelcomeScreen>;
+        /**
+         * Set the welcome screen settings of the guild and return new updated settings
+         * @param options The welcome screen settings
+         */
+        setWelcomeScreen(options: WelcomeScreen): Promise<WelcomeScreen>;
     }
     type eventCreateOptions = {
         channel_id: string | VoiceChannel | StageChannel | null,
@@ -1741,13 +1761,46 @@ declare module 'devland.js' {
         name?: string,
         user?: User,
     }
+    export enum MessageType {
+        DEFAULT = 0,
+        RECIPIENT_ADD = 1,
+        RECIPIENT_REMOVE = 2,
+        CALL = 3,
+        CHANNEL_NAME_CHANGE = 4,
+        CHANNEL_ICON_CHANGE = 5,
+        CHANNEL_PINNED_MESSAGE = 6,
+        USER_JOIN = 7,
+        GUILD_BOOST = 8,
+        GUILD_BOOST_TIER_1 = 9,
+        GUILD_BOOST_TIER_2 = 10,
+        GUILD_BOOST_TIER_3 = 1,
+        CHANNEL_FOLLOW_ADD = 12,
+        GUILD_DISCOVERY_DISQUALIFIED = 14,
+        GUILD_DISCOVERY_REQUALIFIED = 15,
+        GUILD_DISCOVERY_GRACE_PERIOD_INITIAL_WARNING = 16,
+        GUILD_DISCOVERY_GRACE_PERIOD_FINAL_WARNING = 17,
+        THREAD_CREATED = 18,
+        REPLY = 19,
+        CHAT_INPUT_COMMAND = 20,
+        THREAD_STARTER_MESSAGE = 21,
+        GUILD_INVITE_REMINDER = 22,
+        CONTEXT_MENU_COMMAND = 23,
+        AUTO_MODERATION_ACTION = 24,
+        ROLE_SUBSCRIPTION_PURCHASE = 25,
+        INTERACTION_PREMIUM_UPSELL = 26,
+        STAGE_START = 27,
+        STAGE_END = 28,
+        STAGE_SPEAKER = 29,
+        STAGE_TOPIC = 31,
+        GUILD_APPLICATION_PREMIUM_SUBSCRIPTION = 32,
+    }
     export class Message {
         private constructor(client: Client, guild: Guild, channel: TextChannel, data: object)
         private client: Client;
         readonly guild?: Guild;
         readonly channel: TextChannel | AnnouncementChannel | VoiceChannel | Thread | ForumChannel | DmChannel;
         readonly id: string;
-        readonly type: number;
+        readonly type: MessageType;
         readonly content: string | undefined;
         readonly channelId: string;
         readonly attachments: Store<String, Attachment>;
@@ -1763,6 +1816,7 @@ declare module 'devland.js' {
         readonly guildId?: string;
         readonly editTimestamp: number | null;
         readonly flags: MessageFlags;
+        readonly isVoiceMessage: boolean;
         readonly components: ActionRow[];
         readonly messageReplyied: Message | null;
         readonly deleted: boolean;
@@ -1858,6 +1912,10 @@ declare module 'devland.js' {
         readonly height: number | undefined;
         readonly width: number | undefined;
         readonly ephemeral: boolean | undefined;
+        readonly contentScanVersion?: number;
+        readonly isVoiceMessage: boolean;
+        readonly durationSeconds?: number;
+        readonly waveform?: string;
     }
     type fieldOptions = {
         name: string,
@@ -2162,7 +2220,11 @@ declare module 'devland.js' {
         | 'MODERATE_MEMBERS'
         | 'MANAGE_EVENTS'
         | 'VIEW_CREATOR_MONETIZATION_ANALYTICS'
-        | 'USE_SOUNDBOARD';
+        | 'USE_SOUNDBOARD'
+        | 'CREATE_GUILD_EXPRESSIONS'
+        | 'CREATE_EVENTS'
+        | 'USE_EXTERNAL_SOUNDS'
+        | 'SEND_VOICE_MESSAGES';
     export type PermissionFlags = Record<PermissionString, bigint>;
     export type PermissionResolvable = BitFieldResolvable<PermissionString, bigint>;
     export type BitFieldResolvable<T extends string, N extends number | bigint> =
@@ -2974,7 +3036,8 @@ declare module 'devland.js' {
         | 'EPHEMERAL'
         | 'LOADING'
         | 'FAILED_TO_MENTION_SOME_ROLES_IN_THREAD'
-        | 'SUPPRESS_NOTIFICATIONS';
+        | 'SUPPRESS_NOTIFICATIONS'
+        | 'IS_VOICE_MESSAGE';
     export type Message_Flags = Record<MessageFlagString, bigint>;
     export type MessageFlagsResolvable = BitFieldResolvable<MessageFlagString, bigint>;
     export class MessageFlags extends BitField<MessageFlagString, bigint> {

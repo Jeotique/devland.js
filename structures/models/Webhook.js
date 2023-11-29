@@ -6,6 +6,7 @@ const TextChannel = require('./TextChannel')
 const AnnouncementChannel = require('./AnnouncementChannel')
 const ForumChannel = require('./ForumChannel')
 const DataResolver = require('../util/DateResolver')
+const Message = require('./Message')
 module.exports = class Webhook {
     constructor(client, guild, data) {
         Object.defineProperty(this, 'client', { value: client })

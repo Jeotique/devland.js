@@ -469,17 +469,17 @@ module.exports = class Interaction {
 
     getSelectedUsers() {
         if (!this.isUserSelect) throw new TypeError("This function can be used on a user select only")
-        return [Object.keys(this.data.resolved.users).map(u => new User(this.client, this.data.resolved.users[u]))]
+        return Object.keys(this.data.resolved.users).map(u => new User(this.client, this.data.resolved.users[u]))
     }
 
     getSelectedRoles() {
         if (!this.isRoleSelect) throw new TypeError("This function can be used on a role select only")
-        return [Object.keys(this.data.resolved.roles).map(r => new Role(this.client, this.client.guilds.get(this.guildId) || this.guild, this.data.resolved.roles[r]))]
+        return Object.keys(this.data.resolved.roles).map(r => new Role(this.client, this.client.guilds.get(this.guildId) || this.guild, this.data.resolved.roles[r]))
     }
 
     getSelectedMentionables() {
         if (!this.isMentionableSelect) throw new TypeError("This function can be used on a mentionable select only")
-        return [Object.keys(this.data.resolved.users).map(u => new User(this.client, this.data.resolved.users[u]))]
+        return Object.keys(this.data.resolved.users).map(u => new User(this.client, this.data.resolved.users[u]))
     }
 
     getSelectedChannels() {
