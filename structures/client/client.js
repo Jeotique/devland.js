@@ -87,7 +87,7 @@ module.exports = class Client extends EventEmitter {
             GATEWAY: DiscordAPI + '/gateway',
             SETTINGS: ME + '/settings',
             NOTE: (userID) => { return ME + '/notes/' + userID; },
-            SERVERS: (serverID) => { return `${DiscordAPI}/guilds${serverID ? '/' + serverID : ''}`; },
+            SERVERS: (serverID) => { return `${DiscordAPI}/guilds${serverID ? '/' + `${serverID}?with_counts=true` : ''}`; },
             SERVERS_USER: (serverID) => { return `${this._ENDPOINTS.ME()}/guilds${serverID ? '/' + serverID : ''}`; },
             SERVER_EMOJIS: (serverID, emojiID) => { return `${this._ENDPOINTS.SERVERS(serverID)}/emojis${emojiID ? '/' + emojiID : ''}`; },
             CHANNEL: (channelID) => { return DiscordAPI + '/channels/' + channelID; },
