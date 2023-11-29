@@ -22,12 +22,16 @@ module.exports = class Attachment {
         this.filename = data.filename
         this.description = data.description
         this.contentType = data.content_type
+        this.contentScanVersion = data.content_scan_version
         this.size = data.size
         this.url = data.url
         this.proxyUrl = data.proxy_url
         this.height = data.height
         this.width = data.width
         this.ephemeral = data.ephemeral
+        this.isVoiceMessage = this.contentType?.includes("audio")
+        this.durationSeconds = data.duration_secs
+        this.waveform = data.waveform
     }
 
     pack(){

@@ -58,6 +58,7 @@ module.exports = class Message {
         this.guildId = this.guild?.id
         this.editTimestamp = new Date(data.edited_timestamp)
         this.flags = new MessageFlags(BigInt(data.flags ?? 0))
+        this.isVoiceMessage = this.flags.has("IS_VOICE_MESSAGE")
         this.components = []
         this.messageReplyied = data.referenced_message ? new Message(this.client, this.guild, this.channel, data.referenced_message) : null
         this.deleted = false

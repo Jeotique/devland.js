@@ -67,7 +67,8 @@ MessageFlags.FLAGS = {
     EPHEMERAL: 1n << 6n,
     LOADING: 1n << 7n,
     FAILED_TO_MENTION_SOME_ROLES_IN_THREAD: 1n << 8n,
-    SUPPRESS_NOTIFICATIONS: 1n << 12n
+    SUPPRESS_NOTIFICATIONS: 1n << 12n,
+    IS_VOICE_MESSAGE: 1n << 13n,
 };
 
 /**

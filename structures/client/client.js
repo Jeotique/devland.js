@@ -87,7 +87,7 @@ module.exports = class Client extends EventEmitter {
             GATEWAY: DiscordAPI + '/gateway',
             SETTINGS: ME + '/settings',
             NOTE: (userID) => { return ME + '/notes/' + userID; },
-            SERVERS: (serverID) => { return `${DiscordAPI}/guilds${serverID ? '/' + `${serverID}?with_counts=true` : ''}`; },
+            SERVERS: (serverID) => { return `${DiscordAPI}/guilds${serverID ? '/' + `${serverID}` : ''}`; },
             SERVERS_USER: (serverID) => { return `${this._ENDPOINTS.ME()}/guilds${serverID ? '/' + serverID : ''}`; },
             SERVER_EMOJIS: (serverID, emojiID) => { return `${this._ENDPOINTS.SERVERS(serverID)}/emojis${emojiID ? '/' + emojiID : ''}`; },
             CHANNEL: (channelID) => { return DiscordAPI + '/channels/' + channelID; },
@@ -125,6 +125,7 @@ module.exports = class Client extends EventEmitter {
             INTERACTIONS_MESSAGE: (interactionID, interactionToken) => { return DiscordAPI + '/interactions/' + interactionID + '/' + interactionToken; },
             AUTOMOD: (serverID, ruleID) => { return `${this._ENDPOINTS.SERVERS(serverID)}/auto-moderations/rules${ruleID ? `/${ruleID}` : ``}`; },
             EVENT: (serverID, eventID) => { return `${this._ENDPOINTS.SERVERS(serverID)}/scheduled-events${eventID ? `/${eventID}` : ``}`; },
+            WELCOME_SCREEN: (serverID) => { return `${this._ENDPOINTS.SERVERS(serverID)}/welcome-screen`; },
         }
 
         this.token = options?.token
@@ -303,7 +304,7 @@ module.exports = class Client extends EventEmitter {
              */
             let res = new Store()
             if (!max) for (let i of this.guildsIds) {
-                let result = await this.rest.get(this._ENDPOINTS.SERVERS(i)).catch(e => { return reject(e) })
+                let result = await this.rest.get(this._ENDPOINTS.SERVERS(i)+"?with_counts=true").catch(e => { return reject(e) })
                 if (!result) return reject(new TypeError("One guild has not result"))
                 let oldGuild = this.guilds.get(i)
                 let guild = new Guild(this, result)
@@ -317,7 +318,7 @@ module.exports = class Client extends EventEmitter {
                 if (res.size === this.guildsIds.length) return resolve(res)
             }
             else for (let i of this.guildsIds.slice(0, max)) {
-                let result = await this.rest.get(this._ENDPOINTS.SERVERS(i)).catch(e => { return reject(e) })
+                let result = await this.rest.get(this._ENDPOINTS.SERVERS(i)+"?with_counts=true").catch(e => { return reject(e) })
                 if (!result) return reject(new TypeError("One guild has not result"))
                 let oldGuild = this.guilds.get(i)
                 let guild = new Guild(this, result)
@@ -341,7 +342,7 @@ module.exports = class Client extends EventEmitter {
         return new Promise(async (resolve, reject) => {
             if (guildId instanceof Guild) guildId = guildId?.id
             if (typeof guildId !== "string") return reject(new TypeError("guildId must be a string or a valid guild reference"))
-            let result = await this.rest.get(this._ENDPOINTS.SERVERS(guildId)).catch(e => { reject(e) })
+            let result = await this.rest.get(this._ENDPOINTS.SERVERS(guildId)+"?with_counts=true").catch(e => { reject(e) })
             if (!result) return reject(new TypeError("Unknow guild"))
             let oldGuild = this.guilds.get(guildId)
             let guild = new Guild(this, result)
