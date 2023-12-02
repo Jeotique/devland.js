@@ -70,7 +70,7 @@ declare module 'devland.js' {
         readonly ws: clientWebSocket;
         private rest: RESTHandler;
         private readonly guildsIds: [string];
-        readonly user: Client.ClientUser;
+        readonly user: ClientUser;
         readonly messages: Store<string, Message>;
         readonly guilds: Store<string, Guild>;
         readonly textChannels: Store<string, TextChannel>;
@@ -409,7 +409,6 @@ declare module 'devland.js' {
         delete(endpoint: string, options?: object): Promise<any>;
     }
     export { Store } from '../util/Store/Store';
-    namespace Client {
         export class ClientUser {
             private constructor(client: Client, data: object);
             private client: Client;
@@ -441,7 +440,6 @@ declare module 'devland.js' {
             private _patch(data: any);
             private _parse(data: object);
         }
-    }
     type guildFeatures = "ANIMATED_BANNER" | "ANIMATED_ICON" | "APPLICATION_COMMAND_PERMISSIONS_V2" | "AUTO_MODERATOR" | "BANNER" | "COMMUNITY" | "CREATOR_MODETIZABLE_PROVISIONAL" | "CREATOR_STORE_PAGE" | "DEVELOPER_SUPPORT_SERVER" | "DISCOVERABLE" | "FEATURABLE" | "INVITES_DISABLED" | "INVITE_SPLASH" | "MEMBER_VERIFICATION_GATE_ENABLED" | "MORE_STICKERS" | "NEWS" | "PARTNERED" | "PREVIEW_ENABLED" | "ROLE_ICONS" | "ROLE_SUBSCRIPTIONS_AVAILABLE_FOR_PURCHASE" | "ROLE_SUBSCRIPTIONS_ENABLED" | "TICKETED_EVENTS_ENABLED" | "VANITY_URL" | "VERIFIED" | "VIP_REGIONS" | "WELCOME_SCREEN_ENABLED"
     export enum guildVerificationLevel {
         NONE = 0,
@@ -622,7 +620,7 @@ declare module 'devland.js' {
         deleteCommand(command: GuildCommand | object): Promise<boolean>;
         /**
          * Return all emojis of the guild
-         * @param emoji_id provid a emoji Id if you want only this one
+         * @param emoji_id provid an emoji Id if you want only this one
          */
         fetchEmojis(emoji_id?: string | Emoji): Promise<Store<String, Emoji> | Emoji>;
         /**
@@ -693,7 +691,7 @@ declare module 'devland.js' {
          */
         createRole(options?: createRoleOptions): Promise<Role>;
         /**
-         * Return a audit logs with all logs matching with your fetch options
+         * Return an audit logs with all logs matching with your fetch options
          * @param options fetch options
          */
         fetchLogs(options: fetchLogsOptions): Promise<Store<String, Log>>;
@@ -717,7 +715,7 @@ declare module 'devland.js' {
         /**
          * Unban a user from the guild
          * @param user the user Id or a User instance
-         * @param reason the reason of the unban
+         * @param reason the reason of the unbanning
          */
         unbanMember(user: string | User | Member, reason?: string): Promise<boolean>;
         /**
@@ -777,7 +775,7 @@ declare module 'devland.js' {
          */
         getScheduledEvent(event: string | ScheduledEvent): Promise<ScheduledEvent>;
         /**
-         * Fetch and return all scheduled event of the guild
+         * Fetch and return all scheduled events of the guild
          */
         listScheduledEvent(): Promise<Store<String, ScheduledEvent>>;
         /**
@@ -1420,7 +1418,7 @@ declare module 'devland.js' {
         edit_stage(options: stageEditOptions): Promise<StageInstance>;
         /**
          * Delete the stage
-         * @param reason the reason of the delete
+         * @param reason the reason of to delete
          */
         delete_stage(reason?: string): Promise<void>;
         /**
@@ -1844,7 +1842,7 @@ declare module 'devland.js' {
          */
         reply(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
         /**
-         * Cross post this message in a announcement channel
+         * Cross post this message in an announcement channel
          */
         crosspost(): Promise<Message>;
         /**
@@ -1858,7 +1856,7 @@ declare module 'devland.js' {
          */
         unpinMessage(reason?: string): Promise<void>;
         /**
-         * React to this message with a emoji
+         * React to this message with an emoji
          * @param emoji the emoji to add
          */
         react(emoji: APIEmoji | string): Promise<void>;
@@ -1880,7 +1878,7 @@ declare module 'devland.js' {
          */
         deleteAllReactions(emoji?: APIEmoji | string): Promise<void>;
         /**
-         * Create a collector for all components which contains this message
+         * Create a collector for all components that contains this message
          * @param options the collector options
          */
         createComponentsCollector(options?: collectorOptions): Collector;
@@ -2401,7 +2399,7 @@ declare module 'devland.js' {
         edit(options: editEmojiOptions): Promise<Emoji>;
         /**
          * Delete this emoji
-         * @param reason the reason of the delete
+         * @param reason the reason of to delete
          */
         delete(reason?: string): Promise<void>;
     }
@@ -2446,12 +2444,12 @@ declare module 'devland.js' {
         edit(options: editRoleOptions): Promise<Role>;
         /**
          * Delete this role
-         * @param reason the reason of the delete
+         * @param reason the reason of to delete
          */
         delete(reason?: string): Promise<Role>;
         readonly hexColor: string;
         /**
-         * Compare the position of this role with an other role, result inferior to 1 mean this role is under
+         * Compare the position of this role with another role, result inferior to 1 mean this role is under
          * @param role the role to compare
          */
         comparePositions(role: Role | string): number;
@@ -2498,7 +2496,7 @@ declare module 'devland.js' {
         private readonly expireAt: number | undefined;
         /**
          * Delete this invite
-         * @param reason the reason of the delete
+         * @param reason the reason of the deleting
          */
         delete(reason?: string): Promise<Invite>;
     }
@@ -2548,7 +2546,7 @@ declare module 'devland.js' {
         edit(options: editWebhookOptions): Promise<Webhook>;
         /**
          * Delete this webhook
-         * @param reason the reason of this delete
+         * @param reason the reason of this deleting
          */
         delete(reason?: string): Promise<void>;
         /**
@@ -2591,7 +2589,7 @@ declare module 'devland.js' {
         scopes?: OAuth2Scopes[];
         /**
          * Delete this integration
-         * @param reason the reason of this delete
+         * @param reason the reason of this deleting
          */
         delete(reason?: string): Promise<void>;
     }
@@ -2788,7 +2786,7 @@ declare module 'devland.js' {
          */
         getTargetMessage(): Message;
         /**
-         * Reply to a auto complete request, usable only on slash command
+         * Reply to an auto complete request, usable only on slash command
          * @param options array of choices
          */
         sendAutoCompleteChoices(options: commandChoicesOptions[]): Promise<Interaction>;
@@ -3108,7 +3106,7 @@ declare module 'devland.js' {
         edit(options: editAutoModRuleOptions): Promise<AutoModRule>;
         /**
          * Delete this auto moderation rule
-         * @param reason the reason of the delete
+         * @param reason the reason of the deleting
          */
         delete(reason?: string): Promise<AutoModRule>;
     }

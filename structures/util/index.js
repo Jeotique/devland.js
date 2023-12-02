@@ -43,6 +43,7 @@ module.exports.createDefaultOptions = () => {
     invitesLifeTime: null,
     presencesLifeTime: null,
     voicesLifeTime: null,
+    enableAllCaches: false,
     waitCacheBeforeReady: true,
     shardId: 0,
     shardCount: 0,

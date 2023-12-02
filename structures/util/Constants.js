@@ -28,15 +28,15 @@ const PERMISSIONS = {
     MANAGE_NICKNAMES: 0x08000000,
     MANAGE_ROLES: 0x10000000,
     MANAGE_WEBHOOKS: 0x20000000,
-    MANAGE_EMOJIS: 0x40000000
+    MANAGE_GUILD_EXPRESSIONS: 0x40000000
 };
 
 const arr = Object.values(PERMISSIONS);
 PERMISSIONS.ALL = arr.reduce((x, y) => x | y);
 
 module.exports = {
-    baseURL: 'https://discordapp.com/api/v9',
-    UserAgent: `Discord-Bot (https://github.com/mxtorie/mxtorie, 1.0.0`,
+    baseURL: 'https://discord.com/api/v10',
+    UserAgent: `Discord-Bot (https://github.com/jeotique/devland.js, 1.0.0`,
     // UserAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.109 Safari/537.36",
     guildSettings: {
         messageNotifications: [0, 1, 'ALL_MESSAGES', 'ONLY_MENTIONS'],
@@ -129,6 +129,8 @@ module.exports = {
         AUTO_MODERATION_BLOCK_MESSAGE: 143,
         AUTO_MODERATION_FLAG_TO_CHANNEL: 144,
         AUTO_MODERATION_USER_COMMUNICATION_DISABLED: 145,
+        CREATOR_MONETIZATION_REQUEST_CREATED: 150,
+        CREATOR_MONETIZATION_TERMS_ACCEPTED: 151,
     },
     logsTypeFromIndex: {
         1: "GUILD_UPDATE",
@@ -185,6 +187,7 @@ module.exports = {
         143: "AUTO_MODERATION_BLOCK_MESSAGE",
         144: "AUTO_MODERATION_FLAG_TO_CHANNEL",
         145: "AUTO_MODERATION_USER_COMMUNICATION_DISABLED",
+        150: "CREATOR_MONETIZATION_REQUEST_CREATED",
+        151: "CREATOR_MONETIZATION_TERMS_ACCEPTED"
     }
-
 }

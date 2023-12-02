@@ -45,6 +45,7 @@ module.exports = class Client extends EventEmitter {
      * @property {number} invitesLifeTime
      * @property {number} presencesLifeTime
      * @property {number} voicesLifeTime
+     * @property {boolean} enableAllCaches
      * @property {boolean} waitCacheBeforeReady
      * @property {number} shardId
      * @property {number} shardCount
@@ -143,6 +144,12 @@ module.exports = class Client extends EventEmitter {
          * @type {clientOptions}
          */
         this.options = util.mergeDefault(util.createDefaultOptions(), options)
+        if(typeof this.options.enableAllCaches === "boolean" && this.options.enableAllCaches){
+            Object.keys(this.options).forEach(key => {
+                if(key.includes("LifeTime"))
+                    this.options[key] = Infinity
+            })
+        }
         if (this.options.membersLifeTime > 0 && !this.options.guildsLifeTime) {
             this.options.membersLifeTime = null
             process.emitWarning("The guilds cache must be enabled if you want to use the members cache")
