@@ -62,13 +62,14 @@ module.exports = class Message {
         this.components = []
         this.messageReplyied = data.referenced_message ? new Message(this.client, this.guild, this.channel, data.referenced_message) : null
         this.deleted = false
-        this.webhookId = data.webhook_id
-        this.author = this.webhookId ? null : new User(this.client, data.author)
+        this.webhookId = data.webhook_id || null
+        this.author = this.webhookId ? null : this.client.users.get(data.author?.id) || new User(this.client, data.author)
         this.authorId = this.webhookId ? this.webhookId : data.author.id
         this.member = this.webhookId ? null : this.guildId ? data.member ? data.member : this.guild.members.get(this.authorId) : null
-        this.interaction = data.interaction
+        this.interaction = data.interaction || null
+        this.nonce = data?.nonce || null
         this.data_is_available = true
-        if (this.interaction && this.interaction.user) {
+        if (this.interaction !== null && this.interaction.user) {
             this.interaction.user = this.client.users.get(this.interaction.user.id) || new User(this.client, this.interaction.user)
         }
         if (data.mentions) data.mentions.map(m => {
@@ -132,6 +133,7 @@ module.exports = class Message {
      */
     async edit(options) {
         return new Promise(async (resolve, reject) => {
+            if(this.authorId !== this.client.user.id) return reject(new TypeError("You can't edit a message if the bot is not the author"))
             if(typeof options !== "string" && typeof options !== "object") return reject(new TypeError("Invalid message payload"))
             let data = {
                 content: undefined,

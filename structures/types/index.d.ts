@@ -1819,11 +1819,12 @@ declare module 'devland.js' {
         readonly messageReplyied: Message | null;
         readonly deleted: boolean;
         readonly data_is_available: boolean;
-        readonly author?: User;
-        readonly member?: Member;
+        readonly author: User|null;
+        readonly member: Member|null;
         readonly authorId: string | webhookId;
-        readonly webhookId?: webhookId;
-        readonly interaction?: simpleInteraction;
+        readonly webhookId: webhookId|null;
+        readonly interaction: simpleInteraction|null;
+        readonly nonce: string|number|null;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
         /**
