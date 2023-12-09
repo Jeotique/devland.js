@@ -21,6 +21,7 @@ declare module 'devland.js' {
         invitesLifeTime: number;
         presencesLifeTime: number;
         voicesLifeTime: number;
+        enableAllCaches: boolean;
         waitCacheBeforeReady: boolean;
         shardId: number;
         shardCount: number;
@@ -735,7 +736,7 @@ declare module 'devland.js' {
         /**
          * Return all invites of the guild
          */
-        fetchInvite(): Promise<Store<String, Invite>>;
+        fetchInvites(): Promise<Store<String, Invite>>;
         /**
          * Return all webhooks of the guild
          */
@@ -851,6 +852,7 @@ declare module 'devland.js' {
         readonly guildId: string;
         readonly id: string;
         readonly premium_since: string;
+        readonly premium_since_timestamp: number;
         readonly pending: boolean;
         readonly nick: string;
         readonly voice: VoiceState;

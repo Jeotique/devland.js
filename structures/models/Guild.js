@@ -96,8 +96,8 @@ module.exports = class Guild {
             })
             if (!result) return reject(new TypeError("Can't fetch the vanity data from : " + this.name))
             let res = {
-                code: result.vanityUrlCode,
-                uses: result.vanityUrlUses,
+                code: result.code,
+                uses: result.uses,
             }
             return resolve(res)
         })
