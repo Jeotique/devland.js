@@ -30,7 +30,7 @@ module.exports = class Role {
     }
 
     toString() {
-        return `<&${this.id}>`
+        return `<@&${this.id}>`
     }
 
     edit(options = {}) {

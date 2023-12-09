@@ -31,7 +31,7 @@ module.exports = class DmChannel {
         this.createdTimestamp = Utils.getTimestampFrom(this.id)
         this.createdAt = new Date(this.createdTimestamp)
         const User = require('./User')
-        this.user = data.user || data.recipients ? data.recipients.length < 1 ? null : new User(client, data.recipients[0]) : null
+        this.user = (data.user || data.recipients) ? data.recipients.length < 1 ? null : new User(client, data.recipients[0]) : null
         this.data_is_available = true
     }
 

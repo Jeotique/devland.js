@@ -50,7 +50,8 @@ membersLifeTime: milliseconds, //will unlock <guild>.members
 rolesLifeTime: milliseconds, //will unlock <guild>.roles
 invitesLifeTime: milliseconds, //will unlock <guild>.invites
 presencesLifeTime: milliseconds, //will unlock <guild>.presences & <member>.presence
-voicesLifeTime: milliseconds, //will unlock <guild>.voicesStates & <member>.voice 
+voicesLifeTime: milliseconds, //will unlock <guild>.voicesStates & <member>.voice
+enableAllCaches: //will unlock all caches of the client
 waitCacheBeforeReady: boolean, //wait for all caches enabled to be completed before emit the ready event, by default set to true
 fetchAllMembers: boolean, //by default fetch all members in a guild
 checkForUpdate: boolean, //check for a new update when the program is up

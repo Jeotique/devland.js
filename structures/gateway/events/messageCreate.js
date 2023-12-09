@@ -19,7 +19,7 @@ module.exports = {
             if (!guild) {
                 let channel = await client.rest.get(client._ENDPOINTS.CHANNEL(data.channel_id)).catch(e => { })
                 if (!channel) return
-                channel.user = client.users.get(data?.author?.id) || new User(client, data.author)
+                if(!data.webhook_id) channel.user = client.users.get(data?.author?.id) || new User(client, data.author)
                 let dm_channel = new DmChannel(client, channel)
                 client.dmChannels.set(dm_channel.id, dm_channel)
                 let message = new Message(client, guild, dm_channel, data)
@@ -51,7 +51,7 @@ module.exports = {
                 if (user && !(user instanceof User)) user = new User(client, user)
                 if (user && !member.user) member.user = user
                 if (member && !(member instanceof Member)) member = new Member(client, guild, member)
-                data.member = member
+                data.member = member || null
                 data.roleMentions = await fetchMentionsRoles()
                 data.channelMentions = await fetchMentionsChannels()
                 let message = new Message(client, guild, channel, data)
