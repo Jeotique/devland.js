@@ -576,7 +576,7 @@ module.exports = class Interaction {
         }
         options.componentType = 5
         if (typeof options.filter !== "undefined") {
-            if (typeof options.filter !== "function") throw new TypeError("The filter must be a filter function for the collector, example : 'filter: (collected) => collected.author.id === message.author.id'")
+            if (typeof options.filter !== "function") throw new TypeError("The filter must be a filter function for the collector, example : 'filter: (collected) => collected.user.id === message.author.id'")
         }
         let identifier = Date.now()
         this.client.collectorCache[identifier] = new Collector(this.client, this.client.guilds.get(this.guildId) || this.guild, this.message, this.channel, options)
@@ -584,5 +584,34 @@ module.exports = class Interaction {
             delete this.client.collectorCache[identifier]
         })
         return this.client.collectorCache[identifier]
+    }
+
+    awaitModalResponse(options = {}) {
+        return new Promise(async (resolve, reject) => {
+            if (typeof options !== "object") throw new TypeError("You must provide options for the collector")
+            if (typeof options.count !== "undefined") {
+                if (typeof options.count !== "number") throw new TypeError("The count must be a number")
+            }
+            options.type = "await_modal"
+            if (typeof options.time !== "undefined") {
+                if (typeof options.time !== "number") throw new TypeError("The time must be a number")
+            }
+            options.componentType = 5
+            if (typeof options.filter !== "undefined") {
+                if (typeof options.filter !== "function") throw new TypeError("The filter must be a filter function for the collector, example : 'filter: (collected) => collected.user.id === message.author.id'")
+            }
+            let identifier = Date.now()
+            this.client.collectorCache[identifier] = new Collector(this.client, this.client.guilds.get(this.guildId) || this.guild, this.message, this.channel, options)
+            var resolved = false
+            this.client.collectorCache[identifier]?.on('end', () => {
+                if (!resolved) resolve(null)
+                delete this.client.collectorCache[identifier]
+            })
+            this.client.collectorCache[identifier]?.on('collected', collected => {
+                resolved = true
+                resolve(collected)
+                delete this.client.collectorCache[identifier]
+            })
+        })
     }
 }

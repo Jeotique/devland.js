@@ -98,6 +98,26 @@ module.exports = class Collector extends EventEmitter {
                     }
                 }
             })
+        else if(this.data.type === "await_modal")
+            this.client.on('interaction', interaction => {
+                if (this.ended) return;
+                if (this.channel && this.channel.id !== interaction.channelId) return;
+                if (this.message && this.message.id !== interaction.message?.id) return;
+                if (typeof this.data.componentType === "number" && (interaction.data?.component_type !== this.data.componentType) && interaction.type !== this.data.componentType) return;
+                if (this.data.filter && typeof this.data.filter === "function") {
+                    let array = []
+                    array.push(interaction)
+                    array = array.filter(this.data.filter)
+                    if (array.length < 1) return
+                    else array.map(i => this.cache.set(i.id, i))
+                    this.emit("collected", array[0])
+                    return this.emit('end')
+                } else {
+                    this.cache.set(interaction.id, interaction)
+                    this.emit("collected", interaction)
+                    return this.emit('end')
+                }
+            })
 
         if(typeof this.data.time !== "undefined" && this.data.time !== null && this.data.time !== Infinity) {
             setTimeout(() => {
