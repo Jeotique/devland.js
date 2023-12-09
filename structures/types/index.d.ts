@@ -1964,6 +1964,13 @@ declare module 'devland.js' {
         url: string | undefined;
     }
 
+    export enum userPremiumType {
+        NONE = 0,
+        CLASSIC = 1,
+        BOOST = 2,
+        BASIC = 3
+    }
+
     export class User {
         private constructor(client: Client, data: object);
         private client: Client;
@@ -1978,6 +1985,7 @@ declare module 'devland.js' {
         readonly avatar: string | null;
         readonly createdAt: Date;
         readonly createdTimestamp: number;
+        readonly premiumType: userPremiumType|null;
         readonly data_is_available: boolean;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;
@@ -1989,8 +1997,27 @@ declare module 'devland.js' {
         /**
          * Fetch and return the banner of this user, return null if not
          * @param size the size of the banner
+         * @param type the type of the image (auto, gif, png)
          */
-        fetchBanner(size?: number): Promise<string>;
+        fetchBanner(size?: number, type?: 'auto'|'gif'|'png'): Promise<string>;
+        /**
+         * Fetch and return the avatar of this user, return null if not
+         * @param size the size of the avatar
+         * @param type the type of the image (auto, gif, png)
+         */
+        fetchAvatar(size?: number, type?: 'auto'|'gif'|'png'): Promise<string>;
+        /**
+         * Return the banner of this user from the cache, return null if not
+         * @param size the size of the banner
+         * @param type the type of the image (auto, gif, png)
+         */
+        getBannerUrl(size?: number, type?: 'auto'|'gif'|'png'): string;
+        /**
+         * Return the avatar of this user from the cache, return null if not
+         * @param size the size of the avatar
+         * @param type the type of the image (auto, gif, png)
+         */
+        getAvatarUrl(size?: number, type?: 'auto'|'gif'|'png'): string;
     }
 
     export enum ComponentsType {

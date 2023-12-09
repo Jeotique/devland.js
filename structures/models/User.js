@@ -31,9 +31,14 @@ module.exports = class User {
         this.avatar = data.avatar
         this.createdTimestamp = Utils.getTimestampFrom(this.id)
         this.createdAt = new Date(this.createdTimestamp)
+        this.banner = data.banner
+        this.premiumType = data.premium_type || null
 
         if (this.avatar) {
             this.avatar = `https://cdn.discordapp.com/avatars/${this.id}/${this.avatar}${this.avatar.startsWith('a_') ? '.gif' : '.png'}?size=512`
+        }
+        if (this.banner){
+            this.banner = `https://cdn.discordapp.com/banners/${this.id}/${this.banner}${this.banner.startsWith('a_') ? '.gif' : '.png'}?size=1024`
         }
     }
 
@@ -41,6 +46,17 @@ module.exports = class User {
         return `<@${this.id}>`
     }
 
+    getBannerUrl(size = 1024, type = "auto"){
+        if (typeof size !== "number") size = 1024
+        if (typeof type !== "string" || type === "auto") type = this.banner.startsWith('a_') ? 'gif' : 'png'
+        return `https://cdn.discordapp.com/banners/${this.id}/${this.banner}.${type}?size=${size}`
+    }
+
+    getAvatarUrl(size = 512, type = "auto"){
+        if (typeof size !== "number") size = 512
+        if (typeof type !== "string" || type === "auto") type = this.avatar.startsWith('a_') ? 'gif' : 'png'
+        return `https://cdn.discordapp.com/avatars/${this.id}/${this.avatar}.${type}?size=${size}`
+    }
     /**
      * @typedef {object} MessageOptions
      * @property {string} content
@@ -209,12 +225,22 @@ module.exports = class User {
         })
     }
 
-    async fetchBanner(size) {
+    async fetchBanner(size = 1024, type = "auto") {
         return new Promise(async (resolve, reject) => {
             if (typeof size !== "number") size = 1024
             let user = await this.client.rest.get(this.client._ENDPOINTS.USER(this.id)).catch(e => { return reject(e) })
             if (!user.banner) return resolve(null)
-            else return resolve(`https://cdn.discordapp.com/banners/${this.id}/${user.banner}${user.banner.startsWith('a_') ? '.gif' : '.png'}?size=${size}`)
+            if (typeof type !== "string" || type === "auto") type = user.banner.startsWith('a_') ? 'gif' : 'png'
+            else return resolve(`https://cdn.discordapp.com/banners/${this.id}/${user.banner}.${type}?size=${size}`)
+        })
+    }
+    async fetchAvatar(size = 512, type = "auto") {
+        return new Promise(async (resolve, reject) => {
+            if (typeof size !== "number") size = 512
+            let user = await this.client.rest.get(this.client._ENDPOINTS.USER(this.id)).catch(e => { return reject(e) })
+            if (!user.avatar) return resolve(null)
+            if (typeof type !== "string" || type === "auto") type = user.avatar.startsWith('a_') ? 'gif' : 'png'
+            else return resolve(`https://cdn.discordapp.com/avatars/${this.id}/${user.avatar}.${type}?size=${size}`)
         })
     }
 }

@@ -219,3 +219,10 @@ module.exports.MessageType = {
     STAGE_TOPIC: 31,
     GUILD_APPLICATION_PREMIUM_SUBSCRIPTION: 32,
 }
+
+module.exports.userPremiumType = {
+    NONE: 0,
+    CLASSIC: 1,
+    BOOST: 2,
+    BASIC: 3
+}
