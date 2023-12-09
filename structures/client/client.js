@@ -10,6 +10,7 @@ const ForumChannel = require('../models/ForumChannel')
 const IntentFlags = require('../util/BitFieldManagement/IntentFlags')
 const ShardClientUtil = require('../sharding/ShardClientUtil')
 const webSocket = require('../gateway/websocket')
+const Webhook = require("../models/Webhook");
 /**
  * @extends {EventEmitter}
  */
@@ -481,6 +482,18 @@ module.exports = class Client extends EventEmitter {
                     return resolve(channel)
                 }
             }).catch(e => {
+                return reject(e)
+            })
+        })
+    }
+
+    async getWebhook(url){
+        return new Promise(async(resolve, reject) => {
+            if(typeof url !== "string") return reject(new TypeError("The webhook url must be a string"))
+            if(!url.includes("discord.com/api/webhooks/")) return reject(new TypeError("The webhook url is invalid"))
+            this.rest.get(url).then(res => {
+                return resolve(new Webhook(this, this.guilds.get(res.guild_id) || null, res))
+            }).catch(e=>{
                 return reject(e)
             })
         })

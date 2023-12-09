@@ -130,6 +130,11 @@ declare module 'devland.js' {
          * @param channel the channel to fetch or a valid channel Id
          */
         fetchChannel(channel: string | TextChannel | VoiceChannel | AnnouncementChannel | CategoryChannel | Thread | StageChannel | ForumChannel | DmChannel): Promise<TextChannel | VoiceChannel | AnnouncementChannel | CategoryChannel | Thread | StageChannel | ForumChannel | DmChannel>;
+        /**
+         * Fetch a webhook with the url the send message, edit, delete
+         * @param url the webhook url
+         */
+        getWebhook(url: string): Promise<Webhook>;
         public on<K extends keyof ClientEvents>(event: K, listener: (...args: ClientEvents[K]) => Awaitable<void>): this;
         public on<S extends string | symbol>(
             event: Exclude<S, keyof ClientEvents>,
@@ -2583,7 +2588,7 @@ declare module 'devland.js' {
          * Send a message with this webhook
          * @param options the message payload
          */
-        send(options: MessageOptions | string | Embed | ActionRow): Promise<Message>;
+        send(options: MessageOptions | string | Embed | ActionRow): Promise<Message|null>;
     }
     export enum integrationExpireBehavior {
         RemoveRole = 0,

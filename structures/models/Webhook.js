@@ -33,9 +33,9 @@ module.exports = class Webhook {
             if (typeof options !== "object") return reject(new TypeError("Edit webhook options must be a object"))
             if (typeof options.name !== "undefined" && typeof options.name !== "string") return reject(new TypeError("Edit webhook options name must be provided (string)"))
             if (typeof options.name === "string" && (options.name.length < 1 || options.name.length > 80)) return reject(new TypeError("Edit webhook options name must have a length between 1 and 80"))
-            if (options.channel_id instanceof TextChannel) options.channel_id = options.channel_id.id
-            if (options.channel_id instanceof AnnouncementChannel) options.channel_id = options.channel_id.id
-            if (options.channel_id instanceof ForumChannel) options.channel_id = options.channel_id.id
+            if (typeof options.channel_id === "object" && options.channel_id instanceof TextChannel) options.channel_id = options.channel_id.id
+            if (typeof options.channel_id === "object" && options.channel_id instanceof AnnouncementChannel) options.channel_id = options.channel_id.id
+            if (typeof options.channel_id === "object" && options.channel_id instanceof ForumChannel) options.channel_id = options.channel_id.id
             if (typeof options.channel_id !== "undefined" && typeof options.channel_id !== "string") return reject(new TypeError("Edit webhook options the channel must be a valid Channel instance or a valid Id"))
             if (typeof options.avatar !== "undefined") options.avatar = await DataResolver.resolveImage(options.avatar)
             if (options.reason === null) options.reason = undefined
@@ -80,6 +80,7 @@ module.exports = class Webhook {
      */
     async send(options) {
         return new Promise(async (resolve, reject) => {
+            const Message = require('./Message')
             if(typeof options !== "string" && typeof options !== "object") return reject(new TypeError("Invalid message payload"))
             let data = {
                 content: undefined,
@@ -92,6 +93,7 @@ module.exports = class Webhook {
             if (typeof options === 'string') {
                 data['content'] = options
                 this.client.rest.post(this.client._ENDPOINTS.WEBHOOKS(this.id) + '/' + this.token, data).then(messageData => {
+                    if(!messageData) return resolve(null)
                     return resolve(new Message(this.client, this.guild, this.channel, messageData))
                 }).catch(e => {
                     return reject(e)
@@ -99,6 +101,7 @@ module.exports = class Webhook {
             } else if (options instanceof Embed) {
                 data['embeds'].push(options.pack())
                 this.client.rest.post(this.client._ENDPOINTS.WEBHOOKS(this.id) + '/' + this.token, data).then(messageData => {
+                    if(!messageData) return resolve(null)
                     return resolve(new Message(this.client, this.guild, this.channel, messageData))
                 }).catch(e => {
                     return reject(e)
@@ -113,6 +116,7 @@ module.exports = class Webhook {
                     else alrSeen[test.custom_id] = true
                 })
                 this.client.rest.post(this.client._ENDPOINTS.WEBHOOKS(this.id) + '/' + this.token, data).then(messageData => {
+                    if(!messageData) return resolve(null)
                     return resolve(new Message(this.client, this.guild, this.channel, messageData))
                 }).catch(e => {
                     return reject(e)
@@ -143,6 +147,7 @@ module.exports = class Webhook {
                     else alrSeen[test.custom_id] = true
                 })
                 this.client.rest.post(this.client._ENDPOINTS.WEBHOOKS(this.id) + '/' + this.token, data).then(messageData => {
+                    if(!messageData) return resolve(null)
                     return resolve(new Message(this.client, this.guild, this.channel, messageData))
                 }).catch(e => {
                     return reject(e)
