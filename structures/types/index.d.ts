@@ -2760,6 +2760,11 @@ declare module 'devland.js' {
          */
         createModalListener(options: collectorOptions): Collector;
         /**
+         * Listen and wait for the first modal response sended to this interaction
+         * @param options  The options of the listener
+         */
+        awaitModalResponse(options: collectorOptions): Interaction;
+        /**
          * Get the selected users from the UserSelect
          */
         getSelectedUsers(): User[];
