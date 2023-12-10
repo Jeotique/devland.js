@@ -871,6 +871,7 @@ declare module 'devland.js' {
         readonly permissions: Permissions;
         readonly presence: Presence | null;
         readonly highestRole: Role | null;
+        get onlineSince(): number|null;
         readonly data_is_available: boolean;
         private readonly cachedAt: number | undefined;
         private readonly expireAt: number | undefined;

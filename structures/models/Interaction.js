@@ -512,7 +512,7 @@ module.exports = class Interaction {
     }
 
     getCommandValue(name) {
-        if (!this.isSlashCommand) throw new TypeError("This function can be used on a slash command only")
+        if (!this.isSlashCommand && !this.isAutoCompleteRequest) throw new TypeError("This function can be used on a slash command/autocomplete request only")
         if (typeof name !== "string") throw new TypeError("You didn't provide any option name")
         if (!this.data) return this.client.options.invalidCommandValueReturnNull ? null : undefined
         if (!this.data?.options || this.data?.options?.length < 1) return this.client.options.invalidCommandValueReturnNull ? null : undefined
