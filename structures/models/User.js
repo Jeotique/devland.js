@@ -231,7 +231,7 @@ module.exports = class User {
             let user = await this.client.rest.get(this.client._ENDPOINTS.USER(this.id)).catch(e => { return reject(e) })
             if (!user.banner) return resolve(null)
             if (typeof type !== "string" || type === "auto") type = user.banner.startsWith('a_') ? 'gif' : 'png'
-            else return resolve(`https://cdn.discordapp.com/banners/${this.id}/${user.banner}.${type}?size=${size}`)
+            return resolve(`https://cdn.discordapp.com/banners/${this.id}/${user.banner}.${type}?size=${size}`)
         })
     }
     async fetchAvatar(size = 512, type = "auto") {
@@ -240,7 +240,7 @@ module.exports = class User {
             let user = await this.client.rest.get(this.client._ENDPOINTS.USER(this.id)).catch(e => { return reject(e) })
             if (!user.avatar) return resolve(null)
             if (typeof type !== "string" || type === "auto") type = user.avatar.startsWith('a_') ? 'gif' : 'png'
-            else return resolve(`https://cdn.discordapp.com/avatars/${this.id}/${user.avatar}.${type}?size=${size}`)
+            return resolve(`https://cdn.discordapp.com/avatars/${this.id}/${user.avatar}.${type}?size=${size}`)
         })
     }
 }
