@@ -476,6 +476,11 @@ module.exports = class Client extends EventEmitter {
                     else if (channel.type === 10 || channel.type === 11 || channel.type === 12) channel = new Thread(this, guild, channel)
                     else if (channel.type === 13) channel = new StageChannel(this, guild, channel)
                     else if (channel.type === 15) channel = new ForumChannel(this, guild, channel)
+                    else if (channel.type === 4) {
+                        channel = new CategoryChannel(this, guild, channel)
+                        channel.childrens = []
+                        this.allChannels.filter(child => child.parent_id === channel.id || child.parentId === channel.id).map(child => channel.childrens.push(child.id))
+                    }
                     return resolve(channel)
                 } else {
                     channel = new DmChannel(this, channel)

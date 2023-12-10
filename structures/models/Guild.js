@@ -525,7 +525,7 @@ module.exports = class Guild {
                         case 4:
                             let category = new CategoryChannel(this.client, this.client.guilds.get(this.id) || this, channel)
                             category.childrens = []
-                            res.filter(child => child.parent_id === category.id || child.parentId === category.id).map(child => category.childrens.push(child.id))
+                            this.client.allChannels.filter(child => child.parent_id === category.id || child.parentId === category.id).map(child => category.childrens.push(child.id))
                             toSend['category'].set(category.id, category)
                             if (typeof this.client.options.channelsLifeTime === "number" && this.client.options.channelsLifeTime > 0) {
                                 category.cachedAt = Date.now()
@@ -595,7 +595,7 @@ module.exports = class Guild {
                     case 4:
                         let category = new CategoryChannel(this.client, this.client.guilds.get(this.id) || this, channel)
                         category.childrens = []
-                        res.filter(child => child.parent_id === category.id || child.parentId === category.id).map(child => category.childrens.push(child.id))
+                        this.client.allChannels.filter(child => child.parent_id === category.id || child.parentId === category.id).map(child => category.childrens.push(child.id))
                         resolve(category)
                         if (typeof this.client.options.channelsLifeTime === "number" && this.client.options.channelsLifeTime > 0) {
                             category.cachedAt = Date.now()
