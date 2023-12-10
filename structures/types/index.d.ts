@@ -1988,8 +1988,15 @@ declare module 'devland.js' {
         readonly bot: boolean;
         readonly avatarDecoration: null;
         readonly avatar: string | null;
+        /**
+         * You must fetch the user to get his banner
+         */
+        readonly banner: string | null;
         readonly createdAt: Date;
         readonly createdTimestamp: number;
+        /**
+         * You must fetch the user to get his nitro subscription type
+         */
         readonly premiumType: userPremiumType|null;
         readonly data_is_available: boolean;
         private readonly cachedAt: number | undefined;
@@ -2817,6 +2824,18 @@ declare module 'devland.js' {
          * @param name the option name
          */
         getCommandValue(name: string): string | number | boolean | User | Role | TextChannel | VoiceChannel | CategoryChannel | AnnouncementChannel | Thread | StageChannel | ForumChannel;
+        /**
+         * Get the current value of the focused input for an autocomplete option
+         */
+        getFocusedValue(): string|number;
+        /**
+         * Get the current name of the focused input for an autocomplete option
+         */
+        getFocusedName(): string;
+        /**
+         * Get the current type of the focused input for an autocomplete option
+         */
+        getFocusedType(): commandOptionsType;
         /**
          * Get the target user, context user only
          */
