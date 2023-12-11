@@ -559,7 +559,7 @@ module.exports = class Interaction {
         if(!this.isAutoCompleteRequest) throw new TypeError("This function can be used on a auto complete request")
         if (!this.data) return this.client.options.invalidCommandValueReturnNull ? null : undefined
         if (!this.data?.options || this.data?.options?.length < 1) return this.client.options.invalidCommandValueReturnNull ? null : undefined
-        let value = this.data.options.find(option => option.focused)?.name
+        let value = this.data.options.find(option => option.focused)?.name || this.data.options.find(option => option.options && option.options?.find(op => op.focused))?.options?.find(op => op.focused)?.name
         if (!value) return this.client.options.invalidCommandValueReturnNull ? null : undefined
         return value
     }
@@ -568,7 +568,7 @@ module.exports = class Interaction {
         if(!this.isAutoCompleteRequest) throw new TypeError("This function can be used on a auto complete request")
         if (!this.data) return this.client.options.invalidCommandValueReturnNull ? null : undefined
         if (!this.data?.options || this.data?.options?.length < 1) return this.client.options.invalidCommandValueReturnNull ? null : undefined
-        let value = this.data.options.find(option => option.focused)?.type
+        let value = this.data.options.find(option => option.focused)?.type || this.data.options.find(option => option.options && option.options?.find(op => op.focused))?.options?.find(op => op.focused)?.type
         if (!value) return this.client.options.invalidCommandValueReturnNull ? null : undefined
         return value
     }
@@ -577,7 +577,7 @@ module.exports = class Interaction {
         if(!this.isAutoCompleteRequest) throw new TypeError("This function can be used on a auto complete request")
         if (!this.data) return this.client.options.invalidCommandValueReturnNull ? null : undefined
         if (!this.data?.options || this.data?.options?.length < 1) return this.client.options.invalidCommandValueReturnNull ? null : undefined
-        let value = this.data.options.find(option => option.focused)?.value
+        let value = this.data.options.find(option => option.focused)?.value || this.data.options.find(option => option.options && option.options?.find(op => op.focused))?.options?.find(op => op.focused)?.value
         if (!value) return this.client.options.invalidCommandValueReturnNull ? null : undefined
         return value
     }
