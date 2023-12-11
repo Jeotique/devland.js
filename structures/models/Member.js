@@ -33,6 +33,10 @@ module.exports = class Member {
         this.presence = guild.presences.get(this.id) || null
     }
 
+    get onlineSince(){
+        return this.presence ? (this.presence.status === "offline" ? null : this.presence?.activities[0]?.created_at ?? Date.now()) : null
+    }
+
     toString() {
         return `<@${this.id}>`
     }
