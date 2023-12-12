@@ -11,6 +11,7 @@ module.exports = class Invite {
         this.channelId = data.channel_id
         this.code = data.code
         this.expire_At = data.expires_at
+        const User = require('./User')
         this.inviter = data.inviter ? client.users.get(data.inviter.id) || new User(client, data.inviter) : null
         this.uses = data.uses
         this.maxUses = data.max_uses
